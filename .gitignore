@@ -1,0 +1,29 @@
+node_modules
+dist
+.next
+.env
+.env.local
+.env*.local
+*.tsbuildinfo
+.turbo
+
+# Database files (local dev only)
+*.db
+*.db-journal
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Large media files (use CDN instead)
+# apps/web/public/videos/*.mp4
