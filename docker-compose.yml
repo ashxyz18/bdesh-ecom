@@ -3,6 +3,7 @@ services:
   postgres:
     image: postgres:15
     environment:
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: bdesh_ecom
     ports:
