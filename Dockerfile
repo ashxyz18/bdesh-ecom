@@ -6,20 +6,21 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Copy all source code
+# Copy everything
 COPY . .
 
-# Install dependencies (workspace-aware)
+# Install all dependencies (workspace-aware)
 RUN npm install --ignore-scripts
-
-# Install autoprefixer at root level for Turbopack resolution
-RUN npm install autoprefixer@10.4.20 --save-dev
 
 # Generate Prisma client
 RUN cd packages/database && npx prisma generate
 
-# Build with Turbopack disabled
-RUN NEXT_TURBOPACK=0 npx turbo run build --filter=@bdesh/web
+# Build packages first, then web app directly (bypass turbo, use webpack)
+RUN cd packages/shared && npx tsc
+RUN cd packages/database && npx tsc
+RUN cd packages/ui && npx tsc
+RUN cd packages/ai && npx tsc
+RUN cd apps/web && npx next build
 
 # Setup user
 RUN addgroup --system --gid 1001 nodejs && \
