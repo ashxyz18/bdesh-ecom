@@ -2,32 +2,32 @@ FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Build stage
-FROM base AS builder
-ENV PATH="/app/node_modules/.bin:${PATH}"
-ENV NEXT_TURBOPACK=0
-ENV NEXT_TELEMETRY_DISABLED=1
-
-# Copy package files first for better caching
+# Install dependencies
+FROM base AS deps
 COPY package.json package-lock.json ./
 COPY apps/web/package.json ./apps/web/
 COPY packages/database/package.json ./packages/database/
+COPY packages/ai/package.json ./packages/ai/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json ./packages/ui/
-COPY packages/ai/package.json ./packages/ai/
+RUN npm ci --ignore-scripts
 
-# Install dependencies
-RUN npm install --ignore-scripts
-
-# Generate Prisma client
+# Generate Prisma Client
+FROM base AS prisma
+COPY --from=deps /app/node_modules ./node_modules
 COPY packages/database ./packages/database
 RUN cd packages/database && npx prisma generate
 
-# Copy source code and build
+# Build
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=prisma /app/packages/database/node_modules ./packages/database/node_modules
 COPY . .
-RUN rm -rf apps/web/src && npx turbo run build --filter=@bdesh/web
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npx turbo run build --filter=@bdesh/web
 
-# Production stage
+# Production
 FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -45,9 +45,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
 # Copy Prisma files for migrations
 COPY --from=builder /app/packages/database ./packages/database
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 USER nextjs
 
