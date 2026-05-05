@@ -23,7 +23,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN turbo run build --filter=@bdesh/web
+RUN npx turbo run build --filter=@bdesh/web
 
 # Production
 FROM base AS runner
