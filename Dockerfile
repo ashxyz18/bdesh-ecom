@@ -21,7 +21,7 @@ ENV PATH="/app/node_modules/.bin:${PATH}"
 ENV NEXT_TURBOPACK=0
 COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
 COPY . .
-RUN npm ci --ignore-scripts && cat apps/web/src/app/api/sitemap/route.ts && npx turbo run build --filter=@bdesh/web
+RUN npm ci --ignore-scripts && ls apps/web/src/app/api/sitemap/route.ts && cat apps/web/src/app/api/sitemap/route.ts && ls node_modules/next/dist/server/next.js || echo "next.js not found" && npx turbo run build --filter=@bdesh/web
 
 # Production
 FROM base AS runner
