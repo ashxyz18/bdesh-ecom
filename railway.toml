@@ -1,6 +1,5 @@
 [build]
-builder = "nixpacks"
-buildCommand = "npx turbo run build --filter=@bdesh/web"
+builder = "dockerfile"
 
 [deploy]
 startCommand = "cd apps/web && npx next start -p $PORT"
