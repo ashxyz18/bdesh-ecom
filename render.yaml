@@ -6,15 +6,11 @@ services:
     user: admin
     plan: free
 
-  # Next.js web service
+  # Next.js web service (using Dockerfile)
   - type: web
     name: bdesh-ecom-web
-    env: node
+    env: docker
     plan: free
-    rootDir: apps/web
-    buildCommand: NEXT_TURBOPACK=0 npm run build
-    startCommand: npm start
-    numInstances: 1
     healthCheckPath: /
     envVars:
       - key: NODE_ENV
