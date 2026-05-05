@@ -1,9 +1,9 @@
 [build]
 builder = "nixpacks"
 buildCommand = "npx turbo run build --filter=@bdesh/web"
-startCommand = "cd apps/web && npx next start -p $PORT"
 
 [deploy]
+startCommand = "cd apps/web && npx next start -p $PORT"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
