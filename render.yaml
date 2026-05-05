@@ -1,12 +1,10 @@
 services:
-  # PostgreSQL database
-  - type: postgres
+  - type: psql
     name: bdesh-ecom-db
     databaseName: bdesh_ecom
     user: admin
     plan: free
-
-  # Next.js web service (using Dockerfile)
+    
   - type: web
     name: bdesh-ecom-web
     env: docker
