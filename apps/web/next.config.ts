@@ -5,9 +5,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
   transpilePackages: ["@bdesh/database", "@bdesh/shared", "@bdesh/ui"],
-  turbopack: {
-    root: process.cwd(),
-  },
 
   images: {
     formats: ["image/avif", "image/webp"],
