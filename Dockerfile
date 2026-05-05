@@ -18,11 +18,12 @@ RUN cd packages/database && npx prisma generate
 # Build
 FROM base AS builder
 ENV PATH="/app/node_modules/.bin:${PATH}"
+ENV NEXT_TURBOPACK=0
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npx turbo run build --filter=@bdesh/web
+RUN turbo run build --filter=@bdesh/web
 
 # Production
 FROM base AS runner
