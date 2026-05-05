@@ -1,0 +1,34 @@
+services:
+  # PostgreSQL database
+  - type: psql
+    name: bdesh-ecom-db
+    databaseName: bdesh_ecom
+    user: admin
+    plan: free
+
+  # Next.js web service
+  - type: web
+    name: bdesh-ecom-web
+    env: node
+    plan: free
+    rootDir: apps/web
+    buildCommand: NEXT_TURBOPACK=0 npm run build
+    startCommand: npm start
+    numInstances: 1
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: NEXT_TURBOPACK
+        value: "0"
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://bdesh-ecom-web.onrender.com
+      - key: NEXT_PUBLIC_BASE_URL
+        value: https://bdesh-ecom-web.onrender.com
+      - key: DATABASE_URL
+        fromService:
+          type: psql
+          name: bdesh-ecom-db
+          envVarKey: DATABASE_URL
