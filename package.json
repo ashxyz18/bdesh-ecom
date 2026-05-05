@@ -20,5 +20,6 @@
     "apps/*",
     "packages/*"
   ],
+  "packageManager": "npm@11.8.0",
   "dependencies": {}
 }

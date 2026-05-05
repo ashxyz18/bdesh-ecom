@@ -1,5 +1,5 @@
 services:
-  - type: p sql
+  - type: pgsql
     name: bdesh-ecom-db
     databaseName: bdesh_ecom
     user: admin
@@ -23,6 +23,12 @@ services:
         value: https://bdesh-ecom-web.onrender.com
       - key: DATABASE_URL
         fromService:
-          type: p sql
+          type: pgsql
           name: bdesh-ecom-db
           envVarKey: DATABASE_URL
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: NEXTAUTH_URL
+        value: https://bdesh-ecom-web.onrender.com
