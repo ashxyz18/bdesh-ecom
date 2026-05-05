@@ -5,11 +5,8 @@ WORKDIR /app
 # Install dependencies
 FROM base AS deps
 COPY package.json package-lock.json ./
-COPY apps/web/package.json ./apps/web/
-COPY packages/database/package.json ./packages/database/
-COPY packages/ai/package.json ./packages/ai/
-COPY packages/shared/package.json ./packages/shared/
-COPY packages/ui/package.json ./packages/ui/
+COPY apps/ ./apps/
+COPY packages/ ./packages/
 RUN npm ci --ignore-scripts
 
 # Generate Prisma Client

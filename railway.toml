@@ -1,8 +1,5 @@
-[build]
-builder = "nixpacks"
-
 [deploy]
-startCommand = "cd packages/database && npx prisma migrate deploy && cd ../../apps/web && npx next start -p $PORT"
+startCommand = "/bin/sh -c 'cd /app/packages/database && /app/node_modules/.bin/prisma migrate deploy && cd /app/apps/web && node server.js'"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
