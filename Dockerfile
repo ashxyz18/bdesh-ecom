@@ -22,7 +22,6 @@ RUN cd packages/database && npx prisma generate
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=prisma /app/packages/database/node_modules ./packages/database/node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx turbo run build --filter=@bdesh/web
