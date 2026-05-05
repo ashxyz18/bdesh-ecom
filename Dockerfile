@@ -2,29 +2,32 @@ FROM node:20-alpine AS base
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install dependencies
-FROM base AS deps
-COPY package.json package-lock.json ./
-COPY apps/ ./apps/
-COPY packages/ ./packages/
-RUN npm ci --ignore-scripts
-
-# Generate Prisma Client
-FROM base AS prisma
-COPY --from=deps /app/node_modules ./node_modules
-COPY packages/database ./packages/database
-RUN cd packages/database && npx prisma generate
-
-# Build
+# Build stage
 FROM base AS builder
 ENV PATH="/app/node_modules/.bin:${PATH}"
 ENV NEXT_TURBOPACK=0
-COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
-COPY . .
-# Cache bust 2026-05-05
-RUN npm ci --ignore-scripts && rm -rf apps/web/src && ls -la apps/web/ && cat apps/web/app/api/sitemap/route.ts && npx turbo run build --filter=@bdesh/web
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Production
+# Copy package files first for better caching
+COPY package.json package-lock.json ./
+COPY apps/web/package.json ./apps/web/
+COPY packages/database/package.json ./packages/database/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/ai/package.json ./packages/ai/
+
+# Install dependencies
+RUN npm install --ignore-scripts
+
+# Generate Prisma client
+COPY packages/database ./packages/database
+RUN cd packages/database && npx prisma generate
+
+# Copy source code and build
+COPY . .
+RUN rm -rf apps/web/src && npx turbo run build --filter=@bdesh/web
+
+# Production stage
 FROM base AS runner
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
