@@ -13,7 +13,6 @@ apps/*/node_modules
 apps/*/.next/cache
 apps/*/build
 .npm
-package-lock.json
 *.log
 .DS_Store
 .vscode
