@@ -42,6 +42,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/apps/web/public ./public
 # Copy Prisma files for migrations
 COPY --from=builder /app/packages/database ./packages/database
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 USER nextjs
 
