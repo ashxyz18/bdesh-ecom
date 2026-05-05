@@ -14,13 +14,9 @@ COPY packages/shared/package.json ./packages/shared/
 COPY packages/ui/package.json ./packages/ui/
 COPY packages/ai/package.json ./packages/ai/
 COPY apps/web/package.json ./apps/web/
-COPY apps/mobile/package.json ./apps/mobile/
 
 # Install dependencies
 RUN npm ci --include-workspace-root --ignore-scripts
-
-# Install autoprefixer globally
-RUN npm install -g autoprefixer@10.4.20
 
 # Copy source code
 COPY . .
@@ -35,7 +31,10 @@ RUN cd packages/ui && npx tsc
 RUN cd packages/ai && npx tsc
 
 # Build web app
-RUN cd apps/web && NEXT_TURBOPACK=0 npm run build
+RUN cd apps/web && npm run build
+
+# Prune dev dependencies
+RUN npm prune --production
 
 # Stage 2: Production
 FROM node:20-alpine AS runner
@@ -55,7 +54,9 @@ COPY --from=builder /app/apps/web/public apps/web/public
 COPY --from=builder /app/apps/web/package.json apps/web/
 COPY --from=builder /app/apps/web/next.config.ts apps/web/
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages ./packages
+COPY --from=builder /app/packages/database ./packages/database
+COPY --from=builder /app/packages/shared ./packages/shared
+COPY --from=builder /app/package.json ./package.json
 
 WORKDIR /app/apps/web
 
