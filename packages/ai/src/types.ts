@@ -352,3 +352,34 @@ export interface SocialPostResponse {
   suggestedTime: string;
   platform: string;
 }
+
+export interface GenerateImageRequest {
+  prompt: string;
+  productName?: string;
+  storeName?: string;
+  style?: "photorealistic" | "artistic" | "minimal" | "luxury" | "playful";
+  width?: number;
+  height?: number;
+  negativePrompt?: string;
+  count?: number;
+}
+
+export interface GenerateImageResponse {
+  images: { url: string; revisedPrompt?: string }[];
+  prompt: string;
+}
+
+export interface GenerateStoreAssetsRequest {
+  storeName: string;
+  businessType?: string;
+  style?: "minimal" | "bold" | "luxury" | "playful" | "corporate";
+  assetTypes: ("logo" | "banner" | "favicon" | "social-facebook" | "social-instagram" | "social-twitter")[];
+}
+
+export interface GenerateStoreAssetsResponse {
+  assets: {
+    type: string;
+    url: string;
+    prompt: string;
+  }[];
+}

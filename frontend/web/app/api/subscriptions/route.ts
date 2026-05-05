@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     // Verify user owns this store
     const store = await prisma.store.findUnique({ where: { id: storeId } });
-    if (!store || (store.ownerId !== session.userId && session.user?.role !== "ADMIN")) {
+    if (!store || (store.ownerId !== session.user.id && session.user?.role !== "ADMIN")) {
       return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
     // Create new subscription
     const subscription = await (prisma as any).subscription.create({
       data: {
-        userId: session.userId,
+        userId: session.user.id,
         storeId,
         planId,
         status: "ACTIVE",

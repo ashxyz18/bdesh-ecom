@@ -116,7 +116,7 @@ export default function CustomizePage() {
         </div>
         <div className="flex items-center gap-3">
           <a
-            href={`/?store=${activeStore.subdomain}`}
+            href={`/store?subdomain=${activeStore.subdomain}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium"

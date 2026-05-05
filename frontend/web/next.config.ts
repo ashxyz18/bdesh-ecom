@@ -64,7 +64,7 @@ const nextConfig: NextConfig = {
               "img-src 'self' data: blob: https: http:",
               "media-src 'self' blob: https:",
               "connect-src 'self' https: http://localhost:*",
-              "frame-src 'none'",
+              "frame-src 'self'",
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self'",

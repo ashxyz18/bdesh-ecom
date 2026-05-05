@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Package,
   ShoppingCart,
+  Calendar,
   Settings,
   Store,
   LogOut,
@@ -32,6 +33,8 @@ import {
   BarChart3,
   Wand2,
   CreditCard,
+  MonitorSmartphone,
+  Box,
 } from "lucide-react";
 import { DashboardProvider, useDashboard } from "./DashboardContext";
 
@@ -67,7 +70,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           label: "Store",
           items: [
             { href: "/dashboard/products", icon: Package, label: "Products" },
+            { href: "/dashboard/inventory", icon: Box, label: "Inventory" },
+            { href: "/dashboard/bookings", icon: Calendar, label: "Bookings" },
             { href: "/dashboard/orders", icon: ShoppingCart, label: "Orders", badge: pendingOrderCount || undefined },
+            { href: "/dashboard/builder", icon: MonitorSmartphone, label: "Visual Builder" },
             { href: "/dashboard/ai-builder", icon: Wand2, label: "AI Builder" },
             { href: "/dashboard/customize", icon: Paintbrush, label: "Customize Store" },
             { href: "/dashboard/templates", icon: Palette, label: "Templates" },
@@ -269,7 +275,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             {/* View Store Link */}
             {activeStore && (
               <a
-                href={`/?store=${activeStore.subdomain}`}
+                href={`/store?subdomain=${activeStore.subdomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`flex items-center gap-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors ${
@@ -379,7 +385,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             {/* View Store */}
             {activeStore && (
               <a
-                href={`/?store=${activeStore.subdomain}`}
+                href={`/store?subdomain=${activeStore.subdomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden sm:flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors px-3 py-2 rounded-xl hover:bg-emerald-50"

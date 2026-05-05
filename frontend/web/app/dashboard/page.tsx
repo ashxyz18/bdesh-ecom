@@ -586,7 +586,7 @@ export default function DashboardPage() {
                       Manage
                     </Link>
                     <a
-                      href={`/?store=${store.subdomain}`}
+                      href={`/store?subdomain=${store.subdomain}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-1 text-center px-3 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors flex items-center justify-center gap-1.5"

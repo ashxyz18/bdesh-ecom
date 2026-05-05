@@ -4,6 +4,11 @@ import Script from "next/script";
 import type { Metadata } from "next";
 import { getStoreTemplate, isBuiltInTemplate, getTemplateInfo } from "@/lib/store-templates/registry";
 import { StoreProviders } from "./providers";
+import { BlockData } from "@/lib/builder/blocks/types";
+import { 
+  HeroBlock, AboutBlock, ServicesBlock, ContactBlock, 
+  TestimonialsBlock, HoursBlock, GalleryBlock, ContactFormBlock
+} from "@/lib/builder/blocks";
 
 // ISR: revalidate store pages every 60 seconds
 export const revalidate = 60;
@@ -293,8 +298,62 @@ export default async function StorePage({ params, searchParams }: StorePageProps
   // Build store JSX
   let storeJSX: React.ReactNode;
 
-  // AI-generated template
-  if (parsedStore.theme?.aiGenerated && parsedStore.theme?.templateConfig) {
+  // 1. Check for specific system pages (Checkout, Cart, etc.)
+  if (path && path[0] === "checkout") {
+    const { ConfigCheckoutPage } = await import("@/lib/store-templates/engine/pages/ConfigCheckoutPage");
+    // We need a dummy config for theme variables if using block builder
+    const dummyConfig = {
+      id: "system",
+      theme: {
+        colors: { primary: "#008060", secondary: "#2c3e50", bg: "#ffffff", text: "#1a1a1a" },
+        fonts: { body: "Inter", heading: "Inter" },
+        radius: "md",
+        shadows: "sm"
+      }
+    };
+    
+    storeJSX = (
+      <StoreProviders storeId={parsedStore.id}>
+        <ConfigCheckoutPage 
+          config={dummyConfig as any} 
+          store={parsedStore} 
+          formatPrice={(p) => `৳${p.toLocaleString()}`} 
+          storeLink={(sub) => `/store?subdomain=${parsedStore.subdomain}${sub ? `&path=${sub}` : ""}`} 
+        />
+      </StoreProviders>
+    );
+  }
+  // 2. Visual Builder blocks (Custom Drag-and-Drop)
+  else if (parsedStore.theme?.blocks?.length > 0) {
+    storeJSX = (
+      <StoreProviders storeId={parsedStore.id}>
+        <main className="flex-1 bg-white min-h-screen">
+          {parsedStore.theme.blocks.map((block: any) => {
+            const props = {
+              id: block.id,
+              data: block,
+              isActive: false,
+              isEditable: false,
+              storeId: parsedStore.id,
+            };
+            switch (block.type) {
+              case "hero": return <HeroBlock key={block.id} {...props} />;
+              case "about": return <AboutBlock key={block.id} {...props} />;
+              case "services": return <ServicesBlock key={block.id} {...props} />;
+              case "contact": return <ContactBlock key={block.id} {...props} />;
+              case "contactForm": return <ContactFormBlock key={block.id} {...props} />;
+              case "testimonials": return <TestimonialsBlock key={block.id} {...props} />;
+              case "hours": return <HoursBlock key={block.id} {...props} />;
+              case "gallery": return <GalleryBlock key={block.id} {...props} />;
+              default: return null;
+            }
+          })}
+        </main>
+      </StoreProviders>
+    );
+  }
+  // 2. AI-generated template
+  else if (parsedStore.theme?.aiGenerated && parsedStore.theme?.templateConfig) {
     const configJson = JSON.stringify(parsedStore.theme.templateConfig);
     const { ConfigTemplateWrapper } = await import("@/lib/store-templates/engine/ConfigTemplateWrapper");
     storeJSX = (
@@ -303,7 +362,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
       </StoreProviders>
     );
   }
-  // Built-in template
+  // 3. Built-in template
   else if (isBuiltInTemplate(templateId)) {
     const StoreTemplate = getStoreTemplate(templateId);
     storeJSX = (
@@ -312,7 +371,7 @@ export default async function StorePage({ params, searchParams }: StorePageProps
       </StoreProviders>
     );
   }
-  // Custom/uploaded template
+  // 4. Custom/uploaded template
   else {
     const templateRecord = await prisma.template.findUnique({
       where: { slug: templateId },

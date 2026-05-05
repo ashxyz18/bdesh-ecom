@@ -19,12 +19,12 @@ export interface OnboardingStep {
 }
 
 const STEPS: OnboardingStep[] = [
-  { id: "business", label: "Business", labelBn: "ব্যবসা" },
+  { id: "business", label: "Type", labelBn: "ধরন" },
+  { id: "details", label: "Details", labelBn: "বিস্তারিত" },
+  { id: "goals", label: "Goals", labelBn: "লক্ষ্য" },
+  { id: "style", label: "Style", labelBn: "স্টাইল" },
   { id: "template", label: "Template", labelBn: "টেমপ্লেট" },
-  { id: "customize", label: "Customize", labelBn: "কাস্টমাইজ" },
-  { id: "products", label: "Products", labelBn: "প্রোডাক্ট" },
-  { id: "domain", label: "Domain", labelBn: "ডোমেইন" },
-  { id: "payment", label: "Payment", labelBn: "পেমেন্ট" },
+  { id: "finalize", label: "Finalize", labelBn: "চূড়ান্ত" },
 ];
 
 interface OnboardingWizardProps {
@@ -51,7 +51,13 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [storeName, setStoreName] = useState("");
   const [subdomain, setSubdomain] = useState("");
+  const [location, setLocation] = useState("");
+  const [phone, setPhone] = useState("");
+  const [goals, setGoals] = useState<string[]>([]);
+  const [referenceUrl, setReferenceUrl] = useState("");
+  const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
+  const [aiRecommending, setAiRecommending] = useState(false);
 
   const selectedTpl = templates.find((t) => t.id === selectedTemplate);
 
@@ -86,7 +92,31 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [typography, setTypography] = useState(defaultTypography);
   const [layout, setLayout] = useState(defaultLayout);
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    if (step === 3) {
+      setAiRecommending(true);
+      try {
+        const res = await fetch("/api/ai/recommend-template", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessType,
+            prompt,
+            referenceUrl,
+            goals,
+          }),
+        });
+        const data = await res.json();
+        if (data.templateId) {
+          setSelectedTemplate(data.templateId);
+          if (data.colors) setColors(prev => ({ ...prev, ...data.colors }));
+        }
+      } catch (err) {
+        console.error("AI recommendation failed", err);
+      } finally {
+        setAiRecommending(false);
+      }
+    }
     if (step < STEPS.length - 1) setStep(step + 1);
   };
 
@@ -145,8 +175,6 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
                 key={bt.id}
                 onClick={() => {
                   setBusinessType(bt.id);
-                  const recommended = templates.filter((t) => t.category.toLowerCase().includes(bt.id))[0];
-                  if (recommended) setSelectedTemplate(recommended.id);
                   handleNext();
                 }}
                 className={`p-4 rounded-xl border-2 text-center hover:border-[#008060] hover:bg-[#008060]/5 transition-all ${
@@ -166,6 +194,102 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
       )}
 
       {step === 1 && (
+        <div className="max-w-md space-y-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {lang === "bn" ? "ব্যবসার তথ্য" : "Business Details"}
+          </h2>
+          <div>
+            <label className={labelClass}>{lang === "bn" ? "স্টোরের নাম" : "Store Name"}</label>
+            <input
+              type="text"
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              className={inputClass}
+              placeholder="e.g. My Awesome Shop"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>{lang === "bn" ? "লোকেশন" : "Location"}</label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className={inputClass}
+              placeholder="e.g. Dhaka, Bangladesh"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>{lang === "bn" ? "ফোন নম্বর" : "Phone Number"}</label>
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className={inputClass}
+              placeholder="e.g. 01700000000"
+            />
+          </div>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            {lang === "bn" ? "আপনার লক্ষ্য কি?" : "What are your goals?"}
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+            {[
+              { id: "sell", label: "Sell Products", icon: <ShoppingBag /> },
+              { id: "leads", label: "Get Leads", icon: <Sparkles /> },
+              { id: "info", label: "Share Info", icon: <Globe /> },
+              { id: "booking", label: "Book Appointments", icon: <Check /> },
+            ].map((goal) => (
+              <button
+                key={goal.id}
+                onClick={() => {
+                  setGoals(prev => prev.includes(goal.id) ? prev.filter(g => g !== goal.id) : [...prev, goal.id]);
+                }}
+                className={`p-6 rounded-2xl border-2 flex items-center gap-4 transition-all ${
+                  goals.includes(goal.id) ? "border-[#008060] bg-[#008060]/5 shadow-sm" : "border-gray-100 hover:border-gray-200"
+                }`}
+              >
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${goals.includes(goal.id) ? "bg-[#008060] text-white" : "bg-gray-50 text-gray-400"}`}>
+                  {goal.icon}
+                </div>
+                <span className="font-semibold text-gray-900">{goal.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900">
+            {lang === "bn" ? "ব্র্যান্ড ও স্টাইল" : "Brand & Style"}
+          </h2>
+          <div>
+            <label className={labelClass}>{lang === "bn" ? "রেফারেন্স সাইট (ঐচ্ছিক)" : "Reference Site URL (Optional)"}</label>
+            <input
+              type="text"
+              value={referenceUrl}
+              onChange={(e) => setReferenceUrl(e.target.value)}
+              className={inputClass}
+              placeholder="https://example.com"
+            />
+          </div>
+          <div>
+            <label className={labelClass}>{lang === "bn" ? "আপনার ব্যবসার বর্ণনা দিন (AI এর জন্য)" : "Describe your business (for AI)"}</label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className={`${inputClass} h-32 resize-none`}
+              placeholder="e.g. A premium leather goods store focusing on hand-crafted wallets..."
+            />
+          </div>
+        </div>
+      )}
+
+      {step === 4 && (
         <TemplatePicker
           selected={selectedTemplate}
           onSelect={setSelectedTemplate}
@@ -173,20 +297,54 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         />
       )}
 
-      {step === 2 && (
+      {step === 5 && (
         <div className="grid gap-8 lg:grid-cols-2">
-          <CustomizationPanel
-            colors={colors}
-            typography={typography}
-            layout={layout}
-            onColorsChange={(c) => setColors((p) => ({ ...p, ...c }))}
-            onTypographyChange={(t) => setTypography((p) => ({ ...p, ...t }))}
-            onLayoutChange={(l) => setLayout((p) => ({ ...p, ...l }))}
-            lang={lang}
-          />
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900">
+              {lang === "bn" ? "চূড়ান্ত পর্যালোচনা" : "Final Review"}
+            </h2>
+            <div className="bg-gray-50 p-6 rounded-2xl border border-gray-100 space-y-3 text-sm">
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500 font-medium">Store Name</span>
+                <span className="text-gray-900 font-semibold">{storeName}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500 font-medium">Category</span>
+                <span className="text-gray-900 font-semibold capitalize">{businessType}</span>
+              </div>
+              <div className="flex justify-between border-b border-gray-200 pb-2">
+                <span className="text-gray-500 font-medium">Domain</span>
+                <span className="text-gray-900 font-semibold">{subdomain || storeName.toLowerCase().replace(/[^a-z0-9-]/g, "")}.bdesh.shop</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 font-medium">Template</span>
+                <span className="text-gray-900 font-semibold capitalize">{selectedTemplate}</span>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={subdomain}
+                onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                placeholder="desired-subdomain"
+                className={inputClass}
+              />
+              <span className="text-sm text-gray-400 font-medium">.bdesh.shop</span>
+            </div>
+
+            <Button className="w-full bg-[#008060] hover:bg-[#006A4E] text-white py-6 text-lg font-bold shadow-lg" onClick={handleCreateStore} disabled={loading}>
+              {loading ? (
+                <Loader2 size={20} className="animate-spin mr-2" />
+              ) : (
+                <Check size={20} className="mr-2" />
+              )}
+              {lang === "bn" ? "আমার স্টোর শুরু করুন" : "Launch My Store"}
+            </Button>
+          </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-3">
-              {lang === "bn" ? "প্রিভিউ" : "Preview"}
+              {lang === "bn" ? "লাইভ প্রিভিউ" : "Live Preview"}
             </h3>
             <BackgroundPreview
               primaryColor={colors.primary}
@@ -194,114 +352,6 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
               companyName={storeName || undefined}
             />
           </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {lang === "bn" ? "প্রোডাক্ট যোগ করুন" : "Add Products"}
-          </h2>
-          <p className="text-gray-500 mb-8">
-            {lang === "bn"
-              ? "আপনি এখন বা পরে প্রোডাক্ট যোগ করতে পারবেন।"
-              : "You can add products now or later from your dashboard."}
-          </p>
-          <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
-            <ShoppingBag size={48} className="text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 mb-4">
-              {lang === "bn"
-                ? "আপনার প্রোডাক্ট, দাম, এবং ছবি যোগ করুন।"
-                : "Add your products with images, prices, and descriptions."}
-            </p>
-            <Button className="bg-[#008060] hover:bg-[#006A4E] text-white" onClick={handleNext}>
-              {lang === "bn" ? "পরে যোগ করব" : "Add Later"} <ArrowRight size={16} className="ml-1.5" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {lang === "bn" ? "আপনার স্টোরের নাম দিন" : "Name Your Store"}
-          </h2>
-          <p className="text-gray-500 mb-8">
-            {lang === "bn"
-              ? "আপনার স্টোরের নাম এবং ডোমেইন সেট করুন।"
-              : "Set your store name and domain."}
-          </p>
-          <div className="max-w-md space-y-4">
-            <div>
-              <label className={labelClass}>
-                {lang === "bn" ? "স্টোরের নাম" : "Store Name"}
-              </label>
-              <input
-                type="text"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                placeholder={lang === "bn" ? "আমার দোকান" : "My Store"}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className={labelClass}>
-                {lang === "bn" ? "সাবডোমেইন" : "Subdomain"}
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={subdomain}
-                  onChange={(e) => setSubdomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
-                  placeholder="mystore"
-                  className={inputClass}
-                />
-                <span className="text-sm text-gray-400 whitespace-nowrap">.bdesh.shop</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {step === 5 && (
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            {lang === "bn" ? "পেমেন্ট সেটআপ" : "Payment Setup"}
-          </h2>
-          <p className="text-gray-500 mb-8">
-            {lang === "bn"
-              ? "আপনার পেমেন্ট পদ্ধতি সেট করুন।"
-              : "Configure your payment methods."}
-          </p>
-          <div className="grid gap-4 max-w-lg">
-            {[
-              { id: "bkash", label: "bKash", icon: "৳" },
-              { id: "nagad", label: "Nagad", icon: "৳" },
-              { id: "rocket", label: "Rocket", icon: "৳" },
-              { id: "cod", label: lang === "bn" ? "ক্যাশ অন ডেলিভারি" : "Cash on Delivery", icon: "৳" },
-            ].map((pm) => (
-              <label
-                key={pm.id}
-                className="flex items-center gap-3 p-4 rounded-xl border-2 border-gray-200 cursor-pointer hover:border-[#008060]/50 transition-colors"
-              >
-                <input type="checkbox" defaultChecked className="w-5 h-5 rounded text-[#008060] focus:ring-[#008060]" />
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-[#008060]/10 flex items-center justify-center text-[#008060] font-bold text-sm">
-                    {pm.icon}
-                  </div>
-                  <span className="text-sm font-medium text-gray-900">{pm.label}</span>
-                </div>
-              </label>
-            ))}
-          </div>
-          <Button className="mt-8 bg-[#008060] hover:bg-[#006A4E] text-white" onClick={handleCreateStore} disabled={loading}>
-            {loading ? (
-              <Loader2 size={16} className="animate-spin mr-2" />
-            ) : (
-              <Check size={16} className="mr-2" />
-            )}
-            {lang === "bn" ? "স্টোর তৈরি করুন" : "Create Store"}
-          </Button>
         </div>
       )}
 

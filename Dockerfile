@@ -9,9 +9,9 @@ ENV NODE_ENV=production
 
 # Copy package files first for better layer caching
 COPY package*.json ./
-COPY backend/database/package.json ./backend/database/
-COPY backend/ai/package.json ./backend/ai/
-COPY frontend/ui/package.json ./frontend/ui/
+COPY packages/database/package.json ./packages/database/
+COPY packages/ai/package.json ./packages/ai/
+COPY packages/ui/package.json ./packages/ui/
 COPY frontend/web/package.json ./frontend/web/
 COPY packages/shared/package.json ./packages/shared/
 
@@ -22,13 +22,12 @@ RUN npm ci --include-workspace-root --ignore-scripts
 COPY . .
 
 # Generate Prisma client
-RUN cd backend/database && npx prisma generate
+RUN cd packages/database && npx prisma generate
 
 # Build packages
 RUN cd packages/shared && npx tsc
-RUN cd backend/database && npx tsc
-RUN cd frontend/ui && npx tsc
-RUN cd backend/ai && npx tsc
+RUN cd packages/database && npx tsc
+RUN cd packages/ai && npx tsc
 
 # Build web app
 RUN cd frontend/web && npm run build
@@ -58,4 +57,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Use standalone server.js built by Next.js
-CMD ["node", "frontend/web/server.js"]
+CMD ["node", "server.js"]

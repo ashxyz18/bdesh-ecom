@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useDashboard } from "../DashboardContext";
 
 const templates = [
   {
@@ -129,6 +130,7 @@ export default function NewStorePage() {
 function NewStorePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { refreshStores } = useDashboard();
   const preselectedTemplate = searchParams.get("template") || "";
 
   const [step, setStep] = useState<"template" | "details">(preselectedTemplate ? "details" : "template");
@@ -203,16 +205,24 @@ function NewStorePageInner() {
         }),
       });
 
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (e) {
+        // Fallback if response isn't JSON
+      }
 
       if (!res.ok) {
-        setError(data.message || "Failed to create store");
+        setError(data.message || "Failed to create store. The store name or subdomain might already be taken.");
         return;
       }
 
+      // Refresh the store list in the sidebar before navigating
+      await refreshStores();
       router.push("/dashboard");
       router.refresh();
-    } catch {
+    } catch (err) {
+      console.error("Store creation error:", err);
       setError("Network error. Please try again.");
     } finally {
       setLoading(false);

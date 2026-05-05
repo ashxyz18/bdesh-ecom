@@ -35,15 +35,26 @@ export async function POST(req: NextRequest) {
           },
         },
         items: {
-          create: items.map((item: any) => ({
-            productId: item.product.id,
-            quantity: item.quantity,
-            price: item.product.price,
-            name: item.product.name || "",
-            image: typeof item.product.images === "string"
-              ? JSON.parse(item.product.images)[0] || null
-              : (item.product.images?.[0] || null),
-          })),
+          create: items.map((item: any) => {
+            const productId = item.product?.id || item.productId;
+            const quantity = item.quantity;
+            const price = item.product?.price || item.price;
+            const name = item.product?.name || item.name || "";
+            let image = item.image || null;
+            if (!image && item.product?.images) {
+              image = typeof item.product.images === "string"
+                ? JSON.parse(item.product.images)[0] || null
+                : (item.product.images?.[0] || null);
+            }
+            
+            return {
+              productId,
+              quantity,
+              price,
+              name,
+              image,
+            };
+          }),
         },
       },
       include: { payment: true },

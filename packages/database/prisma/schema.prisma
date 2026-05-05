@@ -65,7 +65,11 @@ model Store {
   campaigns     Campaign[]
   coupons       Coupon[]
   analytics     Analytics[]
-  leads         Lead[]
+  leads          Lead[]
+  media          Media[]
+  formSubmissions FormSubmission[]
+  bookings       Booking[]
+  blogPosts      BlogPost[]
   subscriptions  Subscription[]
   paymentGateway PaymentGateway?
 
@@ -347,6 +351,7 @@ model Lead {
   createdAt DateTime @default(now())
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  @@unique([storeId, email])
   @@map("leads")
 }
 
@@ -405,4 +410,71 @@ model PaymentGateway {
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
 
   @@map("payment_gateways")
+}
+model Media {
+  id        String   @id @default(cuid())
+  storeId   String
+  url       String
+  name      String
+  type      String   // IMAGE, VIDEO, DOCUMENT
+  size      Int
+  mimeType  String
+  altText   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("media")
+}
+
+model FormSubmission {
+  id        String   @id @default(cuid())
+  storeId   String
+  formId    String   // Identifier for which form was submitted
+  data      String   @default("{}") // JSON blob of form data
+  status    String   @default("NEW") // NEW, READ, ARCHIVED
+  createdAt DateTime @default(now())
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("form_submissions")
+}
+
+model Booking {
+  id          String   @id @default(cuid())
+  storeId     String
+  customerName  String
+  customerEmail String?
+  customerPhone String?
+  serviceName   String
+  startTime     DateTime
+  endTime       DateTime
+  status        String   @default("PENDING") // PENDING, CONFIRMED, CANCELLED, COMPLETED
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@map("bookings")
+}
+
+model BlogPost {
+  id          String   @id @default(cuid())
+  storeId     String
+  title       String
+  slug        String
+  content     String   // Content can be HTML or JSON blocks
+  excerpt     String?
+  image       String?
+  isPublished Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, slug])
+  @@map("blog_posts")
 }

@@ -10,6 +10,8 @@ import {
   Trash2,
   Upload,
   Image as ImageIcon,
+  Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +45,12 @@ export default function NewProductPage() {
   const [status, setStatus] = useState<"active" | "draft">("active");
   const [featured, setFeatured] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  
+  // AI Image generation
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiStyle, setAiStyle] = useState<"photorealistic" | "artistic" | "minimal" | "luxury" | "playful">("photorealistic");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [showAiGenerator, setShowAiGenerator] = useState(false);
 
   // Variants
   const [variants, setVariants] = useState<VariantRow[]>([]);
@@ -94,6 +102,35 @@ export default function NewProductPage() {
     setVariants((prev) =>
       prev.map((v, i) => (i === index ? { ...v, [field]: value } : v))
     );
+  };
+
+  const handleAiImageGenerate = async () => {
+    if (!aiPrompt.trim() || aiLoading) return;
+    setAiLoading(true);
+    try {
+      const res = await fetch("/api/ai/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          prompt: aiPrompt,
+          productName: name || undefined,
+          storeName: activeStore?.name,
+          style: aiStyle,
+          width: 1024,
+          height: 1024,
+        }),
+      });
+      const data = await res.json();
+      if (data.images && data.images.length > 0) {
+        setImages((prev) => [...prev, ...data.images.map((img: any) => img.url)]);
+        setShowAiGenerator(false);
+        setAiPrompt("");
+      }
+    } catch (error) {
+      console.error("AI image generation failed:", error);
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -216,7 +253,64 @@ export default function NewProductPage() {
 
             {/* Images */}
             <div className="bg-white rounded-xl border p-6 space-y-4">
-              <h2 className="text-lg font-semibold">Product Images</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-lg font-semibold">Product Images</h2>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAiGenerator(!showAiGenerator)}
+                >
+                  <Sparkles size={14} className="mr-1.5" />
+                  {showAiGenerator ? "Hide AI" : "AI Generate"}
+                </Button>
+              </div>
+
+              {showAiGenerator && (
+                <div className="bg-purple-50 rounded-lg p-4 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles size={16} className="text-purple-600" />
+                    <h3 className="text-sm font-semibold text-purple-900">AI Image Generation</h3>
+                  </div>
+                  <div className="flex gap-2">
+                    <Input
+                      value={aiPrompt}
+                      onChange={(e) => setAiPrompt(e.target.value)}
+                      placeholder="Describe the image you want..."
+                      className="flex-1 text-sm"
+                    />
+                    <select
+                      value={aiStyle}
+                      onChange={(e) => setAiStyle(e.target.value as any)}
+                      className="px-3 py-2 rounded-lg border border-purple-200 bg-white text-sm"
+                    >
+                      <option value="photorealistic">Photo-Realistic</option>
+                      <option value="artistic">Artistic</option>
+                      <option value="minimal">Minimal</option>
+                      <option value="luxury">Luxury</option>
+                      <option value="playful">Playful</option>
+                    </select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={handleAiImageGenerate}
+                      disabled={aiLoading || !aiPrompt.trim()}
+                      className="bg-purple-600 hover:bg-purple-700 text-white"
+                    >
+                      {aiLoading ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        "Generate"
+                      )}
+                    </Button>
+                  </div>
+                  {name && (
+                    <p className="text-xs text-purple-600">
+                      Tip: Include "{name}" in your prompt for better results
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {images.map((img, i) => (

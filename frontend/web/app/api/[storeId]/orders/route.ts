@@ -34,7 +34,7 @@ export async function GET(
       items: order.items.map((item: any) => ({
         ...item,
         price: Number(item.price),
-        image: JSON.parse(item.image || '"null"') || null,
+        image: (() => { try { const v = JSON.parse(item.image || 'null'); return v; } catch { return item.image || null; } })(),
       })),
     }));
 

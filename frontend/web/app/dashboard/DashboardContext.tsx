@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -16,6 +16,7 @@ interface StoreData {
   name: string;
   subdomain: string;
   status: string;
+  theme?: string | Record<string, unknown> | null;
 }
 
 interface DashboardContextType {
@@ -24,6 +25,7 @@ interface DashboardContextType {
   activeStore: StoreData | null;
   setActiveStore: (store: StoreData) => void;
   loading: boolean;
+  refreshStores: () => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextType>({
@@ -32,6 +34,7 @@ const DashboardContext = createContext<DashboardContextType>({
   activeStore: null,
   setActiveStore: () => {},
   loading: true,
+  refreshStores: async () => {},
 });
 
 export function useDashboard() {
@@ -44,6 +47,32 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   const [stores, setStores] = useState<StoreData[]>([]);
   const [activeStore, setActiveStore] = useState<StoreData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchStores = useCallback(async (currentUser?: User | null) => {
+    try {
+      const storesRes = await fetch("/api/stores");
+      if (storesRes.ok) {
+        const storesData = await storesRes.json();
+        const storeList: StoreData[] = storesData.stores || [];
+        setStores(storeList);
+        if (storeList.length > 0) {
+          setActiveStore((prev) => {
+            // Keep current active store if it still exists, otherwise use first
+            const stillExists = prev && storeList.find((s) => s.id === prev.id);
+            return stillExists ? prev : storeList[0];
+          });
+        } else {
+          setActiveStore(null);
+        }
+      }
+    } catch {
+      // Ignore fetch errors
+    }
+  }, []);
+
+  const refreshStores = useCallback(async () => {
+    await fetchStores(user);
+  }, [fetchStores, user]);
 
   useEffect(() => {
     async function fetchUser() {
@@ -62,15 +91,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
         }
 
         setUser(data.user);
-
-        const storesRes = await fetch("/api/stores");
-        if (storesRes.ok) {
-          const storesData = await storesRes.json();
-          setStores(storesData.stores || []);
-          if (storesData.stores?.length > 0) {
-            setActiveStore(storesData.stores[0]);
-          }
-        }
+        await fetchStores(data.user);
       } catch {
         router.push("/login");
       } finally {
@@ -78,10 +99,10 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       }
     }
     fetchUser();
-  }, [router]);
+  }, [router, fetchStores]);
 
   return (
-    <DashboardContext.Provider value={{ user, stores, activeStore, setActiveStore, loading }}>
+    <DashboardContext.Provider value={{ user, stores, activeStore, setActiveStore, loading, refreshStores }}>
       {children}
     </DashboardContext.Provider>
   );
