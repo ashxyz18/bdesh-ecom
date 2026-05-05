@@ -9,8 +9,12 @@ ENV NODE_ENV=production
 
 # Copy package files first for better layer caching
 COPY package*.json ./
-COPY packages/*/package.json ./
-COPY apps/*/package.json ./
+COPY packages/database/package.json ./packages/database/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/ui/package.json ./packages/ui/
+COPY packages/ai/package.json ./packages/ai/
+COPY apps/web/package.json ./apps/web/
+COPY apps/mobile/package.json ./apps/mobile/
 
 # Install dependencies
 RUN npm ci --include-workspace-root --ignore-scripts
