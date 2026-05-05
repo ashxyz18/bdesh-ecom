@@ -1,5 +1,5 @@
 services:
-  - type: postgres
+  - type: postgresql
     name: bdesh-ecom-db
     databaseName: bdesh_ecom
     user: admin
@@ -23,7 +23,7 @@ services:
         value: https://bdesh-ecom-web.onrender.com
       - key: DATABASE_URL
         fromService:
-          type: postgres
+          type: postgresql
           name: bdesh-ecom-db
           envVarKey: DATABASE_URL
       - key: OPENAI_API_KEY
