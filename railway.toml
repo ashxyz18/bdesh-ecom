@@ -1,9 +1,8 @@
 [build]
 builder = "dockerfile"
-# cache-bust-2026-05-05-1837
 
 [deploy]
-startCommand = "cd apps/web && npx next start -p $PORT"
+startCommand = "npx next start -p $PORT"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"

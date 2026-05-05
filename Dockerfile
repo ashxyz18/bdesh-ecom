@@ -1,36 +1,61 @@
-FROM node:20-alpine
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
 RUN apk add --no-cache libc6-compat
-WORKDIR /app
 
+WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Copy everything first (so workspace packages are available)
-COPY . .
+# Copy package files first for better layer caching
+COPY package*.json ./
+COPY packages/*/package.json ./
+COPY apps/*/package.json ./
 
-# Install all dependencies (workspace-aware) - cache bust 2026-05-05
+# Install dependencies
 RUN npm ci --include-workspace-root --ignore-scripts
 
-# Install autoprefixer globally for Turbopack
+# Install autoprefixer globally
 RUN npm install -g autoprefixer@10.4.20
+
+# Copy source code
+COPY . .
 
 # Generate Prisma client
 RUN cd packages/database && npx prisma generate
 
-# Build packages first, then web app
+# Build packages
 RUN cd packages/shared && npx tsc
 RUN cd packages/database && npx tsc
 RUN cd packages/ui && npx tsc
 RUN cd packages/ai && npx tsc
+
+# Build web app
 RUN cd apps/web && NEXT_TURBOPACK=0 npm run build
 
-# Setup user
+# Stage 2: Production
+FROM node:20-alpine AS runner
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
+# Copy only necessary files from builder
+COPY --from=builder /app/apps/web/.next apps/web/.next
+COPY --from=builder /app/apps/web/public apps/web/public
+COPY --from=builder /app/apps/web/package.json apps/web/
+COPY --from=builder /app/apps/web/next.config.ts apps/web/ 2>/dev/null || true
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/packages ./packages
+
 WORKDIR /app/apps/web
 
+RUN chown -R nextjs:nodejs /app
 USER nextjs
 
 EXPOSE 3000
