@@ -17,6 +17,7 @@ RUN cd packages/database && npx prisma generate
 
 # Build
 FROM base AS builder
+ENV PATH="/app/node_modules/.bin:${PATH}"
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
 COPY . .
