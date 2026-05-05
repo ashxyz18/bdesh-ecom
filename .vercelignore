@@ -1,8 +1,14 @@
 node_modules
 .git
 .github
-apps/mobile
+frontend/mobile
 .next/cache
+backend/*/node_modules
+backend/*/dist
+backend/*/.turbo
+frontend/*/node_modules
+frontend/*/dist
+frontend/*/.turbo
 packages/*/node_modules
 packages/*/dist
 packages/*/.turbo
@@ -10,3 +16,4 @@ packages/*/.turbo
 .env
 .env.*
 *.log
+*.md

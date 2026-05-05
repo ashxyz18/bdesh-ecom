@@ -1,10 +1,10 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
-  "outputDirectory": "apps/web/.next",
+  "outputDirectory": "frontend/web/.next",
   "framework": null,
   "functions": {
-    "apps/web/app/**": {
+    "frontend/web/app/**": {
       "maxDuration": 60
     }
   },
