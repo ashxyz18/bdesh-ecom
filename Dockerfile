@@ -33,13 +33,8 @@ RUN cd packages/ai && npx tsc
 # Build web app
 RUN cd apps/web && npm run build
 
-# Prune dev dependencies
-RUN npm prune --production
-
-# Stage 2: Production
+# Stage 2: Production (using standalone output)
 FROM node:20-alpine AS runner
-
-RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 ENV NODE_ENV=production
@@ -48,18 +43,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy only necessary files from builder
-COPY --from=builder /app/apps/web/.next apps/web/.next
-COPY --from=builder /app/apps/web/public apps/web/public
-COPY --from=builder /app/apps/web/package.json apps/web/
-COPY --from=builder /app/apps/web/next.config.ts apps/web/
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/packages/database ./packages/database
-COPY --from=builder /app/packages/shared ./packages/shared
-COPY --from=builder /app/package.json ./package.json
+# Copy ONLY standalone output from builder
+# Standalone includes all required runtime files
+COPY --from=builder /app/apps/web/.next/standalone ./
+COPY --from=builder /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=builder /app/apps/web/public ./apps/web/public
 
-WORKDIR /app/apps/web
-
+# Set ownership
 RUN chown -R nextjs:nodejs /app
 USER nextjs
 
@@ -67,4 +57,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-CMD ["npx", "next", "start"]
+# Use standalone server.js built by Next.js
+CMD ["node", "apps/web/server.js"]
