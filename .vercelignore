@@ -1,0 +1,12 @@
+node_modules
+.git
+.github
+apps/mobile
+.next/cache
+packages/*/node_modules
+packages/*/dist
+packages/*/.turbo
+.turbo
+.env
+.env.*
+*.log

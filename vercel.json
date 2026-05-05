@@ -3,5 +3,10 @@
   "buildCommand": "npm run build",
   "outputDirectory": "apps/web/.next",
   "nodeVersion": "20.x",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "framework": null,
+  "ignoreCommand": "npx turbo-ignore",
+  "env": [
+    "NEXT_TELEMETRY_DISABLED=1"
+  ]
 }
