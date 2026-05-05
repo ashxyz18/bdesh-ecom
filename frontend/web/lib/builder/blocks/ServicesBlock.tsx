@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import { BlockComponentProps } from "./types";
 import { EditableText } from "./EditableText";
