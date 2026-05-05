@@ -21,6 +21,7 @@ ENV PATH="/app/node_modules/.bin:${PATH}"
 ENV NEXT_TURBOPACK=0
 COPY --from=prisma /app/node_modules/.prisma ./node_modules/.prisma
 COPY . .
+# Cache bust 2026-05-05
 RUN npm ci --ignore-scripts && rm -rf apps/web/src && ls -la apps/web/ && cat apps/web/app/api/sitemap/route.ts && npx turbo run build --filter=@bdesh/web
 
 # Production
