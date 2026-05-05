@@ -9,7 +9,7 @@ ENV NODE_ENV=production
 # Copy everything first (so workspace packages are available)
 COPY . .
 
-# Install all dependencies (workspace-aware)
+# Install all dependencies (workspace-aware) - cache bust 2026-05-05
 RUN npm ci --include-workspace-root --ignore-scripts
 
 # Generate Prisma client
