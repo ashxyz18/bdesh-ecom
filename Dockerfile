@@ -10,7 +10,7 @@ ENV NODE_ENV=production
 COPY . .
 
 # Install all dependencies (workspace-aware)
-RUN npm install --include-workspace-root --ignore-scripts
+RUN npm ci --include-workspace-root --ignore-scripts
 
 # Generate Prisma client
 RUN cd packages/database && npx prisma generate
