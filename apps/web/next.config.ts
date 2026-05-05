@@ -1,10 +1,15 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
   output: "standalone",
   reactStrictMode: true,
   compress: true,
   transpilePackages: ["@bdesh/database", "@bdesh/shared", "@bdesh/ui"],
+
+  turbopack: {
+    root: path.resolve(__dirname, "../.."),
+  },
 
   images: {
     formats: ["image/avif", "image/webp"],
