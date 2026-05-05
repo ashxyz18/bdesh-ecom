@@ -33,3 +33,5 @@ npm-debug.log*
 
 # Video source files (not needed in repo)
 video/
+
+.vercel
