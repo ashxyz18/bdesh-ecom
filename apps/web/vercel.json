@@ -2,5 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "NEXT_TURBOPACK=0 npm run build",
   "installCommand": "npm install",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "env": {
+    "DATABASE_URL": "postgresql://placeholder:placeholder@localhost:5432/placeholder"
+  }
 }
