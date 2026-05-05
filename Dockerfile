@@ -12,6 +12,9 @@ COPY . .
 # Install all dependencies (workspace-aware) - cache bust 2026-05-05
 RUN npm ci --include-workspace-root --ignore-scripts
 
+# Install autoprefixer globally for Turbopack
+RUN npm install -g autoprefixer@10.4.20
+
 # Generate Prisma client
 RUN cd packages/database && npx prisma generate
 
