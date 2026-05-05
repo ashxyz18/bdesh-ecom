@@ -1,6 +1,6 @@
 services:
   # PostgreSQL database
-  - type: psql
+  - type: postgres
     name: bdesh-ecom-db
     databaseName: bdesh_ecom
     user: admin
