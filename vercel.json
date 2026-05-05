@@ -1,12 +1,15 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "npm install && npm run build",
   "outputDirectory": "apps/web/.next",
   "nodeVersion": "20.x",
-  "installCommand": "npm install",
   "framework": null,
-  "ignoreCommand": "npx turbo-ignore",
-  "env": [
-    "NEXT_TELEMETRY_DISABLED=1"
-  ]
+  "functions": {
+    "apps/web/app/**": {
+      "maxDuration": 60
+    }
+  },
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  }
 }
