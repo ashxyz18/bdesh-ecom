@@ -1,10 +1,4 @@
 services:
-  - type: postgresql
-    name: bdesh-ecom-db
-    databaseName: bdesh_ecom
-    user: admin
-    plan: free
-    
   - type: web
     name: bdesh-ecom-web
     env: docker
@@ -21,14 +15,12 @@ services:
         value: https://bdesh-ecom-web.onrender.com
       - key: NEXT_PUBLIC_BASE_URL
         value: https://bdesh-ecom-web.onrender.com
-      - key: DATABASE_URL
-        fromService:
-          type: postgresql
-          name: bdesh-ecom-db
-          envVarKey: DATABASE_URL
       - key: OPENAI_API_KEY
         sync: false
       - key: NEXTAUTH_SECRET
         sync: false
       - key: NEXTAUTH_URL
         value: https://bdesh-ecom-web.onrender.com
+      # Note: DATABASE_URL should be added manually from your PostgreSQL service
+      - key: DATABASE_URL
+        sync: false
