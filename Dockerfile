@@ -49,7 +49,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 COPY --from=builder /app/apps/web/.next apps/web/.next
 COPY --from=builder /app/apps/web/public apps/web/public
 COPY --from=builder /app/apps/web/package.json apps/web/
-COPY --from=builder /app/apps/web/next.config.ts apps/web/ 2>/dev/null || true
+COPY --from=builder /app/apps/web/next.config.ts apps/web/
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/packages ./packages
 
