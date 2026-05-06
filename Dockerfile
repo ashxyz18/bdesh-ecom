@@ -1,5 +1,5 @@
 # Stage 1: Build
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 RUN apk add --no-cache libc6-compat
 
@@ -22,7 +22,7 @@ RUN npm ci --include-workspace-root --ignore-scripts
 COPY . .
 
 # Generate Prisma client
-RUN cd packages/database && npx prisma generate
+RUN cd packages/database && npm run db:generate
 
 # Build packages
 RUN cd packages/shared && npx tsc
@@ -33,7 +33,7 @@ RUN cd packages/ai && npx tsc
 RUN cd frontend/web && npm run build
 
 # Stage 2: Production (using standalone output)
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 ENV NODE_ENV=production
