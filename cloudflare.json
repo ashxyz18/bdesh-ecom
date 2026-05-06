@@ -1,0 +1,84 @@
+{
+  "name": "bdesh-ecommerce",
+  "type": "nextjs",
+  "description": "BDESH E-commerce platform optimized for Cloudflare Pages",
+  "version": "0.1.0",
+  "deployment": {
+    "platform": "cloudflare-pages",
+    "regions": ["global"],
+    "caching": {
+      "static": {
+        "html": 3600,
+        "css": 31536000,
+        "js": 31536000,
+        "images": 31536000
+      }
+    },
+    "performance": {
+      "mirage": true,
+      "polish": "lossless",
+      "rocket_loader": true,
+      "min_tls_version": "1.2"
+    },
+    "security": {
+      "waf": true,
+      "ddos_protection": true,
+      "bot_management": false,
+      "rate_limiting": true,
+      "rate_limit_rules": [
+        {
+          "path": "/api/*",
+          "requests": 100,
+          "period": 60
+        }
+      ]
+    }
+  },
+  "database": {
+    "recommended": "neon",
+    "alternatives": ["supabase", "railway", "aws-rds"]
+  },
+  "cdn": {
+    "provider": "cloudflare",
+    "cache_rules": [
+      {
+        "path": "/images/*",
+        "ttl": 31536000,
+        "cache_level": "cache_everything"
+      },
+      {
+        "path": "/fonts/*",
+        "ttl": 31536000,
+        "cache_level": "cache_everything"
+      },
+      {
+        "path": "/api/*",
+        "ttl": 0,
+        "cache_level": "bypass"
+      }
+    ]
+  },
+  "environment_variables": {
+    "production": [
+      "NODE_ENV",
+      "NEXT_PUBLIC_APP_URL",
+      "DATABASE_URL",
+      "NEXTAUTH_SECRET",
+      "NEXTAUTH_URL",
+      "OPENAI_API_KEY",
+      "STRIPE_SECRET_KEY"
+    ],
+    "staging": [
+      "NODE_ENV",
+      "NEXT_PUBLIC_APP_URL",
+      "DATABASE_URL",
+      "NEXTAUTH_SECRET",
+      "NEXTAUTH_URL"
+    ]
+  },
+  "build": {
+    "command": "npm run build",
+    "cwd": "./frontend/web",
+    "output_dir": ".next/standalone"
+  }
+}

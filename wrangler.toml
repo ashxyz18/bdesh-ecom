@@ -1,0 +1,42 @@
+# Cloudflare Pages Configuration
+# Deploy Next.js app to Cloudflare Pages
+
+name = "bdesh-ecommerce"
+type = "javascript"
+workers_dev = true
+main = ""
+
+# Cloudflare Pages build configuration
+[build]
+command = "npm run build"
+cwd = "./frontend/web"
+watch_paths = ["./frontend/web/**/*.{js,ts,jsx,tsx}"]
+
+[env.production]
+name = "bdesh-ecommerce-prod"
+routes = [
+  { pattern = "example.com", zone_name = "example.com" }
+]
+
+[env.staging]
+name = "bdesh-ecommerce-staging"
+routes = [
+  { pattern = "staging.example.com", zone_name = "example.com" }
+]
+
+# Environment variables
+[env.production.vars]
+NODE_ENV = "production"
+
+[env.staging.vars]
+NODE_ENV = "staging"
+
+# Compatibility with Node.js
+compatibility_date = "2024-12-19"
+compatibility_flags = ["nodejs_compat"]
+
+# Build output directory
+pages_build_output_dir = ".next/standalone"
+
+# Function directory
+functions_directory = "./functions"

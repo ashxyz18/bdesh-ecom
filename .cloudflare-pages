@@ -1,0 +1,39 @@
+# Cloudflare Pages Configuration
+# See https://developers.cloudflare.com/pages/platform/build-configuration/
+
+# Build configuration
+[build]
+# Build command - runs in the root directory
+command = "npm run build"
+# Directory to deploy from - the output directory should be inside this directory
+cwd = "./frontend/web"
+# Output directory relative to cwd
+destination_dir = ".next/standalone"
+
+# Environment for production deployments
+[env.production]
+vars = { ENVIRONMENT = "production", NODE_ENV = "production" }
+
+# Environment for preview/staging deployments
+[env.preview]
+vars = { ENVIRONMENT = "preview", NODE_ENV = "production" }
+
+# Routes configuration for API endpoints
+[[routes]]
+pattern = "/api/*"
+status = 200
+
+# Static asset routes with caching
+[[routes]]
+pattern = "/static/*"
+status = 200
+
+# Image optimization routes
+[[routes]]
+pattern = "/_next/image*"
+status = 200
+
+# Middleware routes
+[[routes]]
+pattern = "/*"
+status = 200
