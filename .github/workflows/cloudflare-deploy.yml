@@ -50,7 +50,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
-          directory: ./frontend/web/.next
+          directory: ./frontend/web/.vercel/output/static
           branch: ${{ github.ref_name }}
           wranglerVersion: "3"
 

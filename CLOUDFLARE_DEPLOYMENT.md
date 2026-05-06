@@ -54,12 +54,11 @@ account_id = "your_cloudflare_account_id"
 # Install dependencies
 npm install
 
-# Build all packages (monorepo build script)
+# Build all packages using next-on-pages
 npm run build:cloudflare
 
 # Deploy using Wrangler
-npm install -g @cloudflare/wrangler
-wrangler pages deploy frontend/web/.next
+npx wrangler pages deploy frontend/web/.vercel/output/static
 ```
 
 **Option B: Using GitHub Actions (Recommended)**
@@ -151,9 +150,10 @@ Check `wrangler.toml`:
 
 ### 404 Errors on Routes
 
-Next.js routes should work automatically. If not:
-- Check `functions/_middleware.ts`
-- Verify `output: "standalone"` in `next.config.ts`
+Next.js routes on Cloudflare Pages require `@cloudflare/next-on-pages`. If routes are failing:
+- Ensure you built the app with `npm run build:cloudflare` (which runs `npx @cloudflare/next-on-pages`).
+- Verify you deployed the `.vercel/output/static` directory, not `.next/standalone`.
+- Note: Next.js edge runtime features are fully supported, but Node.js APIs (like `fs` or `child_process`) are not supported on Cloudflare Workers/Pages.
 
 ### Environment Variables Not Loading
 

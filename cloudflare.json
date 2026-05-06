@@ -79,6 +79,6 @@
   "build": {
     "command": "npm run build",
     "cwd": "./frontend/web",
-    "output_dir": ".next/standalone"
+    "output_dir": ".vercel/output/static"
   }
 }
