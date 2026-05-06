@@ -25,7 +25,9 @@ services:
       - key: NEXTAUTH_URL
         value: https://bdesh-ecom-web.onrender.com
       - key: DATABASE_URL
-        value: postgresql://postgres:ashxyz187@localhost:5433/bdesh_ecom
+        fromDatabase:
+          name: bdesh-ecom-db
+          property: connectionString
 
 databases:
   - name: bdesh-ecom-db
