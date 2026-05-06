@@ -1,13 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "name": "bdesh-ecom",
+  "buildCommand": "cd frontend/web && npm run build",
   "outputDirectory": "frontend/web/.next",
-  "framework": null,
-  "functions": {
-    "frontend/web/app/**": {
-      "maxDuration": 60
-    }
-  },
+  "framework": "nextjs",
+  "installCommand": "cd frontend/web && npm install",
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1"
   }
