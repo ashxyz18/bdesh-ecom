@@ -28,11 +28,6 @@ services:
         fromDatabase:
           name: bdesh-ecom-db
           property: connectionString
-      - key: REDIS_URL
-        fromService:
-          type: redis
-          name: bdesh-ecom-redis
-          property: connectionString
 
 databases:
   - name: bdesh-ecom-db
