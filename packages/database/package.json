@@ -7,17 +7,17 @@
     "prebuild": "prisma generate",
     "build": "tsc",
     "postinstall": "prisma generate",
-    "db:generate": "prisma generate",
+    "db:generate": "npx prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@prisma/client": "^6.2.1"
+    "@prisma/client": "^6.2.1",
+    "prisma": "^6.2.1"
   },
   "devDependencies": {
-    "prisma": "^6.2.1",
     "typescript": "^5.7.3"
   }
 }

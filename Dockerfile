@@ -22,7 +22,7 @@ RUN npm ci --include-workspace-root --ignore-scripts
 COPY . .
 
 # Generate Prisma client
-RUN cd packages/database && npm run db:generate
+RUN cd packages/database && npx prisma generate
 
 # Build packages
 RUN cd packages/shared && npx tsc
