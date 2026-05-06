@@ -20,7 +20,7 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
-      - key: NEXTAUTH_SECRET
+      - key: NEXTAUTH_SECRET 3805138e506e790c6bc3747e4b7bdf7caf7d5743304afffd6996ca807dafba88
         sync: false
       - key: NEXTAUTH_URL
         value: https://bdesh-ecom-web.onrender.com

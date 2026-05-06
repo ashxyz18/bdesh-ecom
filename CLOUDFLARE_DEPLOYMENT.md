@@ -54,11 +54,12 @@ account_id = "your_cloudflare_account_id"
 # Install dependencies
 npm install
 
-# Build all packages using next-on-pages
+# Build all packages using OpenNext
 npm run build:cloudflare
 
-# Deploy using Wrangler
-npx wrangler pages deploy frontend/web/.vercel/output/static
+# Deploy using OpenNext
+cd frontend/web
+npx @opennextjs/cloudflare deploy
 ```
 
 **Option B: Using GitHub Actions (Recommended)**
@@ -150,10 +151,10 @@ Check `wrangler.toml`:
 
 ### 404 Errors on Routes
 
-Next.js routes on Cloudflare Pages require `@cloudflare/next-on-pages`. If routes are failing:
-- Ensure you built the app with `npm run build:cloudflare` (which runs `npx @cloudflare/next-on-pages`).
-- Verify you deployed the `.vercel/output/static` directory, not `.next/standalone`.
-- Note: Next.js edge runtime features are fully supported, but Node.js APIs (like `fs` or `child_process`) are not supported on Cloudflare Workers/Pages.
+Next.js routes on Cloudflare require `@opennextjs/cloudflare`. If routes are failing:
+- Ensure you built the app with `npm run build:cloudflare` (which runs `npx @opennextjs/cloudflare`).
+- Verify you deployed using `npx @opennextjs/cloudflare deploy`.
+- Note: OpenNext handles Next.js routing internally for Cloudflare Workers.
 
 ### Environment Variables Not Loading
 

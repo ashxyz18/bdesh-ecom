@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "build:cloudflare": "turbo run build --filter=!@bdesh/web && cd frontend/web && npx @cloudflare/next-on-pages",
+    "build:cloudflare": "turbo run build --filter=!@bdesh/web && cd frontend/web && npx @opennextjs/cloudflare",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "start": "cd frontend/web && npx next start -p $PORT",
