@@ -34,10 +34,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
+      - name: Generate database client
+        run: npm run db:generate
+        continue-on-error: true
+
+      - name: Build project dependencies
         run: npm run build
         env:
           NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
@@ -45,7 +50,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
-          directory: ./frontend/web/.next/standalone
+          directory: ./frontend/web/.next
           branch: ${{ github.ref_name }}
           wranglerVersion: "3"
 

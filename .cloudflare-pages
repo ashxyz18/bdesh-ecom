@@ -1,39 +1,52 @@
-# Cloudflare Pages Configuration
-# See https://developers.cloudflare.com/pages/platform/build-configuration/
+# Cloudflare Pages Build Configuration for Next.js
+# This configuration is read by Cloudflare Pages during build and deployment
 
-# Build configuration
 [build]
-# Build command - runs in the root directory
+# Build command executed by Cloudflare Pages
 command = "npm run build"
-# Directory to deploy from - the output directory should be inside this directory
+# Working directory for the build command
 cwd = "./frontend/web"
-# Output directory relative to cwd
-destination_dir = ".next/standalone"
+# Static assets output directory
+publish_dir = ".next"
 
-# Environment for production deployments
+# Environment variables for production
 [env.production]
-vars = { ENVIRONMENT = "production", NODE_ENV = "production" }
+vars = { NODE_ENV = "production", ENVIRONMENT = "production", NEXT_TELEMETRY_DISABLED = "1" }
 
-# Environment for preview/staging deployments
+# Environment variables for preview/staging
 [env.preview]
-vars = { ENVIRONMENT = "preview", NODE_ENV = "production" }
+vars = { NODE_ENV = "production", ENVIRONMENT = "preview", NEXT_TELEMETRY_DISABLED = "1" }
 
-# Routes configuration for API endpoints
+# Caching rules for static assets
+[[routes]]
+pattern = "*.{jpg,jpeg,png,gif,ico,svg,webp,avif,woff,woff2,ttf,eot}"
+status = 200
+cache_on_cookie = ""
+cache_default_ttl = 31536000
+cache_key_query_string_whitelist = ""
+cache_key_query_string_ignore = "*"
+cache_key_extra_on_cookie = ""
+cache_key_extra_on_host = true
+cache_key_extra_on_proto = true
+cache_key_extra_on_query_string = ""
+
+# JavaScript and CSS files
+[[routes]]
+pattern = "*.{js,css}"
+status = 200
+cache_on_cookie = ""
+cache_default_ttl = 31536000
+cache_key_query_string_whitelist = ""
+cache_key_query_string_ignore = "*"
+cache_key_extra_on_cookie = ""
+cache_key_extra_on_host = true
+cache_key_extra_on_proto = true
+cache_key_extra_on_query_string = ""
+
+# API routes - no caching
 [[routes]]
 pattern = "/api/*"
 status = 200
-
-# Static asset routes with caching
-[[routes]]
-pattern = "/static/*"
-status = 200
-
-# Image optimization routes
-[[routes]]
-pattern = "/_next/image*"
-status = 200
-
-# Middleware routes
-[[routes]]
-pattern = "/*"
-status = 200
+cache_on_cookie = ""
+cache_default_ttl = 0
+cache_key_query_string_whitelist = "*"
