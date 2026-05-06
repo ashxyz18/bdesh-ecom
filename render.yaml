@@ -20,16 +20,14 @@ services:
         sync: false
       - key: OPENROUTER_API_KEY
         sync: false
-      - key: NEXTAUTH_SECRET 3805138e506e790c6bc3747e4b7bdf7caf7d5743304afffd6996ca807dafba88
-        sync: false
+      - key: NEXTAUTH_SECRET
+        value: 3805138e506e790c6bc3747e4b7bdf7caf7d5743304afffd6996ca807dafba88
       - key: NEXTAUTH_URL
         value: https://bdesh-ecom-web.onrender.com
-      # Add DATABASE_URL from Render's PostgreSQL service
       - key: DATABASE_URL
         fromDatabase:
           name: bdesh-ecom-db
           property: connectionString
-      # Add REDIS_URL if using Redis
       - key: REDIS_URL
         fromService:
           type: redis
@@ -40,10 +38,3 @@ databases:
   - name: bdesh-ecom-db
     databaseName: bdesh_ecom
     plan: free
-      - key: NEXTAUTH_SECRET 3805138e506e790c6bc3747e4b7bdf7caf7d5743304afffd6996ca807dafba88
-        sync: false
-      - key: NEXTAUTH_URL
-        value: https://bdesh-ecom-web.onrender.com
-      # Note: DATABASE_URL should be added manually from your PostgreSQL service
-      - key: DATABASE_URL DATABASE_URL=postgresql://postgres:ashxyz187@localhost:5433/bdesh_ecom
-        sync: false
