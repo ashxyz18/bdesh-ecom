@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/auth";
 import { validateTemplateConfig } from "@/lib/store-templates/engine/types";
+import { WebsiteType } from "@prisma/client";
 
 // GET /api/templates — List templates (public for all, all for admin)
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const category = searchParams.get("category");
+    const websiteType = searchParams.get("websiteType");
     const checkSlug = searchParams.get("check");
     const includeConfig = searchParams.get("includeConfig") === "true";
 
@@ -23,6 +25,9 @@ export async function GET(req: NextRequest) {
     const where: any = { isPublic: true };
     if (category) {
       where.category = category;
+    }
+    if (websiteType) {
+      where.websiteType = websiteType.toUpperCase();
     }
 
     // Admin sees all templates (including private/draft)
@@ -44,6 +49,7 @@ export async function GET(req: NextRequest) {
         description: true,
         thumbnail: true,
         category: true,
+        websiteType: true,
         isPremium: true,
         isPublic: true,
         isBuiltIn: true,
@@ -84,7 +90,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, slug, description, thumbnail, config, category, isPremium, isPublic } = body;
+    const { name, slug, description, thumbnail, config, category, websiteType, isPremium, isPublic } = body;
 
     // Validate required fields
     if (!name || !slug || !config) {
@@ -143,6 +149,7 @@ export async function POST(req: NextRequest) {
         thumbnail: thumbnail || null,
         config: typeof configObj === "string" ? configObj : JSON.stringify(configObj),
         category: category || "general",
+        websiteType: (websiteType?.toUpperCase() as WebsiteType) || WebsiteType.ECOMMERCE,
         isPremium: isPremium || false,
         isPublic: isPublic !== false,
         isBuiltIn: false,

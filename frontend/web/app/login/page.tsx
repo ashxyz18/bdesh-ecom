@@ -76,10 +76,24 @@ function LoginForm() {
       return;
     }
     setForgotLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.message || "Failed to send reset email");
+      }
+
       setForgotSent(true);
+    } catch (err: any) {
+      setError(err.message || "Failed to send reset email. Please try again.");
+    } finally {
       setForgotLoading(false);
-    }, 1000);
+    }
   };
 
   return (

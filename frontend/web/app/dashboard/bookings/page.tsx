@@ -1,168 +1,197 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { 
-  Calendar, Clock, User, Phone, Mail, 
-  CheckCircle2, XCircle, Clock4, Filter, Search 
-} from "lucide-react";
+import { Suspense } from "react";
+import { getSession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { useDashboard } from "../DashboardContext";
+import { Loader2, Calendar, Clock, CheckCircle, XCircle } from "lucide-react";
 
-interface Booking {
-  id: string;
-  customerName: string;
-  customerEmail: string | null;
-  customerPhone: string | null;
-  serviceName: string;
-  startTime: string;
-  status: string;
-  notes: string | null;
+function getStatusColor(status: string) {
+  switch (status) {
+    case "CONFIRMED": return "text-green-600 bg-green-50";
+    case "COMPLETED": return "text-blue-600 bg-blue-50";
+    case "CANCELLED": return "text-red-600 bg-red-50";
+    case "PENDING": return "text-yellow-600 bg-yellow-50";
+    default: return "text-gray-600 bg-gray-50";
+  }
 }
 
-export default function BookingsPage() {
-  const { activeStore } = useDashboard();
-  const storeId = activeStore?.id;
-  const [bookings, setBookings] = useState<Booking[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("all");
-
-  useEffect(() => {
-    async function fetchBookings() {
-      if (!storeId) {
-        setLoading(false);
-        return;
-      }
-      try {
-        const res = await fetch(`/api/${storeId}/bookings`);
-        if (res.ok) {
-          const data = await res.json();
-          setBookings(data.bookings || []);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchBookings();
-  }, [storeId]);
-
-  const handleStatusUpdate = async (id: string, status: string) => {
-    try {
-      const res = await fetch(`/api/${storeId}/bookings/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-      if (res.ok) {
-        setBookings(bookings.map(b => b.id === id ? { ...b, status } : b));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const filteredBookings = bookings.filter(b => 
-    filter === "all" || b.status.toLowerCase() === filter.toLowerCase()
-  );
-
-  if (!storeId) {
+export default async function BookingManagementPage({
+  searchParams,
+}: {
+  searchParams: { storeId?: string; status?: string };
+}) {
+  const session = await getSession();
+  
+  if (!session || (session.user.role !== "ADMIN" && session.user.role !== "MERCHANT")) {
     return (
-      <div className="text-center py-24">
-        <Calendar className="mx-auto text-slate-300 mb-4" size={48} />
-        <h2 className="text-xl font-bold">No Store Selected</h2>
-        <p className="text-slate-500">Select a store to view bookings.</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Access Denied</h2>
+          <p className="text-gray-600">You need merchant or admin privileges.</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bookings</h1>
-          <p className="text-slate-500 text-sm mt-1">Manage your service appointments</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {["all", "pending", "confirmed", "completed", "cancelled"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium capitalize transition-all ${
-                filter === s ? "bg-slate-900 text-white" : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
-              }`}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      </div>
+  const storeId = searchParams.storeId;
+  const statusFilter = searchParams.status;
 
-      <div className="grid gap-4">
-        {loading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white p-6 rounded-3xl border border-slate-200 animate-pulse h-32" />
-          ))
-        ) : filteredBookings.length === 0 ? (
-          <div className="bg-white py-20 rounded-3xl border border-slate-200 text-center">
-            <Calendar className="mx-auto text-slate-200 mb-4" size={48} />
-            <p className="text-slate-500">No bookings found for this filter.</p>
+  // Build where clause
+  const where: any = {};
+  if (statusFilter && statusFilter !== "all") {
+    where.status = statusFilter;
+  }
+
+  // For merchants, only show their store's bookings
+  if (session.user.role === "MERCHANT") {
+    const store = await prisma.store.findFirst({
+      where: { ownerId: session.user.id, deletedAt: null },
+      select: { id: true },
+    });
+    if (store) where.storeId = store.id;
+  } else if (storeId) {
+    where.storeId = storeId;
+  }
+
+  const [bookings, stores] = await Promise.all([
+    prisma.booking.findMany({
+      where,
+      orderBy: { startTime: "asc" },
+      include: {
+        store: { select: { id: true, name: true } },
+      },
+    }),
+    session.user.role === "ADMIN" 
+      ? prisma.store.findMany({ where: { deletedAt: null }, select: { id: true, name: true } })
+      : [],
+  ]);
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Booking Management</h1>
+          <Link href="/dashboard">
+            <Button variant="outline">Back to Dashboard</Button>
+          </Link>
+        </div>
+
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <div className="flex gap-4 flex-wrap">
+            <Link href="/dashboard/bookings">
+              <Button variant={!statusFilter ? "default" : "outline"} size="sm">
+                All
+              </Button>
+            </Link>
+            <Link href="/dashboard/bookings?status=PENDING">
+              <Button variant={statusFilter === "PENDING" ? "default" : "outline"} size="sm">
+                Pending
+              </Button>
+            </Link>
+            <Link href="/dashboard/bookings?status=CONFIRMED">
+              <Button variant={statusFilter === "CONFIRMED" ? "default" : "outline"} size="sm">
+                Confirmed
+              </Button>
+            </Link>
+            <Link href="/dashboard/bookings?status=COMPLETED">
+              <Button variant={statusFilter === "COMPLETED" ? "default" : "outline"} size="sm">
+                Completed
+              </Button>
+            </Link>
+            <Link href="/dashboard/bookings?status=CANCELLED">
+              <Button variant={statusFilter === "CANCELLED" ? "default" : "outline"} size="sm">
+                Cancelled
+              </Button>
+            </Link>
+          </div>
+
+          {session.user.role === "ADMIN" && stores.length > 0 && (
+            <div className="mt-4">
+              <label className="text-sm font-medium text-gray-600">Filter by Store</label>
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {stores.map((store) => (
+                  <Link key={store.id} href={`/dashboard/bookings?storeId=${store.id}`}>
+                    <Button variant={storeId === store.id ? "default" : "outline"} size="sm">
+                      {store.name}
+                    </Button>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Bookings List */}
+        {bookings.length === 0 ? (
+          <div className="bg-white rounded-lg shadow p-8 text-center">
+            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold mb-2">No bookings found</h3>
+            <p className="text-gray-600">No bookings match your current filters.</p>
           </div>
         ) : (
-          filteredBookings.map((booking) => (
-            <div key={booking.id} className="bg-white p-6 rounded-3xl border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:shadow-md transition-shadow">
-              <div className="flex gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                  booking.status === "PENDING" ? "bg-amber-100 text-amber-600" :
-                  booking.status === "CONFIRMED" ? "bg-emerald-100 text-emerald-600" :
-                  booking.status === "COMPLETED" ? "bg-blue-100 text-blue-600" :
-                  "bg-slate-100 text-slate-500"
-                }`}>
-                  <Clock4 size={24} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-slate-900">{booking.serviceName}</h3>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-sm text-slate-500">
-                    <span className="flex items-center gap-1.5"><User size={14} /> {booking.customerName}</span>
-                    <span className="flex items-center gap-1.5"><Calendar size={14} /> {new Date(booking.startTime).toLocaleDateString()}</span>
-                    <span className="flex items-center gap-1.5"><Clock size={14} /> {new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          <div className="space-y-4">
+            {bookings.map((booking) => (
+              <div key={booking.id} className="bg-white rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold text-lg">{booking.serviceName}</h3>
+                    <p className="text-sm text-gray-600">
+                      {booking.customerName} • {booking.customerEmail || booking.customerPhone}
+                    </p>
+                    {session.user.role === "ADMIN" && (
+                      <p className="text-xs text-gray-500 mt-1">{booking.store.name}</p>
+                    )}
                   </div>
-                  {(booking.customerPhone || booking.customerEmail) && (
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1 text-xs text-slate-400">
-                      {booking.customerPhone && <span className="flex items-center gap-1.5"><Phone size={12} /> {booking.customerPhone}</span>}
-                      {booking.customerEmail && <span className="flex items-center gap-1.5"><Mail size={12} /> {booking.customerEmail}</span>}
-                    </div>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                    {booking.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm">
+                      {new Date(booking.startTime).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-400" />
+                    <span className="text-sm">
+                      {new Date(booking.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
+                      {new Date(booking.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+
+                {booking.notes && (
+                  <p className="text-sm text-gray-600 mb-4">{booking.notes}</p>
+                )}
+
+                <div className="flex gap-2">
+                  {booking.status === "PENDING" && (
+                    <>
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-600">
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Confirm
+                      </Button>
+                      <Button size="sm" variant="outline" className="text-red-600 border-red-600">
+                        <XCircle className="w-4 h-4 mr-1" />
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                  {booking.status === "CONFIRMED" && (
+                    <Button size="sm" variant="outline" className="text-blue-600 border-blue-600">
+                      <CheckCircle className="w-4 h-4 mr-1" />
+                      Mark Complete
+                    </Button>
                   )}
                 </div>
               </div>
-
-              <div className="flex items-center gap-3">
-                {booking.status === "PENDING" && (
-                  <>
-                    <Button variant="ghost" onClick={() => handleStatusUpdate(booking.id, "CANCELLED")} className="text-red-600 hover:bg-red-50 rounded-xl">
-                      <XCircle className="mr-2" size={16} /> Cancel
-                    </Button>
-                    <Button onClick={() => handleStatusUpdate(booking.id, "CONFIRMED")} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl">
-                      <CheckCircle2 className="mr-2" size={16} /> Confirm
-                    </Button>
-                  </>
-                )}
-                {booking.status === "CONFIRMED" && (
-                  <Button onClick={() => handleStatusUpdate(booking.id, "COMPLETED")} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
-                    Mark Completed
-                  </Button>
-                )}
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  booking.status === "PENDING" ? "bg-amber-100 text-amber-600" :
-                  booking.status === "CONFIRMED" ? "bg-emerald-100 text-emerald-600" :
-                  booking.status === "COMPLETED" ? "bg-blue-100 text-blue-600" :
-                  "bg-slate-100 text-slate-500"
-                }`}>
-                  {booking.status}
-                </span>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>

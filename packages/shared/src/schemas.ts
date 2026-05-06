@@ -12,6 +12,17 @@ export const registerSchema = z.object({
   password: z.string().min(6, "At least 6 characters"),
 });
 
+export const siteCreateSchema = z.object({
+  name: z.string().min(2, "Site name required").max(100),
+  subdomain: z
+    .string()
+    .min(3)
+    .max(30)
+    .regex(/^[a-z0-9-]+$/, "Only lowercase letters, numbers, and hyphens"),
+  description: z.string().optional(),
+  websiteType: z.enum(["ECOMMERCE", "PORTFOLIO", "BLOG", "CORPORATE", "RESTAURANT", "EDUCATION", "LANDING", "NONPROFIT", "REAL_ESTATE"]).default("ECOMMERCE"),
+});
+
 export const storeCreateSchema = z.object({
   name: z.string().min(2, "Store name required").max(100),
   subdomain: z
@@ -63,13 +74,15 @@ export const pageSchema = z.object({
   title: z.string().min(1),
   slug: z.string().min(1),
   content: z.any().optional(),
-  isHome: z.boolean().default(false),
+  pageType: z.string().default("custom"),
+  isPublished: z.boolean().default(false),
   seoTitle: z.string().optional(),
   seoDesc: z.string().optional(),
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;
+export type SiteCreateInput = z.infer<typeof siteCreateSchema>;
 export type StoreCreateInput = z.infer<typeof storeCreateSchema>;
 export type ProductInput = z.infer<typeof productSchema>;
 export type OrderCreateInput = z.infer<typeof orderCreateSchema>;

@@ -1,14 +1,16 @@
-import type { MetadataRoute } from "next";
+import { MetadataRoute } from "next";
 
-export default function robots(): MetadataRoute.Robots {
+export const dynamic = "force-static";
+
+export default async function robots(): Promise<MetadataRoute.Robots> {
   return {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
-        disallow: ["/dashboard/", "/api/", "/preview/", "/admin/"],
+        allow: ["/"],
+        disallow: ["/api/", "/dashboard/", "/admin/", "/login", "/register"],
       },
     ],
-    sitemap: `${process.env.NEXT_PUBLIC_APP_URL}/sitemap.xml`,
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL || "https://bdesh.shop"}/sitemap.xml`,
   };
 }

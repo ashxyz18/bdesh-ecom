@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -94,4 +95,8 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+const plugins = [
+  process.env.ANALYZE === "true" ? withBundleAnalyzer : (config: any) => config,
+];
+
+export default plugins.reduce((config, plugin) => plugin(config), nextConfig);

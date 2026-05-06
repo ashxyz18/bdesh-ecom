@@ -7,6 +7,7 @@ import Link from "next/link";
 
 interface GeneratedDesign {
   analysis: {
+    websiteType?: string;
     detectedColors: { primary: string; secondary: string; accent: string; background: string; text: string; palette: string[] };
     detectedStyle: { vibe: string; typography: string[]; layout: string; mood: string[] };
     detectedIndustry: string;
@@ -19,10 +20,23 @@ interface GeneratedDesign {
   marketingTips: string[];
 }
 
+const WEBSITE_TYPES = [
+  { value: "ecommerce", label: "E-Commerce Store", icon: "🛒" },
+  { value: "portfolio", label: "Portfolio", icon: "🎨" },
+  { value: "corporate", label: "Corporate", icon: "🏢" },
+  { value: "blog", label: "Blog", icon: "📝" },
+  { value: "restaurant", label: "Restaurant", icon: "🍽️" },
+  { value: "education", label: "Education", icon: "🎓" },
+  { value: "landing", label: "Landing Page", icon: "🚀" },
+  { value: "realestate", label: "Real Estate", icon: "🏠" },
+  { value: "nonprofit", label: "Non-Profit", icon: "❤️" },
+];
+
 export function AIWebsiteBuilder() {
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [businessName, setBusinessName] = useState("");
+  const [websiteType, setWebsiteType] = useState("ecommerce");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GeneratedDesign | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -61,7 +75,7 @@ export function AIWebsiteBuilder() {
     setResult(null);
 
     try {
-      const body: Record<string, string> = {};
+      const body: Record<string, string> = { websiteType };
       if (imageFile && image.startsWith("data:")) {
         body.imageBase64 = image.split(",")[1];
       } else {
@@ -86,6 +100,7 @@ export function AIWebsiteBuilder() {
       setError(err.message || "Failed to generate. Using fallback analysis.");
       setResult({
         analysis: {
+          websiteType,
           detectedColors: { primary: "#006A4E", secondary: "#F42A41", accent: "#059669", background: "#ffffff", text: "#111827", palette: ["#006A4E", "#F42A41", "#059669", "#ffffff"] },
           detectedStyle: { vibe: "modern", typography: ["Inter", "Noto Sans"], layout: "centered", mood: ["professional", "clean"] },
           detectedIndustry: "general",
@@ -95,7 +110,9 @@ export function AIWebsiteBuilder() {
         },
         templateConfig: {},
         previewColors: ["#006A4E", "#F42A41", "#059669", "#ffffff"],
-        marketingTips: ["Set up bKash and Nagad payments", "Add high-quality product photos"],
+        marketingTips: websiteType === "ecommerce" 
+          ? ["Set up bKash and Nagad payments", "Add high-quality product photos"]
+          : ["Promote your site on social media", "Add engaging content tailored to your audience"],
       });
     } finally {
       setLoading(false);
@@ -122,7 +139,7 @@ export function AIWebsiteBuilder() {
               Upload a Photo — Get a Complete Website
             </h2>
             <p className="text-white/50 max-w-xl mx-auto">
-              Upload any image (logo, product photo, mood board) and our AI will analyze colors, style, and industry to build a complete store for you.
+              Upload any image (logo, product photo, mood board) and our AI will analyze colors, style, and industry to build a complete {websiteType} site for you.
             </p>
           </div>
 
@@ -179,13 +196,32 @@ export function AIWebsiteBuilder() {
           </div>
 
           <div className="mt-6 max-w-md mx-auto space-y-4">
-            <input
-              type="text"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              placeholder="Your business name (optional)"
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-sm focus:ring-2 focus:ring-[#008060] focus:border-transparent outline-none"
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Website Type</label>
+                <select
+                  value={websiteType}
+                  onChange={(e) => setWebsiteType(e.target.value)}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:ring-2 focus:ring-[#008060] focus:border-transparent outline-none"
+                >
+                  {WEBSITE_TYPES.map((type) => (
+                    <option key={type.value} value={type.value} className="bg-gray-900">
+                      {type.icon} {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-white/70 mb-1.5">Business Name (Optional)</label>
+                <input
+                  type="text"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="Your business name"
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-sm focus:ring-2 focus:ring-[#008060] focus:border-transparent outline-none"
+                />
+              </div>
+            </div>
 
             {error && (
               <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
@@ -212,7 +248,7 @@ export function AIWebsiteBuilder() {
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Check size={20} className="text-emerald-400" /> Your AI-Generated Design
+              <Check size={20} className="text-emerald-400" /> Your AI-Generated {result.analysis.websiteType || "E-Commerce"} Design
             </h3>
             <button onClick={handleReset} className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white">
               <RefreshCw size={14} /> Try Again
@@ -240,6 +276,10 @@ export function AIWebsiteBuilder() {
           {/* Design Analysis */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+              <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold mb-2">Website Type</p>
+              <p className="text-lg font-bold text-white capitalize">{result.analysis.websiteType || "ecommerce"}</p>
+            </div>
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
               <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold mb-2">Industry</p>
               <p className="text-lg font-bold text-white capitalize">{result.analysis.detectedIndustry}</p>
             </div>
@@ -250,10 +290,6 @@ export function AIWebsiteBuilder() {
             <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
               <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold mb-2">Typography</p>
               <p className="text-lg font-bold text-white">{result.analysis.detectedStyle.typography[0]}</p>
-            </div>
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
-              <p className="text-[10px] uppercase tracking-wider text-purple-400 font-semibold mb-2">Layout</p>
-              <p className="text-lg font-bold text-white capitalize">{result.analysis.detectedStyle.layout}</p>
             </div>
           </div>
 
@@ -283,7 +319,7 @@ export function AIWebsiteBuilder() {
           {/* Preview & Register */}
           <div className="flex gap-3">
             <Link
-              href={`/preview/${result.analysis.suggestedTemplateId}`}
+              href={`/preview/${result.analysis.suggestedTemplateId}?websiteType=${result.analysis.websiteType || 'ecommerce'}`}
               target="_blank"
               className="flex-1"
             >
@@ -292,11 +328,11 @@ export function AIWebsiteBuilder() {
               </Button>
             </Link>
             <Link
-              href={`/register?template=${result.analysis.suggestedTemplateId}`}
+              href={`/register?template=${result.analysis.suggestedTemplateId}&websiteType=${result.analysis.websiteType || 'ecommerce'}`}
               className="flex-1"
             >
               <Button className="w-full justify-center bg-gradient-to-r from-[#008060] to-[#006A4E] hover:from-[#006A4E] hover:to-[#004c3f] text-white">
-                Create Store <ArrowRight size={16} className="ml-1.5" />
+                Create Site <ArrowRight size={16} className="ml-1.5" />
               </Button>
             </Link>
           </div>

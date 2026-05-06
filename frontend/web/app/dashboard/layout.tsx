@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -21,7 +21,6 @@ import {
   Palette,
   Search,
   Bell,
-  User,
   ChevronRight,
   Keyboard,
   Paintbrush,
@@ -35,6 +34,9 @@ import {
   CreditCard,
   MonitorSmartphone,
   Box,
+  MapPin,
+  Truck,
+  ClipboardCheck,
 } from "lucide-react";
 import { DashboardProvider, useDashboard } from "./DashboardContext";
 
@@ -48,11 +50,16 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/");
     router.refresh();
+  };
+
+  const toggleSection = (label: string) => {
+    setCollapsedSections((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
   // Count pending orders across stores
@@ -61,43 +68,59 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const navSections = activeStore
     ? [
         {
-          label: "Main",
+          label: "Overview",
           items: [
-            { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
+            { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
           ],
         },
         {
-          label: "Store",
+          label: "Store Management",
           items: [
             { href: "/dashboard/products", icon: Package, label: "Products" },
             { href: "/dashboard/inventory", icon: Box, label: "Inventory" },
             { href: "/dashboard/bookings", icon: Calendar, label: "Bookings" },
-            { href: "/dashboard/orders", icon: ShoppingCart, label: "Orders", badge: pendingOrderCount || undefined },
-            { href: "/dashboard/builder", icon: MonitorSmartphone, label: "Visual Builder" },
-            { href: "/dashboard/ai-builder", icon: Wand2, label: "AI Builder" },
-            { href: "/dashboard/customize", icon: Paintbrush, label: "Customize Store" },
-            { href: "/dashboard/templates", icon: Palette, label: "Templates" },
-            { href: "/dashboard/settings", icon: Settings, label: "Settings" },
-            { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
           ],
         },
         {
-          label: "Marketing",
+          label: "Orders & Fulfillment",
           items: [
+            { href: "/dashboard/orders", icon: ShoppingCart, label: "Orders", badge: pendingOrderCount || undefined },
+            { href: "/dashboard/tracking", icon: MapPin, label: "Tracking" },
+            { href: "/dashboard/delivery", icon: Truck, label: "Delivery Partners" },
+          ],
+        },
+        {
+          label: "Website Builder",
+          items: [
+            { href: "/dashboard/ai-builder", icon: Wand2, label: "AI Builder" },
+            { href: "/dashboard/builder", icon: MonitorSmartphone, label: "Visual Builder" },
+            { href: "/dashboard/customize", icon: Paintbrush, label: "Customize" },
+            { href: "/dashboard/templates", icon: Palette, label: "Templates" },
+          ],
+        },
+        {
+          label: "Marketing & Growth",
+          items: [
+            { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
             { href: "/dashboard/marketing", icon: Megaphone, label: "Marketing" },
             { href: "/dashboard/marketing/seo", icon: Globe, label: "SEO" },
             { href: "/dashboard/marketing/campaigns", icon: Mail, label: "Campaigns" },
-            { href: "/dashboard/marketing/social", icon: Share2, label: "Social" },
             { href: "/dashboard/marketing/discounts", icon: Tag, label: "Discounts" },
-            { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
+          ],
+        },
+        {
+          label: "Settings",
+          items: [
+            { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+            { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
           ],
         },
       ]
     : [
         {
-          label: "Main",
+          label: "Overview",
           items: [
-            { href: "/dashboard", icon: LayoutDashboard, label: "Overview" },
+            { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
           ],
         },
       ];
@@ -115,13 +138,6 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   if (!user) return null;
 
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
-  };
-
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Mobile sidebar overlay */}
@@ -135,7 +151,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         aria-label="Main navigation"
         className={`fixed inset-y-0 left-0 z-50 bg-slate-900 transform transition-all duration-300 lg:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } ${sidebarCollapsed ? "w-20" : "w-64"}`}
+        } ${sidebarCollapsed ? "w-[68px]" : "w-64"}`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -175,7 +191,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                     sidebarCollapsed ? "p-2.5 justify-center" : "px-3 py-2.5"
                   }`}
                 >
-                  <div className={`flex items-center gap-2.5 min-w-0 ${sidebarCollapsed ? "" : ""}`}>
+                  <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-emerald-600/20 flex items-center justify-center shrink-0">
                       <Sparkles size={14} className="text-emerald-400" />
                     </div>
@@ -227,47 +243,69 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           )}
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-6" aria-label="Dashboard navigation">
-            {navSections.map((section) => (
-              <div key={section.label}>
-                {!sidebarCollapsed && (
-                  <p className="px-3 mb-2 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{section.label}</p>
-                )}
-                <div className="space-y-0.5">
-                  {section.items.map((item) => {
-                    const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setSidebarOpen(false)}
-                        title={sidebarCollapsed ? item.label : undefined}
-                        className={`flex items-center gap-3 rounded-lg text-sm font-medium transition-all ${
-                          sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2.5"
-                        } ${
-                          isActive
-                            ? "bg-emerald-600/15 text-emerald-400"
-                            : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                        }`}
-                      >
-                        <item.icon size={18} className="shrink-0" />
-                        {!sidebarCollapsed && (
-                          <>
-                            <span className="flex-1">{item.label}</span>
-                            {item.badge && item.badge > 0 && (
-                              <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[11px] font-bold">
-                                {item.badge}
-                              </span>
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin" aria-label="Dashboard navigation">
+            {navSections.map((section) => {
+              const isCollapsed = collapsedSections[section.label];
+              const hasActiveItem = section.items.some(
+                (item) => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href))
+              );
+
+              return (
+                <div key={section.label}>
+                  {!sidebarCollapsed && (
+                    <button
+                      onClick={() => toggleSection(section.label)}
+                      className="w-full flex items-center justify-between px-3 mb-1 mt-3 first:mt-0 group cursor-pointer"
+                    >
+                      <p className={`text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                        hasActiveItem ? "text-emerald-500" : "text-slate-500 group-hover:text-slate-400"
+                      }`}>
+                        {section.label}
+                      </p>
+                      <ChevronDown
+                        size={12}
+                        className={`text-slate-600 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+                      />
+                    </button>
+                  )}
+                  {!isCollapsed && (
+                    <div className="space-y-0.5">
+                      {section.items.map((item) => {
+                        const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setSidebarOpen(false)}
+                            title={sidebarCollapsed ? item.label : undefined}
+                            className={`flex items-center gap-3 rounded-lg text-sm font-medium transition-all ${
+                              sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
+                            } ${
+                              isActive
+                                ? "bg-emerald-600/15 text-emerald-400"
+                                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
+                            }`}
+                          >
+                            <item.icon size={18} className="shrink-0" />
+                            {!sidebarCollapsed && (
+                              <>
+                                <span className="flex-1">{item.label}</span>
+                                {item.badge && item.badge > 0 && (
+                                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[11px] font-bold">
+                                    {item.badge}
+                                  </span>
+                                )}
+                                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                              </>
                             )}
-                            {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
-                          </>
-                        )}
-                      </Link>
-                    );
-                  })}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </nav>
 
           {/* Bottom section */}
@@ -338,7 +376,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <div className={`transition-all duration-300 ${sidebarCollapsed ? "lg:pl-20" : "lg:pl-64"}`}>
+      <div className={`transition-all duration-300 ${sidebarCollapsed ? "lg:pl-[68px]" : "lg:pl-64"}`}>
         {/* Top bar */}
         <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 flex items-center justify-between px-4 lg:px-8 gap-4" role="banner">
           {/* Left: Mobile menu + Search */}

@@ -23,16 +23,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Priority: OPENAI_API_KEY > OPENROUTER_API_KEY
-    const openaiKey = process.env.OPENAI_API_KEY;
+    // Priority: OPENROUTER_API_KEY > OPENAI_API_KEY
     const openrouterKey = process.env.OPENROUTER_API_KEY;
+    const openaiKey = process.env.OPENAI_API_KEY;
     
-    if (openaiKey) {
-      // Use OpenAI directly (GPT-4o-mini is very affordable: $0.15/$0.60 per 1M tokens)
-      configureAI({ apiKey: openaiKey, provider: "openai", model: "gpt-4o-mini" });
-    } else if (openrouterKey) {
-      // Fallback to OpenRouter (has free models)
+    if (openrouterKey) {
+      // Use OpenRouter (has free models)
       configureAI({ apiKey: openrouterKey, provider: "openrouter" });
+    } else if (openaiKey) {
+      // Fallback to OpenAI directly
+      configureAI({ apiKey: openaiKey, provider: "openai", model: "gpt-4o-mini" });
     }
 
     const result = await generateTemplateFromPrompt({

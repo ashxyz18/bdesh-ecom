@@ -7,6 +7,18 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum WebsiteType {
+  ECOMMERCE
+  PORTFOLIO
+  BLOG
+  CORPORATE
+  RESTAURANT
+  EDUCATION
+  LANDING
+  NONPROFIT
+  REAL_ESTATE
+}
+
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
@@ -27,6 +39,8 @@ model User {
   templates     Template[]
   subscriptions Subscription[]
 
+  @@index([email])
+  @@index([phone])
   @@map("users")
 }
 
@@ -52,7 +66,9 @@ model Store {
   banner      String?
   theme       String   @default("{}") // JSON: { primary, secondary, font, layout }
   settings    String   @default("{}") // JSON: { currency, locale, features }
-  status      String   @default("PENDING") // PENDING, APPROVED, SUSPENDED
+  status      String   @default("PENDING") // PENDING, APPROVED, SUSPENDED, DELETED
+  websiteType WebsiteType @default(ECOMMERCE)
+  deletedAt   DateTime? // Soft delete field
   ownerId     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -60,7 +76,7 @@ model Store {
   owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   products       Product[]
   orders         Order[]
-  pages          Page[]
+  pages          SitePage[]
   collections   Collection[]
   campaigns     Campaign[]
   coupons       Coupon[]
@@ -73,6 +89,11 @@ model Store {
   subscriptions  Subscription[]
   paymentGateway PaymentGateway?
 
+  @@index([subdomain])
+  @@index([ownerId])
+  @@index([status])
+  @@index([websiteType])
+  @@index([deletedAt])
   @@map("stores")
 }
 
@@ -89,11 +110,12 @@ model Product {
   barcode       String?
   quantity      Int      @default(0)
   trackStock    Boolean  @default(true)
-  status        String   @default("active") // active, draft, archived
+  status        String   @default("active") // active, draft, archived, deleted
   featured      Boolean  @default(false)
   attributes    String   @default("{}") // JSON: { color, size, material, etc. }
   seoTitle      String?
   seoDesc       String?
+  deletedAt     DateTime? // Soft delete field
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -105,6 +127,9 @@ model Product {
   cartItems   CartItem[]
 
   @@unique([storeId, slug])
+  @@index([storeId, status])
+  @@index([featured])
+  @@index([deletedAt])
   @@map("products")
 }
 
@@ -161,7 +186,9 @@ model Order {
   paymentMethod  String   // CASH_ON_DELIVERY, BKASH, NAGAD, ROCKET, CARD
   subtotal       Float
   shippingCost   Float
+  discount       Float    @default(0)
   total          Float
+  couponCode     String?
   notes          String?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -172,6 +199,8 @@ model Order {
   shipping    Shipping?
   payment     Payment?
 
+  @@index([storeId, status])
+  @@index([customerId, status])
   @@map("orders")
 }
 
@@ -248,23 +277,45 @@ model CartItem {
   user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([sessionId])
   @@map("cart_items")
 }
 
-model Page {
+model SitePage {
   id        String   @id @default(cuid())
   storeId   String
   title     String
   slug      String
   content   String   @default("{}") // JSON: { blocks: [...] }
+  pageType  String   @default("custom") // home, about, contact, custom, etc.
   isPublished Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  sections  Section[]
 
   @@unique([storeId, slug])
-  @@map("pages")
+  @@index([storeId])
+  @@index([pageType])
+  @@map("site_pages")
+}
+
+model Section {
+  id          String   @id @default(cuid())
+  sitePageId  String
+  type        String   // hero, features, testimonials, projects, menu, etc.
+  props       String   @default("{}") // JSON: section-specific props
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sitePage SitePage @relation(fields: [sitePageId], references: [id], onDelete: Cascade)
+
+  @@index([sitePageId])
+  @@index([type])
+  @@map("sections")
 }
 
 model Template {
@@ -275,6 +326,7 @@ model Template {
   thumbnail   String?
   config      String   @default("{}") // JSON: full template configuration
   category    String   @default("general") // general, fashion, food, electronics, salon, portfolio, etc.
+  websiteType WebsiteType @default(ECOMMERCE)
   isPremium   Boolean  @default(false)
   isPublic    Boolean  @default(true)
   isBuiltIn   Boolean  @default(false)
@@ -286,6 +338,8 @@ model Template {
 
   uploader User?  @relation(fields: [uploadedBy], references: [id], onDelete: SetNull)
 
+  @@index([websiteType])
+  @@index([category])
   @@map("templates")
 }
 

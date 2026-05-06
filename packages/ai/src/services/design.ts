@@ -353,7 +353,21 @@ const SECTION_TYPE_REFERENCE = `
 // ─── Build the AI system prompt ───
 
 function buildDesignSystemPrompt(websiteType: string): string {
-  return `You are a world-class web designer creating a COMPLETE, UNIQUE ${websiteType} website. Your designs must be DIVERSE and tailored to each specific request.
+  const typeSpecificInstructions = {
+    ecommerce: "Create an ecommerce store with products, collections, cart, and checkout flow.",
+    portfolio: "Create a portfolio site showcasing projects, skills, experience, and contact information.",
+    corporate: "Create a corporate website with services, about, team, clients, and contact sections.",
+    blog: "Create a blog site with featured posts, categories, newsletter, and content-focused layout.",
+    restaurant: "Create a restaurant site with menu, hours, reservation, gallery, and contact sections.",
+    education: "Create an education site with courses, instructors, testimonials, and enrollment flow.",
+    landing: "Create a landing page with hero, features, testimonials, pricing, FAQ, and CTA sections.",
+    realestate: "Create a real estate site with property listings, search, agents, and contact sections.",
+    nonprofit: "Create a nonprofit site with mission, programs, donate, volunteers, and impact sections.",
+  };
+
+  const typeInstructions = typeSpecificInstructions[websiteType as keyof typeof typeSpecificInstructions] || typeSpecificInstructions.ecommerce;
+
+  return `You are a world-class web designer creating a COMPLETE, UNIQUE ${websiteType} website. ${typeInstructions}
 
 CRITICAL RULES:
 1. NEVER output the same design twice — vary layouts, colors, sections, and section props
@@ -687,6 +701,12 @@ interface TemplateConfigParams {
 function buildTemplateConfig(params: TemplateConfigParams): GeneratedTemplateConfig {
   const { id, businessName, websiteType, colors: c, style: s, layout, sections, industry } = params;
   const isEcommerce = websiteType === "ecommerce";
+  const isPortfolio = websiteType === "portfolio";
+  const isCorporate = websiteType === "corporate";
+  const isBlog = websiteType === "blog";
+  const isRestaurant = websiteType === "restaurant";
+  const isEducation = websiteType === "education";
+  const isLanding = websiteType === "landing";
 
   return {
     id,
@@ -695,8 +715,8 @@ function buildTemplateConfig(params: TemplateConfigParams): GeneratedTemplateCon
     description: `AI-generated ${s.vibe || "modern"} template for ${industry || websiteType}`,
     version: "1.0.0",
     category: industry || websiteType || "general",
-    isPremium: false,
     websiteType,
+    isPremium: false,
     colors: {
       primary: c.primary,
       secondary: c.secondary,
@@ -737,31 +757,98 @@ function buildTemplateConfig(params: TemplateConfigParams): GeneratedTemplateCon
     },
     footer: {
       style: layout.footerStyle || "dark",
-      showNewsletter: layout.showNewsletter !== false,
+      showNewsletter: layout.showNewsletter !== false && (isEcommerce || isBlog),
       showSocial: true,
       columns: layout.footerColumns || 4,
     },
     homePage: {
       sections,
     },
-    productPage: isEcommerce ? {
-      imageLayout: "stacked",
-      showReviews: true,
-      showRecentlyViewed: true,
-      showRelatedProducts: true,
-      showWishlist: true,
-      showFeatures: true,
-      features: [
-        { icon: "Truck", title: "Free Shipping", description: "On orders over ৳1,000" },
-        { icon: "ShieldCheck", title: "Secure Payment", description: "100% secure checkout" },
-        { icon: "RefreshCw", title: "Easy Returns", description: "7-day return policy" },
-      ],
-    } : undefined,
-    collectionPage: isEcommerce ? {
-      showFilters: true,
-      gridColumns: layout.productColumns || 4,
-      cardStyle: "standard",
-    } : undefined,
+    // Ecommerce-specific pages
+    ...(isEcommerce && {
+      productPage: {
+        imageLayout: "stacked",
+        showReviews: true,
+        showRecentlyViewed: true,
+        showRelatedProducts: true,
+        showWishlist: true,
+        showFeatures: true,
+        features: [
+          { icon: "Truck", title: "Free Shipping", description: "On orders over ৳1,000" },
+          { icon: "ShieldCheck", title: "Secure Payment", description: "100% secure checkout" },
+          { icon: "RefreshCw", title: "Easy Returns", description: "7-day return policy" },
+        ],
+      },
+      collectionPage: {
+        showFilters: true,
+        gridColumns: layout.productColumns || 4,
+        cardStyle: "standard",
+      },
+    }),
+    // Portfolio-specific pages
+    ...(isPortfolio && {
+      portfolioPage: {
+        layout: "grid",
+        columns: 3,
+        showFilters: true,
+        showDetails: true,
+      },
+    }),
+    // Blog-specific pages
+    ...(isBlog && {
+      blogPage: {
+        layout: "grid",
+        columns: 3,
+        showExcerpt: true,
+        showDate: true,
+        showAuthor: true,
+      },
+      blogPostPage: {
+        showComments: true,
+        showRelated: true,
+      },
+    }),
+    // Corporate-specific pages
+    ...(isCorporate && {
+      servicesPage: {
+        layout: "grid",
+        columns: 3,
+        showDetails: true,
+      },
+      aboutPage: {
+        layout: "split",
+        showTeam: true,
+        showStats: true,
+      },
+    }),
+    // Restaurant-specific pages
+    ...(isRestaurant && {
+      menuPage: {
+        layout: "cards",
+        showImages: true,
+        columns: 3,
+      },
+      reservationPage: {
+        showPhone: true,
+        showEmail: true,
+      },
+    }),
+    // Education-specific pages
+    ...(isEducation && {
+      coursesPage: {
+        layout: "grid",
+        columns: 3,
+        showInstructor: true,
+        showPrice: true,
+      },
+    }),
+    // Landing page - uses homePage sections
+    ...(isLanding && {
+      ctaPage: {
+        style: "centered",
+        showBenefits: true,
+      },
+    }),
   };
 }
 

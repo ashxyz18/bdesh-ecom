@@ -188,6 +188,8 @@ export const RATE_LIMITS = {
   storefront: { prefix: "storefront", windowMs: 60_000, maxRequests: 200 },
   /** Admin: 30 requests per minute */
   admin: { prefix: "admin", windowMs: 60_000, maxRequests: 30 },
+  /** Checkout: 10 attempts per minute */
+  checkout: { prefix: "checkout", windowMs: 60_000, maxRequests: 10 },
 } as const;
 
 /**

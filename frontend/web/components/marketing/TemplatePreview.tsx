@@ -5,9 +5,10 @@ import { useState, useRef, useEffect } from "react";
 interface TemplatePreviewProps {
   templateId: string;
   name: string;
+  websiteType?: string;
 }
 
-export function TemplatePreview({ templateId, name }: TemplatePreviewProps) {
+export function TemplatePreview({ templateId, name, websiteType = "ecommerce" }: TemplatePreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.25);
   const [loaded, setLoaded] = useState(false);
@@ -40,6 +41,21 @@ export function TemplatePreview({ templateId, name }: TemplatePreviewProps) {
     return () => io.disconnect();
   }, []);
 
+  const getDomain = (websiteType: string) => {
+    switch (websiteType) {
+      case "ecommerce":
+        return "bdesh.shop";
+      case "portfolio":
+        return "bdesh.portfolio";
+      case "corporate":
+        return "bdesh.biz";
+      case "blog":
+        return "bdesh.blog";
+      default:
+        return "bdesh.site";
+    }
+  };
+
   return (
     <div
       ref={containerRef}
@@ -52,7 +68,7 @@ export function TemplatePreview({ templateId, name }: TemplatePreviewProps) {
         <div className="w-2 h-2 rounded-full bg-[#febc2e]" />
         <div className="w-2 h-2 rounded-full bg-[#28c840]" />
         <div className="ml-2 flex-1 h-4 bg-white/70 rounded text-[8px] text-gray-400 flex items-center px-2 max-w-[180px] truncate">
-          {name.toLowerCase()}.bdesh.shop
+          {name.toLowerCase()}.{getDomain(websiteType)}
         </div>
       </div>
 
@@ -65,7 +81,7 @@ export function TemplatePreview({ templateId, name }: TemplatePreviewProps) {
       <div className="absolute inset-x-0 top-7 bottom-0 overflow-hidden">
         {isVisible && (
           <iframe
-            src={`/preview/${templateId}`}
+            src={`/preview/${templateId}?websiteType=${websiteType}`}
             className="pointer-events-none border-0"
             sandbox="allow-scripts allow-same-origin"
             style={{

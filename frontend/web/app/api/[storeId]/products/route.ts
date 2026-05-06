@@ -1,103 +1,127 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
-import { productSchema } from "@bdesh/shared";
+import { getSessionUser } from "@/lib/auth";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ storeId: string }> }
-) {
+export async function GET(req: NextRequest) {
   try {
-    const { storeId } = await params;
     const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status");
+    const storeId = searchParams.get("storeId");
+    const search = searchParams.get("search");
+    const category = searchParams.get("category");
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
     const featured = searchParams.get("featured");
-    const q = searchParams.get("q");
+    const status = searchParams.get("status") || "active";
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const skip = (page - 1) * limit;
 
+    if (!storeId) {
+      return NextResponse.json(
+        { error: "storeId is required" },
+        { status: 400 }
+      );
+    }
+
+    // Build where clause
     const where: any = { storeId };
 
-    if (status) where.status = status;
-    if (featured === "true") where.featured = true;
-    if (q) {
+    // Filter by status (admin can see all)
+    if (status !== "all") {
+      where.status = status;
+    }
+
+    // Search in name and description
+    if (search) {
       where.OR = [
-        { name: { contains: q } },
-        { description: { contains: q } },
+        { name: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
       ];
     }
 
-    const products = await prisma.product.findMany({
-      where,
-      include: { variants: true, collections: true },
-      orderBy: { createdAt: "desc" },
-    });
-
-    // Parse JSON fields for SQLite compatibility
-    const parsed = products.map((p: any) => ({
-      ...p,
-      images: typeof p.images === "string" ? JSON.parse(p.images) : p.images,
-      attributes: typeof p.attributes === "string" ? JSON.parse(p.attributes) : p.attributes,
-      price: Number(p.price),
-      comparePrice: p.comparePrice ? Number(p.comparePrice) : null,
-    }));
-
-    return NextResponse.json({ products: parsed });
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
-  }
-}
-
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ storeId: string }> }
-) {
-  try {
-    const { storeId } = await params;
-    const session = await requireAuth();
-    const body = await req.json();
-    const data = productSchema.parse(body);
-
-    const store = await prisma.store.findUnique({
-      where: { id: storeId },
-    });
-
-    if (!store || store.ownerId !== session.user.id) {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+    // Filter by category (via collection)
+    if (category) {
+      where.collections = {
+        some: {
+          collection: {
+            slug: category,
+          },
+        },
+      };
     }
 
-    const product = await prisma.product.create({
-      data: {
-        name: data.name,
-        slug: data.slug,
-        description: data.description,
-        price: data.price,
-        comparePrice: data.comparePrice ?? null,
-        sku: data.sku,
-        barcode: data.barcode,
-        quantity: data.quantity,
-        trackStock: data.trackStock,
-        status: data.status,
-        featured: data.featured,
-        images: JSON.stringify(data.images || []),
-        attributes: JSON.stringify(data.attributes || []),
-        seoTitle: data.seoTitle,
-        seoDesc: data.seoDesc,
-        storeId,
+    // Filter by price range
+    if (minPrice || maxPrice) {
+      where.price = {};
+      if (minPrice) where.price.gte = parseFloat(minPrice);
+      if (maxPrice) where.price.lte = parseFloat(maxPrice);
+    }
+
+    // Filter featured products
+    if (featured === "true") {
+      where.featured = true;
+    }
+
+    // Build orderBy
+    let orderBy: any = { [sortBy]: sortOrder };
+    if (sortBy === "price") {
+      orderBy = { price: sortOrder };
+    } else if (sortBy === "name") {
+      orderBy = { name: sortOrder };
+    } else {
+      orderBy = { createdAt: sortOrder };
+    }
+
+    // Get total count for pagination
+    const total = await prisma.product.count({ where });
+
+    // Get products
+    const products = await prisma.product.findMany({
+      where,
+      orderBy,
+      skip,
+      take: limit,
+      include: {
+        variants: true,
+        collections: {
+          include: {
+            collection: true,
+          },
+        },
+        reviews: {
+          select: { rating: true },
+        },
       },
     });
 
-    return NextResponse.json({
-      product: {
+    // Calculate average rating for each product
+    const productsWithRating = products.map(product => {
+      const avgRating = product.reviews.length > 0
+        ? product.reviews.reduce((sum, r) => sum + r.rating, 0) / product.reviews.length
+        : 0;
+      return {
         ...product,
-        images: JSON.parse(product.images as string),
-        attributes: JSON.parse(product.attributes as string),
-        price: Number(product.price),
-        comparePrice: product.comparePrice ? Number(product.comparePrice) : null,
+        avgRating: Math.round(avgRating * 10) / 10,
+        reviewCount: product.reviews.length,
+        reviews: undefined,
+      };
+    });
+
+    return NextResponse.json({
+      products: productsWithRating,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
     });
   } catch (error: any) {
     return NextResponse.json(
-      { message: error.message || "Something went wrong" },
-      { status: 400 }
+      { error: error.message || "Failed to fetch products" },
+      { status: 500 }
     );
   }
 }

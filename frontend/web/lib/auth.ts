@@ -2,6 +2,18 @@ import { prisma } from "@bdesh/database";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 
+export async function hashToken(token: string): Promise<string> {
+  return bcrypt.hash(token, 10);
+}
+
+export async function verifyToken(token: string, hashedToken: string): Promise<boolean> {
+  return bcrypt.compare(token, hashedToken);
+}
+
+export function generateToken(): string {
+  return crypto.randomUUID();
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 12);
 }
@@ -14,11 +26,12 @@ export async function verifyPassword(
 }
 
 export async function createSession(userId: string) {
-  const token = crypto.randomUUID();
+  const token = generateToken();
+  const hashedToken = await hashToken(token);
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
   await prisma.session.create({
-    data: { userId, token, expiresAt },
+    data: { userId, token: hashedToken, expiresAt },
   });
 
   return token;
@@ -30,16 +43,21 @@ export async function getSession() {
 
   if (!token) return null;
 
-  const session = await prisma.session.findUnique({
-    where: { token },
+  const sessions = await prisma.session.findMany({
+    where: { 
+      expiresAt: { gt: new Date() }
+    },
     include: { user: true },
   });
 
-  if (!session || session.expiresAt < new Date()) {
-    return null;
+  // Find matching session by comparing tokens
+  for (const session of sessions) {
+    if (await verifyToken(token, session.token)) {
+      return session;
+    }
   }
-
-  return session;
+  
+  return null;
 }
 
 export async function requireAuth() {
@@ -55,7 +73,13 @@ export async function logout() {
   const token = cookieStore.get("session")?.value;
 
   if (token) {
-    await prisma.session.deleteMany({ where: { token } });
+    const sessions = await prisma.session.findMany({});
+    for (const session of sessions) {
+      if (await verifyToken(token, session.token)) {
+        await prisma.session.deleteMany({ where: { id: session.id } });
+        break;
+      }
+    }
   }
 
   cookieStore.delete("session");

@@ -68,8 +68,19 @@ export async function PATCH(
     const updateData: Record<string, unknown> = {};
     if (body.status) updateData.status = body.status;
     if (body.paymentStatus) updateData.paymentStatus = body.paymentStatus;
-    if (body.trackingCode) {
-      updateData.shipping = { update: { trackingCode: body.trackingCode } };
+    if (body.notes !== undefined) updateData.notes = body.notes;
+
+    // Auto-mark payment as PAID when delivered (for COD orders)
+    if (body.status === "DELIVERED" && !body.paymentStatus) {
+      updateData.paymentStatus = "PAID";
+    }
+
+    // Handle shipping updates (tracking code, delivery partner, delivered timestamp)
+    const shippingUpdate: Record<string, unknown> = {};
+    if (body.trackingCode) shippingUpdate.trackingCode = body.trackingCode;
+    if (body.status === "DELIVERED") shippingUpdate.deliveredAt = new Date();
+    if (Object.keys(shippingUpdate).length > 0) {
+      updateData.shipping = { update: shippingUpdate };
     }
 
     const updated = await prisma.order.update({
