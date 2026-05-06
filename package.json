@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:cloudflare": "npm run build && npm run build --workspace=@bdesh/web -- --no-fork",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "start": "cd frontend/web && npx next start -p $PORT",

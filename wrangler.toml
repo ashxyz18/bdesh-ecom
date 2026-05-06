@@ -6,8 +6,8 @@ main = "functions/_middleware.ts"
 
 # Build configuration
 [build]
-command = "npm run build"
-cwd = "./frontend/web"
+command = "npm run build:cloudflare"
+cwd = "."
 
 # Environment configuration for production
 [env.production]

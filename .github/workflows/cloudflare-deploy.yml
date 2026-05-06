@@ -38,8 +38,8 @@ jobs:
         run: npm run db:generate
         continue-on-error: true
 
-      - name: Build project dependencies
-        run: npm run build
+      - name: Build all packages
+        run: npm run build:cloudflare
         env:
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1

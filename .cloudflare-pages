@@ -3,11 +3,11 @@
 
 [build]
 # Build command executed by Cloudflare Pages
-command = "npm run build"
+command = "npm run build:cloudflare"
 # Working directory for the build command
-cwd = "./frontend/web"
+cwd = "."
 # Static assets output directory
-publish_dir = ".next"
+publish_dir = "frontend/web/.next"
 
 # Environment variables for production
 [env.production]
