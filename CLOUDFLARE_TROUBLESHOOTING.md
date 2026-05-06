@@ -33,21 +33,58 @@ Updated GitHub Actions workflow to use `.next` directory instead:
 - Cloudflare Pages can serve both static and dynamic content from this directory
 - Functions middleware handles dynamic routes
 
-## Configuration Files
+## Error: Module Not Found (Monorepo Packages)
+
+**Error Message:**
+```
+Module not found: Can't resolve '@bdesh/database'
+Module not found: Can't resolve '@bdesh/shared'
+```
+
+**Root Cause:**
+In a monorepo setup, the monorepo packages must be built before the frontend can import them. The Cloudflare Pages build was only running the frontend build without building the dependencies first.
+
+**Solution:**
+Created a `build:cloudflare` script that builds all packages in the correct order:
+
+```json
+"build:cloudflare": "npm run build && npm run build --workspace=@bdesh/web -- --no-fork"
+```
+
+Updated configuration files:
+- `wrangler.toml`: Changed build command to `npm run build:cloudflare` from root (`.`)
+- `.cloudflare-pages`: Changed build command to `npm run build:cloudflare` from root (`.`)
+- `.github/workflows/cloudflare-deploy.yml`: Uses `npm run build:cloudflare` instead of `npm run build`
+
+**Build Order:**
+1. Turbo builds all packages in dependency order:
+   - `@bdesh/database` (Prisma setup)
+   - `@bdesh/shared` (Schemas, utilities)
+   - `@bdesh/ui` (Component library)
+   - `@bdesh/ai` (AI services)
+2. Next.js build in `frontend/web` with all dependencies available
+3. Output placed in `frontend/web/.next` for Cloudflare deployment
+
+**Configuration Files
 
 ### Updated Files
 
 1. **wrangler.toml**
    - Main configuration for Cloudflare Workers integration
    - Defines build command, environment variables, and routes
-   - Compatible with Cloudflare Pages deployment
+   - Uses root directory build to support monorepo
 
 2. **.cloudflare-pages**
    - Cloudflare Pages specific configuration
    - Defines caching rules for static and dynamic assets
    - Sets environment variables per deployment environment
+   - Publishes from `frontend/web/.next`
 
-3. **.github/workflows/cloudflare-deploy.yml**
+3. **package.json**
+   - Root package.json includes `build:cloudflare` script
+   - Ensures proper build sequence for monorepo
+
+4. **.github/workflows/cloudflare-deploy.yml**
    - GitHub Actions workflow for CI/CD
    - Builds Next.js project with dependencies
    - Deploys to Cloudflare Pages with proper credentials

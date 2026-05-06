@@ -121,7 +121,8 @@ Check these indicators:
 
 | Issue | Solution |
 |---|---|
-| Build fails | Check GitHub Actions logs, run `npm run build` locally |
+| Build fails: "Module not found" | Run `npm run build:cloudflare` locally, check monorepo packages build |
+| Build fails: Other errors | Check GitHub Actions logs, run `npm run build` locally |
 | Environment variables missing | Redeploy after adding variables to Pages settings |
 | 404 on routes | Check Next.js build configuration in `next.config.ts` |
 | Database connection error | Verify DATABASE_URL format, check connection pooling |
@@ -133,7 +134,10 @@ Check these indicators:
 # Local development
 npm run dev
 
-# Local build test
+# Local build test (full monorepo)
+npm run build:cloudflare
+
+# Local build test (just frontend)
 npm run build
 
 # Type checking
@@ -146,6 +150,17 @@ npm run db:generate
 wrangler pages deployments list
 wrangler pages deployment tail
 ```
+
+## Monorepo Build Process
+
+This project uses a monorepo structure with multiple packages:
+- `packages/database` - Prisma database setup
+- `packages/shared` - Shared schemas and utilities
+- `packages/ui` - UI component library
+- `packages/ai` - AI service clients
+- `frontend/web` - Next.js application
+
+The `build:cloudflare` script ensures all packages are built in the correct dependency order before deploying. This is critical for avoiding "Module not found" errors.
 
 ## Security Checklist
 

@@ -54,12 +54,12 @@ account_id = "your_cloudflare_account_id"
 # Install dependencies
 npm install
 
-# Build the project
-npm run build
+# Build all packages (monorepo build script)
+npm run build:cloudflare
 
 # Deploy using Wrangler
 npm install -g @cloudflare/wrangler
-wrangler pages deploy frontend/web/.next/standalone
+wrangler pages deploy frontend/web/.next
 ```
 
 **Option B: Using GitHub Actions (Recommended)**
@@ -67,8 +67,15 @@ wrangler pages deploy frontend/web/.next/standalone
 1. Add secrets to GitHub repository:
    - `CLOUDFLARE_ACCOUNT_ID`
    - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_PROJECT_NAME`
 
-2. The workflow in `.github/workflows/cloudflare-deploy.yml` will automatically deploy on push to main branch
+2. The workflow in `.github/workflows/cloudflare-deploy.yml` will automatically:
+   - Install dependencies
+   - Generate database client
+   - Build all monorepo packages using `npm run build:cloudflare`
+   - Deploy to Cloudflare Pages on push to main/master branch
+
+**Important:** The `build:cloudflare` script builds all monorepo packages in the correct order before building the frontend. This is required because the frontend depends on `@bdesh/database` and `@bdesh/shared` packages.
 
 ### 6. Environment Variables in Cloudflare
 
