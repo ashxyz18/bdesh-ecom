@@ -45,5 +45,5 @@ databases:
       - key: NEXTAUTH_URL
         value: https://bdesh-ecom-web.onrender.com
       # Note: DATABASE_URL should be added manually from your PostgreSQL service
-      - key: DATABASE_URL
+      - key: DATABASE_URL DATABASE_URL=postgresql://postgres:ashxyz187@localhost:5433/bdesh_ecom
         sync: false
