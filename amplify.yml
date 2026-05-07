@@ -1,23 +1,16 @@
 version: 1
-# ⚠️  WARNING: Amplify Hosting (static) cannot deploy Next.js apps with API routes
-# Your app has 50+ API routes that require a Node.js runtime
-# 
-# SOLUTIONS:
-# 1. Deploy to Railway/Render/Heroku instead (supports Node.js)
-# 2. Migrate to Amplify Hosting Gen 2 (newer, Node.js support)
-# 3. Use OpenNext + Lambda (advanced, serverless)
-#
-# Current config will fail. Recommend using Railway.app instead:
-# https://railway.app - has railway.toml already configured
-#
 frontend:
   phases:
     preBuild:
       commands:
+        - export DEPLOYMENT_PLATFORM=aws-amplify
         - npm ci --include-workspace-root
         - npx prisma generate --schema=packages/database/prisma/schema.prisma
     build:
       commands:
+        - export DEPLOYMENT_PLATFORM=aws-amplify
+        # Run migrations only if RUN_MIGRATIONS env var is set to "true"
+        - if [ "$RUN_MIGRATIONS" = "true" ]; then npx prisma migrate deploy --schema=packages/database/prisma/schema.prisma; fi
         - npm run build
   artifacts:
     baseDirectory: frontend/web/.next
