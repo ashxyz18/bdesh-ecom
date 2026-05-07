@@ -1,0 +1,24 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci --include-workspace-root
+        - npx prisma generate --schema=packages/database/prisma/schema.prisma
+    build:
+      commands:
+        # Run migrations only if RUN_MIGRATIONS env var is set to "true"
+        # This is safer than always running migrations at build time
+        # Alternative: use the /api/migrate endpoint after deployment
+        - if [ "$RUN_MIGRATIONS" = "true" ]; then npx prisma migrate deploy --schema=packages/database/prisma/schema.prisma; fi
+        - npm run build
+  artifacts:
+    baseDirectory: frontend/web/.next
+    files:
+      - "**/*"
+  cache:
+    paths:
+      - node_modules/**/*
+      - frontend/web/node_modules/**/*
+      - packages/*/node_modules/**/*
+      - .next/cache/**/*

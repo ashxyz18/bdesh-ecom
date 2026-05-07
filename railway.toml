@@ -2,7 +2,6 @@
   builder = "dockerfile"
 
 [deploy]
-  startCommand = "./entrypoint.sh"
   healthcheckPath = "/api/health"
   healthcheckTimeout = 300
   restartPolicyType = "on_failure"
@@ -18,5 +17,5 @@
 # DIRECT_URL - Supabase direct connection (port 5432)
 # NEXT_PUBLIC_SUPABASE_URL - Your Supabase project URL
 # NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY - Your Supabase anon/public key
-# NEXTAUTH_SECRET - A random secret for NextAuth.js
-# NEXTAUTH_URL - Your Railway app URL (e.g., https://your-app.railway.app)
+# NEXTAUTH_SECRET - A random secret for NextAuth.js (generate: openssl rand -base64 32)
+# NEXTAUTH_URL - Your Railway app URL (e.g., https://your-app.up.railway.app)

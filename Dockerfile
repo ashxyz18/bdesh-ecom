@@ -7,6 +7,12 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Dummy DATABASE_URL/DIRECT_URL for prisma generate (doesn't need real DB connection)
+ARG DATABASE_URL=postgresql://dummy:dummy@dummy:5432/dummy
+ARG DIRECT_URL=postgresql://dummy:dummy@dummy:5432/dummy
+ENV DATABASE_URL=$DATABASE_URL
+ENV DIRECT_URL=$DIRECT_URL
+
 # Copy package files first for better layer caching
 COPY package*.json ./
 COPY packages/database/package.json ./packages/database/
@@ -15,17 +21,25 @@ COPY packages/ui/package.json ./packages/ui/
 COPY frontend/web/package.json ./frontend/web/
 COPY packages/shared/package.json ./packages/shared/
 
-# Install dependencies
-RUN npm ci --include-workspace-root --ignore-scripts
+# Copy prisma schema BEFORE npm ci so that the postinstall script
+# "prisma generate" in @bdesh/database can find it
+COPY packages/database/prisma ./packages/database/prisma
 
-# Copy source code
+# Copy file: dependencies that npm ci needs to resolve
+COPY src/dataconnect-generated ./src/dataconnect-generated
+
+# Install dependencies (without --ignore-scripts so prisma engine downloads)
+# The @bdesh/database postinstall will run "prisma generate" and succeed
+# because the schema is already copied above
+RUN npm ci --include-workspace-root
+
+# Copy remaining source code
 COPY . .
 
-# Generate Prisma client (doesn't require database connection)
-# Use npm exec instead of npx — it respects locally installed packages and won't download v7
-RUN npm exec -- prisma generate --schema=packages/database/prisma/schema.prisma
+# Re-run prisma generate explicitly to ensure client is built with full source
+RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
 
-# Build packages
+# Build packages in dependency order
 RUN cd packages/shared && npx tsc
 RUN cd packages/database && npx tsc
 RUN cd packages/ai && npx tsc
@@ -44,7 +58,6 @@ RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
 # Copy standalone output from builder
-# Standalone includes all required runtime files
 COPY --from=builder /app/frontend/web/.next/standalone ./
 COPY --from=builder /app/frontend/web/.next/static ./frontend/web/.next/static
 COPY --from=builder /app/frontend/web/public ./frontend/web/public
@@ -68,8 +81,6 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
-ENV NEXTAUTH_SECRET=""
-ENV NEXTAUTH_URL=""
 
 # Run migrations then start the app
 CMD ["./entrypoint.sh"]

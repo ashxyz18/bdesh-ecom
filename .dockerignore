@@ -63,11 +63,14 @@ apps/mobile
 backend
 functions
 dataconnect
-src
 .kilo
 cache
 dist
 build
+
+# src/ contains @dataconnect/generated which is a file: dependency
+# Only exclude src/ subdirectories that aren't needed
+src/dataconnect-generated/.guides
 
 # Video files
 *.mp4
