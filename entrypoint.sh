@@ -2,9 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-cd packages/database
-npx --no-install prisma migrate deploy --schema=prisma/schema.prisma
-cd ../..
+./node_modules/.bin/prisma migrate deploy --schema=packages/database/prisma/schema.prisma
 
 echo "Starting application..."
 exec node frontend/web/server.js

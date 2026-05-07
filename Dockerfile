@@ -22,8 +22,8 @@ RUN npm ci --include-workspace-root --ignore-scripts
 COPY . .
 
 # Generate Prisma client (doesn't require database connection)
-# Use --no-install to prevent npx from downloading a newer Prisma version
-RUN cd packages/database && npx --no-install prisma generate --schema=prisma/schema.prisma
+# Call binary directly from root node_modules to avoid npx downloading a newer version
+RUN ./node_modules/.bin/prisma generate --schema=packages/database/prisma/schema.prisma
 
 # Build packages
 RUN cd packages/shared && npx tsc
@@ -51,10 +51,11 @@ COPY --from=builder /app/frontend/web/public ./frontend/web/public
 
 # Copy Prisma files needed for runtime migrations
 COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
-COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
+COPY --from=builder /app/packages/database/package.json ./packages/database/package.json
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/packages/database/package.json ./packages/database/package.json
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder /app/node_modules/.bin/prisma ./node_modules/.bin/prisma
 
 # Copy entrypoint script
 COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
