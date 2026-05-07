@@ -2,16 +2,13 @@ services:
   - type: web
     name: bdesh-ecom-web
     env: docker
-    plan: free
+    plan: starter
     healthCheckPath: /api/health
-    buildCommand: "npm run build"
     envVars:
       - key: NODE_ENV
         value: production
       - key: NEXT_TELEMETRY_DISABLED
         value: "1"
-      - key: NEXT_PURBOPACK
-        value: "0"
       - key: NEXT_PUBLIC_APP_URL
         value: https://bdesh-ecom-web.onrender.com
       - key: NEXT_PUBLIC_BASE_URL
@@ -21,15 +18,14 @@ services:
       - key: OPENROUTER_API_KEY
         sync: false
       - key: NEXTAUTH_SECRET
-        value: 3805138e506e790c6bc3747e4b7bdf7caf7d5743304afffd6996ca807dafba88
+        sync: false
       - key: NEXTAUTH_URL
         value: https://bdesh-ecom-web.onrender.com
       - key: DATABASE_URL
-        fromDatabase:
-          name: bdesh-ecom-db
-          property: connectionString
-
-databases:
-  - name: bdesh-ecom-db
-    databaseName: bdesh_ecom
-    plan: free
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false

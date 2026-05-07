@@ -22,7 +22,8 @@ RUN npm ci --include-workspace-root --ignore-scripts
 COPY . .
 
 # Generate Prisma client (doesn't require database connection)
-RUN cd packages/database && npx prisma generate --schema=prisma/schema.prisma
+# Use --no-install to prevent npx from downloading a newer Prisma version
+RUN cd packages/database && npx --no-install prisma generate --schema=prisma/schema.prisma
 
 # Build packages
 RUN cd packages/shared && npx tsc
@@ -42,11 +43,22 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Copy ONLY standalone output from builder
+# Copy standalone output from builder
 # Standalone includes all required runtime files
 COPY --from=builder /app/frontend/web/.next/standalone ./
 COPY --from=builder /app/frontend/web/.next/static ./frontend/web/.next/static
 COPY --from=builder /app/frontend/web/public ./frontend/web/public
+
+# Copy Prisma files needed for runtime migrations
+COPY --from=builder /app/packages/database/prisma ./packages/database/prisma
+COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/packages/database/package.json ./packages/database/package.json
+
+# Copy entrypoint script
+COPY --from=builder /app/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 # Set ownership
 RUN chown -R nextjs:nodejs /app
@@ -56,5 +68,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Use standalone server.js built by Next.js
-CMD ["node", "server.js"]
+# Run migrations then start the app
+CMD ["./entrypoint.sh"]

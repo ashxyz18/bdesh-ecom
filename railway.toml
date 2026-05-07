@@ -2,7 +2,7 @@
   builder = "dockerfile"
 
 [deploy]
-  startCommand = "node server.js"
+  startCommand = "./entrypoint.sh"
   healthcheckPath = "/api/health"
   healthcheckTimeout = 300
   restartPolicyType = "on_failure"
@@ -14,9 +14,9 @@
   PORT = "3000"
 
 # Set these variables in Railway dashboard (Variables section):
-# DATABASE_URL=postgresql://postgres.yqtfndxryhzjduaafvqi:58kJ99cTFsHpGBoG@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true
-# DIRECT_URL=postgresql://postgres.yqtfndxryhzjduaafvqi:58kJ99cTFsHpGBoG@aws-1-ap-southeast-1.pooler.supabase.com:5432/postgres
-# NEXT_PUBLIC_SUPABASE_URL=https://yqtfndxryhzjduaafvqi.supabase.co
-# NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_y6kuTzPLxpO_Ux-XxrUr9A_fq3vGGiU
-# NEXTAUTH_SECRET=uWyGbvqiWk2/UQk18ZpoaW16lzlP0XU72kEsoSkZHsI=
-# NEXTAUTH_URL=https://your-railway-app-url.railway.app
+# DATABASE_URL - Supabase pooled connection (port 6543, pgbouncer=true)
+# DIRECT_URL - Supabase direct connection (port 5432)
+# NEXT_PUBLIC_SUPABASE_URL - Your Supabase project URL
+# NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY - Your Supabase anon/public key
+# NEXTAUTH_SECRET - A random secret for NextAuth.js
+# NEXTAUTH_URL - Your Railway app URL (e.g., https://your-app.railway.app)

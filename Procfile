@@ -1,1 +1,1 @@
-web: cd apps/web && npx next start -p $PORT
+web: cd frontend/web && npx next start -p $PORT
