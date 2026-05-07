@@ -1,12 +1,7 @@
 import type { NextConfig } from "next";
 import withBundleAnalyzer from "@next/bundle-analyzer";
 
-// AWS Amplify Hosting has its own SSR compute layer and doesn't use standalone output.
-// Docker/Railway deployments need standalone output for the custom server.
-const isAmplify = process.env.DEPLOYMENT_PLATFORM === "aws-amplify";
-
 const nextConfig: NextConfig = {
-  output: isAmplify ? undefined : "standalone",
   reactStrictMode: true,
   compress: true,
   transpilePackages: ["@bdesh/database", "@bdesh/shared", "@bdesh/ui"],
