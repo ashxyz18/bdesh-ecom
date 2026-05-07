@@ -1,0 +1,4 @@
+# Amplify routing configuration
+# Rewrite all paths to index.html for SPA routing
+/index.html 200
+/* /index.html 200

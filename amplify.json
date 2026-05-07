@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "frontend": {
+    "phases": {
+      "preBuild": {
+        "commands": [
+          "npm ci --include-workspace-root",
+          "npx prisma generate --schema=packages/database/prisma/schema.prisma"
+        ]
+      },
+      "build": {
+        "commands": [
+          "npm run build"
+        ]
+      }
+    },
+    "artifacts": {
+      "baseDirectory": "frontend/web/.next",
+      "files": [
+        "**/*"
+      ]
+    },
+    "cache": {
+      "paths": [
+        "node_modules/**/*",
+        "frontend/web/node_modules/**/*",
+        "packages/*/node_modules/**/*",
+        ".next/cache/**/*"
+      ]
+    }
+  },
+  "app": {
+    "appRoot": "frontend/web"
+  }
+}
