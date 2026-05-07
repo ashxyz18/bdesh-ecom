@@ -21,8 +21,8 @@ RUN npm ci --include-workspace-root --ignore-scripts
 # Copy source code
 COPY . .
 
-# Generate Prisma client
-RUN cd packages/database && npx prisma generate
+# Generate Prisma client (doesn't require database connection)
+RUN cd packages/database && npx prisma generate --schema=prisma/schema.prisma
 
 # Build packages
 RUN cd packages/shared && npx tsc
