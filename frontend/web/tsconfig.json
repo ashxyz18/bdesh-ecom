@@ -26,13 +26,16 @@
         "./*"
       ],
       "@bdesh/ai": [
-        "../../packages/ai/src/index.ts"
+        "../../backend/ai/src/index.ts"
       ],
       "@bdesh/database": [
-        "../../packages/database/src/index.ts"
+        "../../backend/database/src/index.ts"
       ],
       "@bdesh/shared": [
         "../../packages/shared/src/index.ts"
+      ],
+      "@bdesh/ui": [
+        "../../packages/ui/src/index.tsx"
       ]
     },
     "target": "ES2017"

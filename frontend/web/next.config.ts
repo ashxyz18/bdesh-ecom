@@ -4,7 +4,7 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
-  transpilePackages: ["@bdesh/database", "@bdesh/shared", "@bdesh/ui"],
+  transpilePackages: ["@bdesh/database", "@bdesh/shared", "@bdesh/ui", "@bdesh/ai"],
 
   images: {
     formats: ["image/avif", "image/webp"],
