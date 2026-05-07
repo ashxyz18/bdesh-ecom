@@ -87,7 +87,7 @@ async function callReplicateAPI(
     throw new Error(`Replicate API error: ${response.status} - ${error}`);
   }
 
-  const prediction = await response.json();
+  const prediction = (await response.json()) as Record<string, any>;
   
   // Poll for completion
   const pollUrl = prediction.urls?.get;
@@ -101,7 +101,7 @@ async function callReplicateAPI(
     const pollResponse = await fetch(pollUrl, {
       headers: { "Authorization": `Token ${apiKey}` },
     });
-    const pollData = await pollResponse.json();
+    const pollData = (await pollResponse.json()) as Record<string, any>;
     
     if (pollData.status === "succeeded") {
       return pollData.output?.[0] || "";

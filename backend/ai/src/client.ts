@@ -238,7 +238,7 @@ export async function aiComplete(
       throw new Error(`AI API error: ${response.status} - ${errorBody}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as Record<string, any>;
     const result = parseOpenAICompatibleResponse(data, mergedConfig);
     setCachedResponse(cacheKey, result);
     return result;
@@ -286,7 +286,7 @@ async function handleGoogleAIRequest(
     throw new Error(`Google AI API error: ${response.status}`);
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as Record<string, any>;
   const result: AICompletionResponse = {
     content: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
     finishReason: data.candidates?.[0]?.finishReason || "stop",
