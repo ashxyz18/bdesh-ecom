@@ -27,7 +27,6 @@ node_modules
 .env.local.example
 
 # Docker files
-Dockerfile
 .dockerignore
 docker-compose.yml
 
