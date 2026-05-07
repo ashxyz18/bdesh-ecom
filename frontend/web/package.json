@@ -5,7 +5,7 @@
   "scripts": {
     "analyze": "ANALYZE=true next build",
     "dev": "next dev -p 3000",
-    "prebuild": "npm run build -w @bdesh/shared -w @bdesh/database -w @bdesh/ai --if-present 2>nul || true",
+    "prebuild": "npm run build -w @bdesh/shared -w @bdesh/database -w @bdesh/ai --if-present || true",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

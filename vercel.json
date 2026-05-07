@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "name": "bdesh-ecom",
+  "buildCommand": "cd frontend/web && next build --no-turbopack",
+  "installCommand": "npm install && npm run build -w @bdesh/shared -w @bdesh/database -w @bdesh/ai --if-present",
+  "outputDirectory": "frontend/web/.next",
+  "framework": "nextjs"
+}
