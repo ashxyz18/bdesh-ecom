@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   try {
     console.log("Running database migrations...");
     const output = execSync(
-      "npx prisma migrate deploy --schema=packages/database/prisma/schema.prisma",
+       "npx prisma migrate deploy --schema=backend/database/prisma/schema.prisma",
       {
         encoding: "utf-8",
         timeout: 60000,
