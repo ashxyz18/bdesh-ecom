@@ -22,8 +22,8 @@ RUN npm ci --include-workspace-root --ignore-scripts
 COPY . .
 
 # Generate Prisma client (doesn't require database connection)
-# Call binary directly from root node_modules to avoid npx downloading a newer version
-RUN ./node_modules/.bin/prisma generate --schema=packages/database/prisma/schema.prisma
+# Use npm exec instead of npx — it respects locally installed packages and won't download v7
+RUN npm exec -- prisma generate --schema=packages/database/prisma/schema.prisma
 
 # Build packages
 RUN cd packages/shared && npx tsc
@@ -68,6 +68,8 @@ USER nextjs
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
+ENV NEXTAUTH_SECRET=""
+ENV NEXTAUTH_URL=""
 
 # Run migrations then start the app
 CMD ["./entrypoint.sh"]
