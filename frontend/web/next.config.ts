@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import withBundleAnalyzer from "@next/bundle-analyzer";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -94,8 +93,15 @@ const nextConfig: NextConfig = {
   },
 };
 
-const plugins = [
-  process.env.ANALYZE === "true" ? withBundleAnalyzer : (config: any) => config,
-];
+let finalConfig: NextConfig = nextConfig;
 
-export default plugins.reduce((config, plugin) => plugin(config), nextConfig);
+if (process.env.ANALYZE === "true") {
+  try {
+    const withBundleAnalyzer = require("@next/bundle-analyzer")({ enabled: true });
+    finalConfig = withBundleAnalyzer(nextConfig);
+  } catch {
+    console.warn("@next/bundle-analyzer not installed, skipping bundle analysis");
+  }
+}
+
+export default finalConfig;
