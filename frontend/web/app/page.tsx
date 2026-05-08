@@ -2,21 +2,17 @@
 
 import { Navbar } from "@/components/marketing/Navbar";
 import { HeroSection } from "@/components/marketing/HeroSection";
-import { TemplatePreview } from "@/components/marketing/TemplatePreview";
+import { WebsiteTemplatesSection } from "@/components/marketing/WebsiteTemplatesSection";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button } from "@/components/shared/Button";
 import { LazySection } from "@/components/shared/LazySection";
 import {
-  Store, ShoppingBag, CreditCard, Truck, Shield, Smartphone,
-  ArrowRight, Check, Star, Eye,
-  Zap, Globe, BarChart3, Layers, Palette, MousePointerClick,
-  Users, Award, Sparkles,
+  Store, ShoppingBag,
+  ArrowRight, Check, Star,
+  Zap, Palette,
 } from "lucide-react";
-import { useState } from "react";
 import {
-  templates,
-  templateCategories,
   features,
   testimonials,
   stats,
@@ -32,12 +28,6 @@ const steps = [
 ];
 
 export default function LandingPage() {
-  const [templateFilter, setTemplateFilter] = useState("All");
-
-  const filteredTemplates = templateFilter === "All"
-    ? templates
-    : templates.filter((t) => t.category === templateFilter);
-
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
@@ -64,64 +54,8 @@ export default function LandingPage() {
         </div>
       </LazySection>
 
-      {/* Templates */}
-      <LazySection id="templates" className="py-20 md:py-28 bg-white" placeholderHeight={500}>
-        <div className="max-w-[1400px] mx-auto px-6">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#1d4ed8]/5 text-[#1d4ed8] text-sm font-medium mb-4">
-              <Layers size={14} /> Template Gallery
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Choose Your Design</h2>
-            <p className="text-gray-500 max-w-2xl mx-auto text-lg">Professionally designed templates for every type of shop.</p>
-          </div>
-          <div className="flex items-center justify-center gap-2 mb-10 flex-wrap" role="tablist">
-            {templateCategories.map((cat) => (
-              <button key={cat} onClick={() => setTemplateFilter(cat)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-all ${
-                  templateFilter === cat ? "bg-[#1d4ed8] text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200"
-                }`}>{cat}</button>
-            ))}
-          </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {filteredTemplates.map((tpl) => (
-              <div key={tpl.id} className="bg-white rounded-2xl border border-gray-200/80 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group">
-                <div className="relative h-56">
-                  <TemplatePreview templateId={tpl.id} name={tpl.name} />
-                  {/* Overlay with name, badges, and preview link */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none">
-                    <div className="absolute top-3 left-3 flex items-center gap-2 pointer-events-auto">
-                      {tpl.isNew && <span className="px-2 py-0.5 bg-white/20 text-white text-[10px] font-bold rounded-full">NEW</span>}
-                      {tpl.isPopular && <span className="px-2 py-0.5 bg-[#ffc453]/90 text-black text-[10px] font-bold rounded-full">POPULAR</span>}
-                    </div>
-                    <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between pointer-events-auto">
-                      <div>
-                        <span className="text-white font-bold text-sm drop-shadow-md">{tpl.name}</span>
-                        <p className="text-white/80 text-xs drop-shadow-sm">{tpl.tagline}</p>
-                      </div>
-                      <Link href={`/preview/${tpl.id}`} target="_blank">
-                        <Button size="sm" className="bg-white text-black hover:bg-gray-100 text-xs shadow-lg"><Eye size={12} className="mr-1" /> Preview</Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <p className="text-xs text-gray-500 mb-3 line-clamp-2">{tpl.description}</p>
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {tpl.features.slice(0, 3).map((f) => (
-                      <span key={f} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{f}</span>
-                    ))}
-                  </div>
-                  <Link href={`/register?template=${tpl.id}`}>
-                    <Button className="w-full bg-[#1d4ed8] hover:bg-[#1e40af] text-white justify-center text-sm">
-                      Use Template <ArrowRight size={14} className="ml-1.5" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </LazySection>
+      {/* Website Templates Section */}
+      <WebsiteTemplatesSection maxTemplates={8} showBrowseAll={true} />
 
       {/* How It Works */}
       <LazySection className="py-20 md:py-28 bg-white" placeholderHeight={400}>

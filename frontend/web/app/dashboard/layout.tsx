@@ -4,41 +4,15 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Calendar,
-  Settings,
-  Store,
-  LogOut,
-  Menu,
-  X,
-  ChevronDown,
-  Shield,
-  Plus,
-  ExternalLink,
-  Sparkles,
-  Palette,
-  Search,
-  Bell,
-  ChevronRight,
-  Keyboard,
-  Paintbrush,
-  Megaphone,
-  Globe,
-  Mail,
-  Share2,
-  Tag,
-  BarChart3,
-  Wand2,
-  CreditCard,
-  MonitorSmartphone,
-  Box,
-  MapPin,
-  Truck,
-  ClipboardCheck,
+  LayoutDashboard, Package, ShoppingCart, Calendar, Settings, Store,
+  LogOut, Menu, X, ChevronDown, Shield, Plus, ExternalLink,
+  Sparkles, Palette, Search, Bell, ChevronRight, Keyboard,
+  Paintbrush, Megaphone, Globe, Mail, Share2, Tag,
+  BarChart3, Wand2, CreditCard, MonitorSmartphone, Box,
+  MapPin, Truck, ClipboardCheck, CheckCircle2,
 } from "lucide-react";
 import { DashboardProvider, useDashboard } from "./DashboardContext";
+import "./dashboard.css";
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -62,8 +36,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
     setCollapsedSections((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  // Count pending orders across stores
-  const pendingOrderCount = 0; // Will be dynamic when we have real-time data
+  const pendingOrderCount = 0;
 
   const navSections = activeStore
     ? [
@@ -127,10 +100,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#030712" }}>
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm text-slate-500">Loading dashboard...</span>
+          <div className="dark-spinner" />
+          <span className="text-sm" style={{ color: "#64748B" }}>Loading dashboard...</span>
         </div>
       </div>
     );
@@ -139,44 +112,42 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Mobile sidebar overlay */}
+    <div className="dashboard-wrapper">
+      <div className="ambient-glow ambient-glow-1"></div>
+      <div className="ambient-glow ambient-glow-2"></div>
+
       {sidebarOpen && (
-        <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-40" style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }} onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <aside
         role="navigation"
         aria-label="Main navigation"
-        className={`fixed inset-y-0 left-0 z-50 bg-slate-900 transform transition-all duration-300 lg:translate-x-0 ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } ${sidebarCollapsed ? "w-[68px]" : "w-64"}`}
+        className={`fixed inset-y-0 left-0 z-50 transform transition-all duration-300 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"} ${sidebarCollapsed ? "w-[68px]" : "w-64"} lg:translate-x-0`}
+        style={{ background: "rgba(11, 17, 32, 0.95)", backdropFilter: "blur(20px)", borderRight: "1px solid rgba(255,255,255,0.08)" }}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className={`flex items-center justify-between h-16 px-4 border-b border-slate-800 ${sidebarCollapsed ? "justify-center" : ""}`}>
+          <div className={`flex items-center justify-between h-16 px-4 border-bottom`} style={{ borderColor: "rgba(255,255,255,0.08)" }}>
             <Link href="/" className={`flex items-center gap-2.5 ${sidebarCollapsed ? "hidden" : ""}`}>
-              <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center shrink-0">
-                <Store className="h-4.5 w-4.5 text-white" />
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)" }}>
+                <Store className="h-4.5 w-4.5" style={{ color: "#F9FAFB" }} />
               </div>
-              <span className="font-bold text-white text-lg tracking-tight">BdeshShop</span>
+              <span className="sidebar-logo">BdeshShop</span>
             </Link>
             {sidebarCollapsed && (
               <Link href="/" className="flex items-center justify-center">
-                <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-                  <Store className="h-4.5 w-4.5 text-white" />
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)" }}>
+                  <Store className="h-4.5 w-4.5" style={{ color: "#F9FAFB" }} />
                 </div>
               </Link>
             )}
-            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1 text-slate-400 hover:text-white" aria-label="Close sidebar">
+            <button onClick={() => setSidebarOpen(false)} className="lg:hidden p-1" style={{ color: "#94A3B8" }} aria-label="Close sidebar">
               <X size={20} />
             </button>
           </div>
 
-          {/* Store Selector */}
           {stores.length > 0 && (
-            <div className={`p-3 border-b border-slate-800 ${sidebarCollapsed ? "px-2" : ""}`}>
+            <div className={`p-3 border-bottom ${sidebarCollapsed ? "px-2" : ""}`} style={{ borderColor: "rgba(255,255,255,0.08)" }}>
               <div className="relative">
                 <button
                   onClick={() => {
@@ -187,28 +158,27 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                   }}
                   aria-expanded={storeDropdownOpen}
                   aria-haspopup="true"
-                  className={`w-full flex items-center justify-between rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors text-sm ${
-                    sidebarCollapsed ? "p-2.5 justify-center" : "px-3 py-2.5"
-                  }`}
+                  className={`w-full flex items-center justify-between rounded-lg transition-colors text-sm ${sidebarCollapsed ? "p-2.5 justify-center" : "px-3 py-2.5"}`}
+                  style={{ background: "rgba(17, 24, 39, 0.6)", border: "1px solid rgba(255,255,255,0.08)" }}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-600/20 flex items-center justify-center shrink-0">
-                      <Sparkles size={14} className="text-emerald-400" />
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "rgba(59, 130, 246, 0.15)" }}>
+                      <Sparkles size={14} style={{ color: "#3b82f6" }} />
                     </div>
                     {!sidebarCollapsed && (
                       <div className="text-left min-w-0">
-                        <span className="truncate font-medium text-white block">{activeStore?.name || "Select Store"}</span>
-                        <span className="text-[11px] text-slate-400 block truncate">{activeStore?.subdomain}.bdesh.shop</span>
+                        <span className="truncate font-medium block" style={{ color: "#F9FAFB" }}>{activeStore?.name || "Select Store"}</span>
+                        <span className="text-[11px] block truncate" style={{ color: "#94A3B8" }}>{activeStore?.subdomain}.bdesh.shop</span>
                       </div>
                     )}
                   </div>
                   {!sidebarCollapsed && (
-                    <ChevronDown size={14} className={`shrink-0 text-slate-400 transition-transform ${storeDropdownOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown size={14} style={{ color: "#94A3B8", transition: "transform 0.3s", transform: storeDropdownOpen ? "rotate(180deg)" : "none" }} />
                   )}
                 </button>
 
                 {storeDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 rounded-lg shadow-xl border border-slate-700 z-10 py-1 overflow-hidden">
+                  <div className="dark-store-dropdown">
                     {stores.map((store) => (
                       <button
                         key={store.id}
@@ -216,22 +186,21 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                           setActiveStore(store);
                           setStoreDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-3 py-2.5 text-sm hover:bg-slate-700 flex items-center gap-2.5 transition-colors ${
-                          activeStore?.id === store.id ? "bg-slate-700/50 text-emerald-400" : "text-slate-300"
-                        }`}
+                        className={`dark-store-option ${activeStore?.id === store.id ? "active" : ""}`}
                       >
-                        <div className="w-6 h-6 rounded bg-slate-600 flex items-center justify-center shrink-0">
-                          <Store size={12} />
+                        <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: "rgba(17, 24, 39, 0.8)" }}>
+                          <Store size={12} style={{ color: "#94A3B8" }} />
                         </div>
                         <div className="min-w-0">
                           <span className="block truncate font-medium">{store.name}</span>
-                          <span className="block text-[11px] text-slate-400 truncate">{store.subdomain}.bdesh.shop</span>
+                          <span className="text-[11px] block truncate" style={{ color: "#94A3B8" }}>{store.subdomain}.bdesh.shop</span>
                         </div>
                       </button>
                     ))}
                     <Link
                       href="/dashboard/new-store"
-                      className="w-full text-left px-3 py-2.5 text-sm text-emerald-400 hover:bg-slate-700 flex items-center gap-2.5 border-t border-slate-700 mt-1 transition-colors"
+                      className="dark-store-option"
+                      style={{ borderTop: "1px solid rgba(255,255,255,0.08)", marginTop: "4px", color: "#3b82f6" }}
                       onClick={() => setStoreDropdownOpen(false)}
                     >
                       <Plus size={14} /> Create New Store
@@ -242,8 +211,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             </div>
           )}
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-3 space-y-1 scrollbar-thin" aria-label="Dashboard navigation">
+          <nav className="flex-1 overflow-y-auto p-3 space-y-1 dark-scrollbar" aria-label="Dashboard navigation">
             {navSections.map((section) => {
               const isCollapsed = collapsedSections[section.label];
               const hasActiveItem = section.items.some(
@@ -257,14 +225,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                       onClick={() => toggleSection(section.label)}
                       className="w-full flex items-center justify-between px-3 mb-1 mt-3 first:mt-0 group cursor-pointer"
                     >
-                      <p className={`text-[11px] font-semibold uppercase tracking-wider transition-colors ${
-                        hasActiveItem ? "text-emerald-500" : "text-slate-500 group-hover:text-slate-400"
-                      }`}>
+                      <p className={`text-[11px] font-semibold uppercase tracking-wider transition-colors ${hasActiveItem ? "text-blue-400" : "text-muted"}`}>
                         {section.label}
                       </p>
                       <ChevronDown
                         size={12}
-                        className={`text-slate-600 transition-transform ${isCollapsed ? "-rotate-90" : ""}`}
+                        style={{ color: "#94A3B8", transition: "transform 0.3s", transform: isCollapsed ? "rotate(-90deg)" : "none" }}
                       />
                     </button>
                   )}
@@ -278,24 +244,18 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                             href={item.href}
                             onClick={() => setSidebarOpen(false)}
                             title={sidebarCollapsed ? item.label : undefined}
-                            className={`flex items-center gap-3 rounded-lg text-sm font-medium transition-all ${
-                              sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
-                            } ${
-                              isActive
-                                ? "bg-emerald-600/15 text-emerald-400"
-                                : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
-                            }`}
+                            className={`sidebar-item ${isActive ? "active" : ""}`}
                           >
-                            <item.icon size={18} className="shrink-0" />
+                            <item.icon size={18} className="sidebar-icon" style={{ color: isActive ? "#3b82f6" : "#94A3B8" }} />
                             {!sidebarCollapsed && (
                               <>
                                 <span className="flex-1">{item.label}</span>
                                 {item.badge && item.badge > 0 && (
-                                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 text-[11px] font-bold">
+                                  <span className="px-2 py-0.5 rounded-full" style={{ background: "rgba(245, 158, 11, 0.2)", color: "#f59e0b", fontSize: "11px", fontWeight: 700 }}>
                                     {item.badge}
                                   </span>
                                 )}
-                                {isActive && <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />}
+                                {isActive && <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#3b82f6", boxShadow: "0 0 8px rgba(59, 130, 246, 0.5)" }} />}
                               </>
                             )}
                           </Link>
@@ -308,65 +268,56 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Bottom section */}
-          <div className="border-t border-slate-800 p-3 space-y-1">
-            {/* View Store Link */}
+          <div className="border-top p-3 space-y-1" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
             {activeStore && (
               <a
                 href={`/store?subdomain=${activeStore.subdomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`flex items-center gap-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors ${
-                  sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
-                }`}
+                className={`flex items-center gap-2 rounded-lg text-sm transition-colors ${sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"}`}
+                style={{ color: "#94A3B8" }}
                 title={sidebarCollapsed ? "View Store" : undefined}
               >
-                <ExternalLink size={16} className="shrink-0" />
+                <ExternalLink size={16} />
                 {!sidebarCollapsed && <span>View Store</span>}
               </a>
             )}
 
-            {/* Admin Panel Link */}
             {user.role === "ADMIN" && (
               <Link
                 href="/admin"
-                className={`flex items-center gap-2 rounded-lg text-sm text-amber-400 hover:bg-amber-500/10 transition-colors ${
-                  sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
-                }`}
+                className={`flex items-center gap-2 rounded-lg text-sm transition-colors ${sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"}`}
+                style={{ color: "#f59e0b" }}
                 title={sidebarCollapsed ? "Admin Panel" : undefined}
               >
-                <Shield size={16} className="shrink-0" />
+                <Shield size={16} />
                 {!sidebarCollapsed && <span>Admin Panel</span>}
               </Link>
             )}
 
-            {/* Collapse toggle */}
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
               aria-expanded={!sidebarCollapsed}
               aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              className={`flex items-center gap-2 rounded-lg text-sm text-slate-500 hover:bg-slate-800 hover:text-slate-300 transition-colors w-full ${
-                sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"
-              }`}
-              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              className={`flex items-center gap-2 rounded-lg text-sm transition-colors w-full ${sidebarCollapsed ? "px-2.5 py-2.5 justify-center" : "px-3 py-2"}`}
+              style={{ color: "#94A3B8" }}
             >
-              <Keyboard size={16} className="shrink-0" />
+              <Keyboard size={16} />
               {!sidebarCollapsed && <span>Collapse</span>}
             </button>
 
-            {/* User section */}
             <div className={`flex items-center gap-3 ${sidebarCollapsed ? "justify-center py-2" : "px-3 py-2"}`}>
-              <div className="w-9 h-9 rounded-full bg-emerald-600/20 flex items-center justify-center text-emerald-400 font-semibold text-sm shrink-0">
+              <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm" style={{ background: "rgba(59, 130, 246, 0.2)", color: "#3b82f6" }}>
                 {user.name.charAt(0).toUpperCase()}
               </div>
               {!sidebarCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                  <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                  <p className="text-sm font-medium truncate" style={{ color: "#F9FAFB" }}>{user.name}</p>
+                  <p className="text-xs truncate" style={{ color: "#94A3B8" }}>{user.email}</p>
                 </div>
               )}
               {!sidebarCollapsed && (
-                <button onClick={handleLogout} className="p-2 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-red-400 transition-colors" title="Logout" aria-label="Log out">
+                <button onClick={handleLogout} className="p-2 rounded-lg transition-colors" style={{ color: "#94A3B8" }} title="Logout" aria-label="Log out">
                   <LogOut size={16} />
                 </button>
               )}
@@ -375,19 +326,15 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      {/* Main content */}
       <div className={`transition-all duration-300 ${sidebarCollapsed ? "lg:pl-[68px]" : "lg:pl-64"}`}>
-        {/* Top bar */}
-        <header className="sticky top-0 z-30 h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/80 flex items-center justify-between px-4 lg:px-8 gap-4" role="banner">
-          {/* Left: Mobile menu + Search */}
+        <header className="sticky top-0 z-30 h-16 flex items-center justify-between px-4 lg:px-8 gap-4" style={{ background: "rgba(11, 17, 32, 0.8)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.08)" }} role="banner">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2 text-slate-600 hover:text-slate-900" aria-label="Open sidebar menu">
+            <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 -ml-2" style={{ color: "#94A3B8" }} aria-label="Open sidebar menu">
               <Menu size={20} />
             </button>
 
-            {/* Search bar */}
-            <div className={`relative flex-1 max-w-md transition-all ${searchFocused ? "max-w-lg" : ""}`}>
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <div className={`relative flex-1 transition-all ${searchFocused ? "max-w-lg" : "max-w-md"}`}>
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "#94A3B8" }} />
               <input
                 type="search"
                 placeholder="Search orders, products..."
@@ -396,12 +343,13 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
                 aria-label="Search orders and products"
-                className="w-full pl-9 pr-4 py-2 bg-slate-100 border border-transparent rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                className="dark-search"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  style={{ color: "#94A3B8" }}
                   aria-label="Clear search"
                 >
                   <X size={14} />
@@ -410,91 +358,90 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* Right: Actions */}
           <div className="flex items-center gap-2">
-            {/* Notification Bell */}
-            <button className="relative p-2.5 rounded-xl hover:bg-slate-100 text-slate-500 hover:text-slate-700 transition-colors" aria-label={`Notifications${pendingOrderCount > 0 ? ` - ${pendingOrderCount} pending orders` : ""}`}>
+            <button className="dark-icon-btn" aria-label={`Notifications${pendingOrderCount > 0 ? ` - ${pendingOrderCount} pending orders` : ""}`}>
               <Bell size={18} />
               {pendingOrderCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-amber-500 rounded-full" aria-hidden="true" />
+                <span className="dark-notification-dot" />
               )}
             </button>
 
-            {/* View Store */}
             {activeStore && (
               <a
                 href={`/store?subdomain=${activeStore.subdomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden sm:flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium transition-colors px-3 py-2 rounded-xl hover:bg-emerald-50"
+                className="hidden sm:flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-2 rounded-xl"
+                style={{ color: "#3b82f6" }}
               >
                 <ExternalLink size={14} />
                 View Store
               </a>
             )}
 
-            {/* New Store */}
             <Link
               href="/dashboard/new-store"
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-600 text-white rounded-xl text-sm font-medium hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20"
+              className="flex items-center gap-1.5 px-3.5 py-2 font-medium text-sm rounded-xl transition-colors"
+              style={{ background: "linear-gradient(135deg, #2563eb, #3b82f6)", color: "#F9FAFB", boxShadow: "0 4px 15px rgba(37, 99, 235, 0.4)" }}
             >
               <Plus size={15} />
               <span className="hidden sm:inline">New Store</span>
             </Link>
 
-            {/* User Dropdown */}
             <div className="relative">
               <button
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                 aria-expanded={userDropdownOpen}
                 aria-haspopup="true"
                 aria-label="User menu"
-                className="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 transition-colors"
+                className="flex items-center gap-2 p-1.5 rounded-xl transition-colors"
+                style={{ color: "#94A3B8" }}
               >
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-semibold text-sm shadow-lg shadow-emerald-600/20">
+                <div className="dark-avatar">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <ChevronDown size={14} className={`text-slate-400 transition-transform hidden sm:block ${userDropdownOpen ? "rotate-180" : ""}`} />
+                <ChevronDown size={14} style={{ transition: "transform 0.3s", transform: userDropdownOpen ? "rotate(180deg)" : "none" }} />
               </button>
 
               {userDropdownOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setUserDropdownOpen(false)} />
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl shadow-2xl shadow-black/10 border border-slate-200/80 py-1.5 z-50 animate-fade-in-down">
-                    <div className="px-4 py-3 border-b border-slate-100">
-                      <p className="text-sm font-semibold text-slate-900">{user.name}</p>
-                      <p className="text-xs text-slate-500">{user.email}</p>
+                  <div className="dark-dropdown">
+                    <div className="px-4 py-3 border-bottom" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+                      <p className="text-sm font-semibold" style={{ color: "#F9FAFB" }}>{user.name}</p>
+                      <p className="text-xs" style={{ color: "#94A3B8" }}>{user.email}</p>
                     </div>
                     <Link
                       href="/dashboard/settings"
                       onClick={() => setUserDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                      className="dark-dropdown-item"
                     >
-                      <Settings size={15} className="text-slate-400" />
+                      <Settings size={15} style={{ color: "#94A3B8" }} />
                       Settings
                     </Link>
                     {user.role === "ADMIN" && (
                       <Link
                         href="/admin"
                         onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-amber-600 hover:bg-amber-50 transition-colors"
+                        className="dark-dropdown-item"
+                        style={{ color: "#f59e0b" }}
                       >
-                        <Shield size={15} className="text-amber-500" />
+                        <Shield size={15} style={{ color: "#f59e0b" }} />
                         Admin Panel
                       </Link>
                     )}
-                    <div className="border-t border-slate-100 mt-1 pt-1">
-                      <button
-                        onClick={() => {
-                          setUserDropdownOpen(false);
-                          handleLogout();
-                        }}
-                        className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors w-full"
-                      >
-                        <LogOut size={15} className="text-red-400" />
-                        Log out
-                      </button>
-                    </div>
+                    <div className="dark-dropdown-divider"></div>
+                    <button
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        handleLogout();
+                      }}
+                      className="dark-dropdown-item"
+                      style={{ color: "#ef4444" }}
+                    >
+                      <LogOut size={15} />
+                      Log out
+                    </button>
                   </div>
                 </>
               )}
@@ -502,8 +449,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        {/* Page content */}
-        <main id="main-content" className="p-4 lg:p-8" role="main">{children}</main>
+        <main id="main-content" className="dark-main" role="main">{children}</main>
       </div>
     </div>
   );

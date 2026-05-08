@@ -173,6 +173,37 @@ export const templates: Template[] = [
 
 export const templateCategories = ["All", "General", "Fashion", "Food", "Electronics", "Grocery", "Salon", "Tuition", "Clinic", "Pharmacy", "Corporate", "Portfolio"];
 
+// Category group mapping for the new website template section
+export const categoryGroups: Record<string, string> = {
+  General: "Online Store",
+  Electronics: "Online Store",
+  Grocery: "Online Store",
+  Fashion: "Fashion & Beauty",
+  Salon: "Fashion & Beauty",
+  Corporate: "Home Services",
+  Portfolio: "Home Services",
+  Tuition: "Home Services",
+  Clinic: "Health & Fitness",
+  Pharmacy: "Health & Fitness",
+  Food: "Restaurants & Food",
+};
+
+export const websiteTemplateCategories = [
+  "All Templates",
+  "Online Store",
+  "Coming Soon",
+  "Fashion & Beauty",
+  "Home Services",
+  "Health & Fitness",
+  "Restaurants & Food",
+];
+
+export function getTemplatesByGroup(group: string): Template[] {
+  if (group === "All Templates") return templates;
+  if (group === "Coming Soon") return templates.filter((t) => t.isNew);
+  return templates.filter((t) => categoryGroups[t.category] === group);
+}
+
 export interface Feature {
   icon: React.ComponentType<{ size?: number; className?: string }>;
   title: string;
