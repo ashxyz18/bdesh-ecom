@@ -223,7 +223,7 @@ export default function SettingsPage() {
   const inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all text-sm";
   const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
 
-  const storePreviewUrl = `/?store=${form.subdomain}`;
+  const storePreviewUrl = `/store?subdomain=${form.subdomain}`;
 
   return (
     <div className="max-w-3xl">

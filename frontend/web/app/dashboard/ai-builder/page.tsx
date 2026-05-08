@@ -819,7 +819,7 @@ export default function AIBuilderDashboardPage() {
               <Check size={16} className="text-emerald-600" />
               Design applied!{" "}
               <a
-                href={`/?store=${activeStore?.subdomain}`}
+                href={`/store?subdomain=${activeStore?.subdomain}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline hover:no-underline"

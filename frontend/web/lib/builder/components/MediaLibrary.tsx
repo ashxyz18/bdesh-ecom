@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Upload, X, Search, Image as ImageIcon, Check, Loader2, Trash2 } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Upload, X, Search, Image as ImageIcon, Check, Loader2, Trash2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
@@ -14,43 +14,62 @@ interface MediaItem {
   size: number;
 }
 
-export function MediaLibrary({ 
-  storeId, 
-  onSelect, 
-  onClose 
-}: { 
-  storeId: string; 
-  onSelect: (url: string) => void; 
-  onClose: () => void 
+export function MediaLibrary({
+  storeId,
+  onSelect,
+  onClose,
+}: {
+  storeId: string;
+  onSelect: (url: string) => void;
+  onClose: () => void;
 }) {
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const fetchMedia = useCallback(async () => {
+    try {
+      setError(null);
+      const res = await fetch(`/api/${storeId}/media`);
+      if (res.ok) {
+        const data = await res.json();
+        setItems(data.media || []);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Failed to load media");
+      }
+    } catch (err) {
+      console.error("Failed to fetch media", err);
+      setError("Network error. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  }, [storeId]);
 
   useEffect(() => {
-    // Fetch media items
-    const fetchMedia = async () => {
-      try {
-        const res = await fetch(`/api/${storeId}/media`);
-        if (res.ok) {
-          const data = await res.json();
-          setItems(data.media || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch media", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchMedia();
-  }, [storeId]);
+  }, [fetchMedia]);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Client-side validation
+    if (file.size > 10 * 1024 * 1024) {
+      setError("File size exceeds 10MB limit");
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      setError("Only image files are allowed");
+      return;
+    }
+
     setUploading(true);
+    setError(null);
     const formData = new FormData();
     formData.append("file", file);
 
@@ -59,39 +78,58 @@ export function MediaLibrary({
         method: "POST",
         body: formData,
       });
+
       if (res.ok) {
         const data = await res.json();
         setItems([data.media, ...items]);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Upload failed. Please try again.");
       }
     } catch (err) {
       console.error("Upload failed", err);
+      setError("Network error during upload. Please try again.");
     } finally {
       setUploading(false);
+      // Reset the file input so the same file can be re-selected
+      e.target.value = "";
     }
   };
 
   const handleDelete = async (id: string) => {
     try {
+      setError(null);
       const res = await fetch(`/api/${storeId}/media/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        setItems(items.filter(item => item.id !== id));
+        setItems(items.filter((item) => item.id !== id));
+        if (selectedId === id) setSelectedId(null);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.message || "Failed to delete media");
       }
     } catch (err) {
       console.error("Delete failed", err);
+      setError("Failed to delete. Please try again.");
     }
   };
 
-  const filteredItems = items.filter(item => 
+  const handleSelect = (item: MediaItem) => {
+    setSelectedId(item.id);
+    onSelect(item.url);
+  };
+
+  const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
-      
+
       <div className="relative bg-white w-full max-w-4xl h-[80vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+        {/* Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-900">Media Library</h2>
@@ -102,20 +140,46 @@ export function MediaLibrary({
           </button>
         </div>
 
+        {/* Error Banner */}
+        {error && (
+          <div className="mx-6 mt-4 p-3 rounded-xl bg-red-50 border border-red-200 flex items-start gap-2">
+            <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm text-red-700 font-medium">{error}</p>
+            </div>
+            <button onClick={() => setError(null)} className="p-0.5 hover:bg-red-100 rounded">
+              <X size={14} className="text-red-400" />
+            </button>
+          </div>
+        )}
+
+        {/* Search + Upload Bar */}
         <div className="p-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row gap-4 items-center">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-            <Input 
-              placeholder="Search media..." 
-              className="pl-10 bg-white" 
+            <Input
+              placeholder="Search media..."
+              className="pl-10 bg-white"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="shrink-0">
             <label className="cursor-pointer">
-              <input type="file" className="hidden" onChange={handleUpload} disabled={uploading} accept="image/*" />
-              <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${uploading ? "bg-slate-100 text-slate-400" : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20"}`}>
+              <input
+                type="file"
+                className="hidden"
+                onChange={handleUpload}
+                disabled={uploading}
+                accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/avif"
+              />
+              <div
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                  uploading
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20"
+                }`}
+              >
                 {uploading ? <Loader2 size={18} className="animate-spin" /> : <Upload size={18} />}
                 {uploading ? "Uploading..." : "Upload New"}
               </div>
@@ -123,6 +187,7 @@ export function MediaLibrary({
           </div>
         </div>
 
+        {/* Media Grid */}
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="h-full flex items-center justify-center">
@@ -139,20 +204,35 @@ export function MediaLibrary({
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {filteredItems.map((item) => (
-                <div 
-                  key={item.id} 
-                  className="group relative aspect-square bg-slate-50 rounded-xl overflow-hidden border border-slate-200 hover:border-emerald-500 cursor-pointer transition-all"
-                  onClick={() => onSelect(item.url)}
+                <div
+                  key={item.id}
+                  className={`group relative aspect-square bg-slate-50 rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
+                    selectedId === item.id
+                      ? "border-emerald-500 ring-2 ring-emerald-500/20"
+                      : "border-slate-200 hover:border-emerald-500"
+                  }`}
+                  onClick={() => handleSelect(item)}
                 >
-                  <Image 
-                    src={item.url} 
-                    alt={item.name} 
-                    fill 
+                  <Image
+                    src={item.url}
+                    alt={item.name}
+                    fill
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
+
+                  {/* Selected indicator */}
+                  {selectedId === item.id && (
+                    <div className="absolute top-2 left-2 w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center shadow-md">
+                      <Check size={14} className="text-white" />
+                    </div>
+                  )}
+
                   <div className="absolute inset-0 bg-slate-900/0 group-hover:bg-slate-900/20 transition-all" />
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(item.id);
+                    }}
                     className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
                   >
                     <Trash2 size={14} />
