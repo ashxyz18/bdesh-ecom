@@ -5,14 +5,14 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "prebuild": "prisma generate",
-    "build": "npx tsc",
+    "build": "tsc",
     "postinstall": "prisma generate",
     "db:generate": "npx prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "ts-node src/seed.ts",
-    "type-check": "npx tsc --noEmit"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
