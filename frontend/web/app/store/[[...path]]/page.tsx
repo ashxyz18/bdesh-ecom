@@ -50,7 +50,7 @@ function getSchemaOrgType(websiteType: string): string {
 
 interface StorePageProps {
   params: Promise<{ path?: string[] }>;
-  searchParams: Promise<{ subdomain?: string; q?: string }>;
+  searchParams: Promise<{ subdomain?: string; q?: string; payment?: string; order?: string }>;
 }
 
 export async function generateMetadata({ searchParams }: StorePageProps): Promise<Metadata> {
@@ -298,9 +298,37 @@ export default async function StorePage({ params, searchParams }: StorePageProps
   // Build store JSX
   let storeJSX: React.ReactNode;
 
-  // 1. Check for specific system pages (Checkout, Cart, etc.)
-  if (path && path[0] === "checkout") {
-    const { ConfigCheckoutPage } = await import("@/lib/store-templates/engine/pages/ConfigCheckoutPage");
+  // Check for payment callback params
+  const paymentStatus = (await searchParams).payment as string | undefined;
+  const paymentOrder = (await searchParams).order as string | undefined;
+
+  // 1. Check for specific system pages (Checkout, Cart, Track, etc.)
+  if (path && path[0] === "track") {
+  const { ConfigOrderTrackPage } = await import("@/lib/store-templates/engine/pages/ConfigOrderTrackPage");
+    const dummyConfig = {
+      id: "system",
+      theme: {
+        colors: { primary: "#008060", secondary: "#2c3e50", bg: "#ffffff", text: "#1a1a1a" },
+        fonts: { body: "Inter", heading: "Inter" },
+        radius: "md",
+        shadows: "sm"
+      }
+    };
+    
+    storeJSX = (
+      <StoreProviders storeId={parsedStore.id}>
+        <ConfigOrderTrackPage
+          config={dummyConfig as any}
+          store={parsedStore}
+          formatPrice={(p: number) => `৳${p.toLocaleString()}`}
+          storeLink={(sub: string) => `/store?subdomain=${parsedStore.subdomain}${sub ? `&path=${sub}` : ""}`}
+          orderNumber={path[1] || paymentOrder || ""}
+        />
+      </StoreProviders>
+    );
+  }
+  else if (path && path[0] === "checkout") {
+    const { ConfigCheckoutPage } = await import("../../../lib/store-templates/engine/pages/ConfigCheckoutPage");
     // We need a dummy config for theme variables if using block builder
     const dummyConfig = {
       id: "system",
@@ -317,8 +345,8 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         <ConfigCheckoutPage 
           config={dummyConfig as any} 
           store={parsedStore} 
-          formatPrice={(p) => `৳${p.toLocaleString()}`} 
-          storeLink={(sub) => `/store?subdomain=${parsedStore.subdomain}${sub ? `&path=${sub}` : ""}`} 
+          formatPrice={(p: number) => `৳${p.toLocaleString()}`} 
+          storeLink={(sub: string) => `/store?subdomain=${parsedStore.subdomain}${sub ? `&path=${sub}` : ""}`} 
         />
       </StoreProviders>
     );

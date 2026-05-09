@@ -12,7 +12,7 @@ export interface AIConfig {
 export const OPENROUTER_CONFIG: AIConfig = {
   provider: "openrouter",
   baseUrl: "https://openrouter.ai/api/v1",
-  model: "google/gemini-2.0-flash-001",
+  model: "google/gemma-4-31b-it:free",
   maxTokens: 2048,
   temperature: 0.7,
   retries: 2,

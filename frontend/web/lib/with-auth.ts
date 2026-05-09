@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSession } from "./auth";
+import { getSession, SessionWithUser } from "./auth";
 
 export interface AuthOptions {
   roles?: string[]; // If specified, user must have one of these roles
@@ -7,7 +7,7 @@ export interface AuthOptions {
 
 export async function withAuth(
   req: NextRequest,
-  handler: (req: NextRequest, session: any) => Promise<NextResponse>,
+  handler: (req: NextRequest, session: SessionWithUser) => Promise<NextResponse>,
   options: AuthOptions = {}
 ): Promise<NextResponse> {
   try {

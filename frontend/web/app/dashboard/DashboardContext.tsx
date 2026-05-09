@@ -17,6 +17,7 @@ interface StoreData {
   subdomain: string;
   status: string;
   theme?: string | Record<string, unknown> | null;
+  settings?: string | Record<string, unknown> | null;
 }
 
 interface DashboardContextType {

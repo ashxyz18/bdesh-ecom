@@ -1,16 +1,35 @@
 import type { AIConfig, AICompletionRequest, AICompletionResponse } from "./types";
 import { OPENROUTER_CONFIG, GOOGLE_CONFIG, GROQ_CONFIG, OPENAI_CONFIG, LOCAL_CONFIG } from "./types";
 
-// Check for available API keys and set priority provider
-const hasOpenAIKey = typeof process !== 'undefined' && process.env?.OPENAI_API_KEY;
-const hasOpenRouterKey = typeof process !== 'undefined' && process.env?.OPENROUTER_API_KEY;
+// Build provider chain lazily at request time (env vars may not be available at import time)
+function buildProviderChain(): AIConfig[] {
+  const chain: AIConfig[] = [];
+  const openRouterKey = typeof process !== 'undefined' && process.env?.OPENROUTER_API_KEY;
+  const googleKey = typeof process !== 'undefined' && process.env?.GOOGLE_API_KEY;
+  const openAIKey = typeof process !== 'undefined' && process.env?.OPENAI_API_KEY;
 
-// Default to OpenAI if key available, otherwise OpenRouter, then local fallback
-let config: AIConfig = hasOpenAIKey 
-  ? { ...OPENAI_CONFIG, model: "gpt-4o-mini" }  // Affordable: $0.15/$0.60 per 1M tokens
-  : hasOpenRouterKey 
-    ? { ...OPENROUTER_CONFIG, model: "google/gemini-2.0-flash-001" }
-    : { ...LOCAL_CONFIG };
+  if (openRouterKey) chain.push({ ...OPENROUTER_CONFIG, apiKey: process.env.OPENROUTER_API_KEY, model: "google/gemma-4-31b-it:free" });
+  if (googleKey) chain.push({ ...GOOGLE_CONFIG, apiKey: process.env.GOOGLE_API_KEY });
+  if (openAIKey) chain.push({ ...OPENAI_CONFIG, apiKey: process.env.OPENAI_API_KEY, model: "gpt-4o-mini" });
+  chain.push({ ...LOCAL_CONFIG });
+  return chain;
+}
+
+// Mutable provider chain — rebuilt lazily when env vars become available
+let providerChain: AIConfig[] = buildProviderChain();
+let chainInitialized = providerChain.length > 1; // true if any real provider was found
+
+// Ensure chain is rebuilt with fresh env vars on first request
+function ensureChainInitialized(): void {
+  if (!chainInitialized) {
+    providerChain = buildProviderChain();
+    config = providerChain[0] || { ...LOCAL_CONFIG };
+    chainInitialized = providerChain.length > 1;
+  }
+}
+
+// Default config — first provider in chain
+let config: AIConfig = providerChain[0] || { ...LOCAL_CONFIG };
 
 // Simple in-memory cache for identical requests
 const responseCache = new Map<string, { response: AICompletionResponse; timestamp: number }>();
@@ -92,6 +111,19 @@ const BANGLA_FALLBACKS: Record<string, string> = {
 
 export function configureAI(cfg: Partial<AIConfig>) {
   config = { ...config, ...cfg };
+  // Rebuild provider chain with the new config at the front
+  const existingIndex = providerChain.findIndex(p => p.provider === cfg.provider);
+  if (existingIndex !== -1) {
+    providerChain[existingIndex] = { ...providerChain[existingIndex], ...cfg };
+  }
+  // Move the configured provider to the front of the chain
+  if (cfg.provider && cfg.apiKey) {
+    const idx = providerChain.findIndex(p => p.provider === cfg.provider);
+    if (idx > 0) {
+      const [item] = providerChain.splice(idx, 1);
+      providerChain.unshift(item);
+    }
+  }
 }
 
 export function getAIConfig(): AIConfig {
@@ -100,7 +132,7 @@ export function getAIConfig(): AIConfig {
 
 export function getAvailableProviders(): { id: AIConfig["provider"]; name: string; models: string[] }[] {
   return [
-    { id: "openrouter", name: "OpenRouter", models: ["google/gemini-2.0-flash-001", "anthropic/claude-3.5-sonnet", "meta-llama/llama-3.3-70b-instruct"] },
+    { id: "openrouter", name: "OpenRouter", models: ["google/gemma-4-31b-it:free", "google/gemini-2.0-flash-001", "anthropic/claude-3.5-sonnet", "meta-llama/llama-3.3-70b-instruct"] },
     { id: "google", name: "Google AI", models: ["gemini-2.0-flash", "gemini-1.5-pro"] },
     { id: "groq", name: "Groq", models: ["llama-3.3-70b-versatile", "mixtral-8x7b-32768"] },
     { id: "openai", name: "OpenAI", models: ["gpt-4o-mini", "gpt-4o"] },
@@ -196,57 +228,74 @@ function parseOpenAICompatibleResponse(data: any, cfg: AIConfig): AICompletionRe
 export async function aiComplete(
   request: AICompletionRequest
 ): Promise<AICompletionResponse> {
-  const mergedConfig = { ...config, ...request.config };
+  // Ensure provider chain is built with fresh env vars
+  ensureChainInitialized();
 
   // Check rate limit
   if (!checkRateLimit()) {
     throw new Error("Rate limit exceeded. Please wait a moment and try again.");
   }
 
-  // Local/fallback provider
-  if (mergedConfig.provider === "local" || !mergedConfig.apiKey) {
-    return generateLocalFallback(request, mergedConfig);
-  }
+  // If request overrides config, use single provider
+  const overrideConfig = request.config;
+  const providersToTry: AIConfig[] = overrideConfig
+    ? [{ ...config, ...overrideConfig }]
+    : providerChain;
 
-  // Check cache
-  const cacheKey = getCacheKey(request, mergedConfig);
-  const cached = getCachedResponse(cacheKey);
-  if (cached) {
-    return cached;
-  }
+  // Try each provider in the fallback chain
+  for (const providerConfig of providersToTry) {
+    const mergedConfig = providerConfig;
 
-  const retries = mergedConfig.retries ?? 2;
-  const retryDelay = mergedConfig.retryDelay ?? 1000;
-
-  try {
-    // Google AI has a different API format
-    if (mergedConfig.provider === "google") {
-      return await handleGoogleAIRequest(request, mergedConfig, cacheKey, retries, retryDelay);
+    // Skip local provider until it's the last resort
+    if (mergedConfig.provider === "local" || !mergedConfig.apiKey) {
+      continue;
     }
 
-    // OpenAI-compatible providers (OpenRouter, OpenAI, Groq)
-    const { url, body, headers } = buildOpenAICompatibleRequest(mergedConfig, request);
-
-    const response = await fetchWithRetry(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    }, retries, retryDelay);
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "");
-      throw new Error(`AI API error: ${response.status} - ${errorBody}`);
+    // Check cache
+    const cacheKey = getCacheKey(request, mergedConfig);
+    const cached = getCachedResponse(cacheKey);
+    if (cached) {
+      return cached;
     }
 
-    const data = (await response.json()) as Record<string, any>;
-    const result = parseOpenAICompatibleResponse(data, mergedConfig);
-    setCachedResponse(cacheKey, result);
-    return result;
-  } catch (error) {
-    // Fallback to local on API error
-    console.warn(`AI provider ${mergedConfig.provider} failed, using local fallback:`, error);
-    return generateLocalFallback(request, mergedConfig);
+    const retries = mergedConfig.retries ?? 2;
+    const retryDelay = mergedConfig.retryDelay ?? 1000;
+
+    try {
+      // Google AI has a different API format
+      if (mergedConfig.provider === "google") {
+        const result = await handleGoogleAIRequest(request, mergedConfig, cacheKey, retries, retryDelay);
+        return result;
+      }
+
+      // OpenAI-compatible providers (OpenRouter, OpenAI, Groq)
+      const { url, body, headers } = buildOpenAICompatibleRequest(mergedConfig, request);
+
+      const response = await fetchWithRetry(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+      }, retries, retryDelay);
+
+      if (!response.ok) {
+        const errorBody = await response.text().catch(() => "");
+        throw new Error(`AI API error: ${response.status} - ${errorBody}`);
+      }
+
+      const data = (await response.json()) as Record<string, any>;
+      const result = parseOpenAICompatibleResponse(data, mergedConfig);
+      setCachedResponse(cacheKey, result);
+      return result;
+    } catch (error) {
+      // Log and try next provider in chain
+      console.warn(`AI provider ${mergedConfig.provider} failed, trying next in chain:`, error instanceof Error ? error.message : error);
+      continue;
+    }
   }
+
+  // All providers failed — use local fallback
+  console.warn("All AI providers failed, using local fallback");
+  return generateLocalFallback(request, config);
 }
 
 async function handleGoogleAIRequest(
@@ -390,49 +439,52 @@ function generateLocalFallback(
 export async function aiCompleteStream(
   request: AICompletionRequest
 ): Promise<ReadableStream<Uint8Array> | null> {
-  const mergedConfig = { ...config, ...request.config };
+  // Ensure provider chain is built with fresh env vars
+  ensureChainInitialized();
 
-  if (mergedConfig.provider === "local" || !mergedConfig.apiKey) {
-    const fallback = await aiComplete(request);
-    return new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(fallback.content));
-        controller.close();
-      },
-    });
-  }
+  // Try each provider in the chain for streaming
+  for (const providerConfig of providerChain) {
+    const mergedConfig = { ...providerConfig, ...request.config };
 
-  try {
-    // Google AI streaming
-    if (mergedConfig.provider === "google") {
-      return handleGoogleAIStream(request, mergedConfig);
+    if (mergedConfig.provider === "local" || !mergedConfig.apiKey) {
+      continue;
     }
 
-    // OpenAI-compatible streaming
-    const { url, body, headers } = buildOpenAICompatibleRequest(mergedConfig, request);
-    const streamBody = { ...body, stream: true };
+    try {
+      // Google AI streaming
+      if (mergedConfig.provider === "google") {
+        return await handleGoogleAIStream(request, mergedConfig);
+      }
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(streamBody),
-    });
+      // OpenAI-compatible streaming
+      const { url, body, headers } = buildOpenAICompatibleRequest(mergedConfig, request);
+      const streamBody = { ...body, stream: true };
 
-    if (!response.ok) {
-      throw new Error(`AI API error: ${response.status}`);
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(streamBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`AI API error: ${response.status}`);
+      }
+
+      return response.body;
+    } catch (error) {
+      console.warn(`AI stream provider ${providerConfig.provider} failed, trying next:`, error instanceof Error ? error.message : error);
+      continue;
     }
-
-    return response.body;
-  } catch {
-    // Fallback to non-streaming
-    const fallback = await aiComplete(request);
-    return new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(fallback.content));
-        controller.close();
-      },
-    });
   }
+
+  // All providers failed — fallback to non-streaming local
+  const fallback = await aiComplete(request);
+  return new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(fallback.content));
+      controller.close();
+    },
+  });
 }
 
 async function handleGoogleAIStream(

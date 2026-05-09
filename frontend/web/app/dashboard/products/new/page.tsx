@@ -12,12 +12,15 @@ import {
   Image as ImageIcon,
   Sparkles,
   Loader2,
+  AlertCircle,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDashboard } from "../../DashboardContext";
 import { slugify } from "@bdesh/shared";
+import { useImageUpload } from "@/lib/hooks/useImageUpload";
 
 interface VariantRow {
   name: string;
@@ -29,6 +32,7 @@ interface VariantRow {
 export default function NewProductPage() {
   const router = useRouter();
   const { activeStore } = useDashboard();
+  const { uploading: imageUploading, uploadImages, error: uploadError, clearError: clearUploadError } = useImageUpload(activeStore?.id);
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -61,20 +65,15 @@ export default function NewProductPage() {
 
   const slug = slugify(name);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) return;
 
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const result = ev.target?.result as string;
-        if (result) {
-          setImages((prev) => [...prev, result]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    const fileArray = Array.from(files);
+    const urls = await uploadImages(fileArray);
+    if (urls.length > 0) {
+      setImages((prev) => [...prev, ...urls]);
+    }
 
     e.target.value = "";
   };
@@ -214,6 +213,17 @@ export default function NewProductPage() {
             {error}
           </div>
         )}
+        {uploadError && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <AlertCircle size={16} />
+              {uploadError}
+            </span>
+            <button type="button" onClick={clearUploadError} className="text-amber-500 hover:text-amber-700">
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content - 2 cols */}
@@ -335,17 +345,24 @@ export default function NewProductPage() {
                   </div>
                 ))}
 
-                <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
-                  <Upload size={20} className="text-gray-400 mb-1" />
-                  <span className="text-xs text-gray-500">Upload</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                </label>
+                {imageUploading ? (
+                  <div className="aspect-square rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 flex flex-col items-center justify-center">
+                    <Loader2 size={20} className="text-emerald-600 animate-spin mb-1" />
+                    <span className="text-xs text-emerald-600">Uploading...</span>
+                  </div>
+                ) : (
+                  <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                    <Upload size={20} className="text-gray-400 mb-1" />
+                    <span className="text-xs text-gray-500">Upload</span>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/avif"
+                      multiple
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
             </div>
 

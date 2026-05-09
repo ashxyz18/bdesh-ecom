@@ -1,6 +1,38 @@
 import { prisma } from "@bdesh/database";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
+import { createHash } from "crypto";
+
+/** Session with included user relation */
+export interface SessionWithUser {
+  id: string;
+  userId: string;
+  token: string;
+  lookupHash: string | null;
+  expiresAt: Date;
+  createdAt: Date;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    role: string;
+    avatar: string | null;
+    phone: string | null;
+    password: string;
+    emailVerified: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  };
+}
+
+/**
+ * Generate a deterministic lookup hash from a session token.
+ * This allows O(1) session lookup instead of loading ALL sessions
+ * and doing bcrypt compare on each one.
+ */
+function tokenLookupHash(token: string): string {
+  return createHash("sha256").update(token).digest("hex");
+}
 
 export async function hashToken(token: string): Promise<string> {
   return bcrypt.hash(token, 10);
@@ -28,39 +60,53 @@ export async function verifyPassword(
 export async function createSession(userId: string) {
   const token = generateToken();
   const hashedToken = await hashToken(token);
+  const lookupHash = tokenLookupHash(token);
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
+  const sessionData: any = { userId, token: hashedToken, expiresAt, lookupHash };
   await prisma.session.create({
-    data: { userId, token: hashedToken, expiresAt },
+    data: sessionData,
   });
 
   return token;
 }
 
-export async function getSession() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
+export async function getSession(): Promise<SessionWithUser | null> {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("session")?.value;
 
-  if (!token) return null;
+    if (!token) return null;
 
-  const sessions = await prisma.session.findMany({
-    where: { 
-      expiresAt: { gt: new Date() }
-    },
-    include: { user: true },
-  });
+    // Use lookup hash for O(1) query instead of loading all sessions
+    const lookupHash = tokenLookupHash(token);
 
-  // Find matching session by comparing tokens
-  for (const session of sessions) {
-    if (await verifyToken(token, session.token)) {
-      return session;
+    const session = await prisma.session.findUnique({
+      where: { lookupHash } as any,
+      include: { user: true },
+    }) as SessionWithUser | null;
+
+    if (!session) return null;
+
+    // Check expiry
+    if (session.expiresAt < new Date()) {
+      // Clean up expired session
+      await prisma.session.deleteMany({ where: { id: session.id } }).catch(() => {});
+      return null;
     }
+
+    // Verify the token matches (security check against hash collisions)
+    const isValid = await verifyToken(token, session.token);
+    if (!isValid) return null;
+
+    return session;
+  } catch (error) {
+    console.error("[auth] getSession error:", error);
+    return null;
   }
-  
-  return null;
 }
 
-export async function requireAuth() {
+export async function requireAuth(): Promise<SessionWithUser> {
   const session = await getSession();
   if (!session) {
     throw new Error("Unauthorized");
@@ -69,20 +115,25 @@ export async function requireAuth() {
 }
 
 export async function logout() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("session")?.value;
 
-  if (token) {
-    const sessions = await prisma.session.findMany({});
-    for (const session of sessions) {
-      if (await verifyToken(token, session.token)) {
-        await prisma.session.deleteMany({ where: { id: session.id } });
-        break;
-      }
+    if (token) {
+      // Use lookup hash for O(1) deletion
+      const lookupHash = tokenLookupHash(token);
+      await prisma.session.deleteMany({ where: { lookupHash } as any }).catch(() => {});
     }
-  }
 
-  cookieStore.delete("session");
+    cookieStore.delete("session");
+  } catch (error) {
+    console.error("[auth] logout error:", error);
+    // Still delete the cookie even if DB fails
+    try {
+      const cookieStore = await cookies();
+      cookieStore.delete("session");
+    } catch {}
+  }
 }
 
 export async function getSessionUser() {

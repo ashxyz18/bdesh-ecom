@@ -1,6 +1,6 @@
 import React from "react";
 import { BlockType } from "../blocks/types";
-import { Layout, Image, Info, Phone, Star, Clock, Grid } from "lucide-react";
+import { Layout, Image, Info, Phone, Star, Clock, Grid, DollarSign, Sparkles, HelpCircle, Users, Mail, BarChart3 } from "lucide-react";
 
 export function BlockSidebar({ onAddBlock }: { onAddBlock: (type: BlockType) => void }) {
   const blocks: { type: BlockType; label: string; icon: any; description: string }[] = [
@@ -12,6 +12,12 @@ export function BlockSidebar({ onAddBlock }: { onAddBlock: (type: BlockType) => 
     { type: "contactForm", label: "Contact Form", icon: Layout, description: "Lead generation form." },
     { type: "testimonials", label: "Testimonials", icon: Star, description: "Customer reviews and quotes." },
     { type: "hours", label: "Business Hours", icon: Clock, description: "Weekly opening hours display." },
+    { type: "pricing", label: "Pricing", icon: DollarSign, description: "Pricing plans and comparison." },
+    { type: "features", label: "Features", icon: Sparkles, description: "Feature grid with icons." },
+    { type: "faq", label: "FAQ", icon: HelpCircle, description: "Frequently asked questions accordion." },
+    { type: "team", label: "Team", icon: Users, description: "Team members showcase." },
+    { type: "newsletter", label: "Newsletter", icon: Mail, description: "Email subscription signup." },
+    { type: "stats", label: "Stats", icon: BarChart3, description: "Animated statistics counter." },
   ];
 
   return (

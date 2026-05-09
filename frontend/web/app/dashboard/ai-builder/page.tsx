@@ -531,7 +531,7 @@ export default function AIBuilderDashboardPage() {
   // ─── Apply design to store ──────────────────────────────────────────────────────
 
   const handleApplyToStore = async () => {
-    if (!storeId || !result) return;
+    if (!result) return;
     setApplying(true);
     setApplied(false);
 
@@ -558,18 +558,26 @@ export default function AIBuilderDashboardPage() {
         heroSubtitle: `Discover amazing products curated just for you. Shop with confidence.`,
       };
 
-      const res = await fetch(`/api/stores/${storeId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme: JSON.stringify(theme),
-          settings: JSON.stringify(settings),
-        }),
-      });
+      if (storeId) {
+        // Apply to actual store
+        const res = await fetch(`/api/stores/${storeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            theme: JSON.stringify(theme),
+            settings: JSON.stringify(settings),
+          }),
+        });
 
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Failed to apply design");
+        if (!res.ok) {
+          const data = await res.json();
+          throw new Error(data.error || "Failed to apply design");
+        }
+      } else {
+        // Demo mode — save to localStorage
+        localStorage.setItem("ai-builder-demo-theme", JSON.stringify(theme));
+        localStorage.setItem("ai-builder-demo-settings", JSON.stringify(settings));
+        localStorage.setItem("ai-builder-demo-config", JSON.stringify(result.templateConfig));
       }
 
       setApplied(true);
@@ -791,26 +799,24 @@ export default function AIBuilderDashboardPage() {
               </Button>
             </Link>
 
-            {storeId && (
-              <Button
-                onClick={handleApplyToStore}
-                disabled={applying}
-                className="w-full justify-center bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-600/20"
-              >
-                {applying ? (
-                  <><Loader2 size={16} className="animate-spin mr-1.5" /> Applying...</>
-                ) : applied ? (
-                  <><Check size={16} className="mr-1.5" /> Applied to Store!</>
-                ) : (
-                  <><Paintbrush size={16} className="mr-1.5" /> Apply to My Store</>
-                )}
-              </Button>
-            )}
+            <Button
+              onClick={handleApplyToStore}
+              disabled={applying}
+              className="w-full justify-center bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-600/20"
+            >
+              {applying ? (
+                <><Loader2 size={16} className="animate-spin mr-1.5" /> Applying...</>
+              ) : applied ? (
+                <><Check size={16} className="mr-1.5" /> {storeId ? "Applied to Store!" : "Saved to Demo!"}</>
+              ) : (
+                <><Paintbrush size={16} className="mr-1.5" /> {storeId ? "Apply to My Store" : "Save Design (Demo)"}</>
+              )}
+            </Button>
           </div>
 
           {!storeId && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-              <strong>No store selected.</strong> Select a store from the sidebar to apply this design.
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+              <strong>Demo mode.</strong> Your design is saved locally. <Link href="/dashboard/new-store" className="font-semibold underline hover:no-underline">Create a store</Link> to publish it live.
             </div>
           )}
 

@@ -16,11 +16,33 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, phone, password } = registerSchema.parse(body);
 
-    const existing = await prisma.user.findFirst({
-      where: { OR: [{ email }, { phone }] },
-    });
+    // Validate input
+    let parsed;
+    try {
+      parsed = registerSchema.parse(body);
+    } catch {
+      return NextResponse.json(
+        { message: "Please fill in all required fields correctly" },
+        { status: 400 }
+      );
+    }
+
+    const { name, email, phone, password } = parsed;
+
+    // Check existing user
+    let existing;
+    try {
+      existing = await prisma.user.findFirst({
+        where: { OR: [{ email }, { phone }] },
+      });
+    } catch (dbError: any) {
+      console.error("[auth/register] Database error:", dbError.message);
+      return NextResponse.json(
+        { message: "Service temporarily unavailable. Please try again in a moment." },
+        { status: 503 }
+      );
+    }
 
     if (existing) {
       return NextResponse.json(
@@ -29,18 +51,54 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const hashedPassword = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        phone: phone || undefined,
-        password: hashedPassword,
-        role: "MERCHANT",
-      },
-    }) as any;
+    // Hash password and create user
+    let hashedPassword;
+    try {
+      hashedPassword = await hashPassword(password);
+    } catch (hashError: any) {
+      console.error("[auth/register] Password hashing error:", hashError.message);
+      return NextResponse.json(
+        { message: "Registration failed. Please try again." },
+        { status: 500 }
+      );
+    }
 
-    const token = await createSession(user.id);
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: {
+          name,
+          email,
+          phone: phone || undefined,
+          password: hashedPassword,
+          role: "MERCHANT",
+        },
+      }) as any;
+    } catch (dbError: any) {
+      console.error("[auth/register] User creation error:", dbError.message);
+      return NextResponse.json(
+        { message: "Could not create account. Please try again." },
+        { status: 500 }
+      );
+    }
+
+    // Create session
+    let token;
+    try {
+      token = await createSession(user.id);
+    } catch (sessionError: any) {
+      console.error("[auth/register] Session creation error:", sessionError.message);
+      // User was created but session failed - still return success, user can login
+      return NextResponse.json({
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+        },
+        message: "Account created. Please log in.",
+      });
+    }
 
     const response = NextResponse.json({
       user: {
@@ -61,9 +119,10 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error: any) {
+    console.error("[auth/register] Unexpected error:", error.message);
     return NextResponse.json(
-      { message: error.message || "Something went wrong" },
-      { status: 400 }
+      { message: "An unexpected error occurred. Please try again." },
+      { status: 500 }
     );
   }
 }

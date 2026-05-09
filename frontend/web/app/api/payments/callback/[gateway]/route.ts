@@ -86,15 +86,16 @@ export async function GET(
 
     // Redirect to store's payment result page
     const storeSubdomain = safeStr((payment.order as any).store?.subdomain);
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://bdesh.shop";
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_APP_URL || "https://bdesh.shop";
+    const orderNumber = safeStr((payment.order as any).orderNumber);
 
     if (result.verified) {
       return NextResponse.redirect(
-        new URL(`/?store=${storeSubdomain}&payment=success&orderId=${safeStr(payment.orderId)}`, baseUrl)
+        new URL(`/store?subdomain=${storeSubdomain}&payment=success&order=${orderNumber}`, baseUrl)
       );
     } else {
       return NextResponse.redirect(
-        new URL(`/?store=${storeSubdomain}&payment=failed&orderId=${safeStr(payment.orderId)}`, baseUrl)
+        new URL(`/store?subdomain=${storeSubdomain}&payment=failed&order=${orderNumber}`, baseUrl)
       );
     }
   } catch (error) {

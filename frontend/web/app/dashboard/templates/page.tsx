@@ -1,199 +1,233 @@
-import { Suspense } from "react";
-import Link from "next/link";
-import { getSession } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
-import { TemplatePreview } from "@/components/marketing/TemplatePreview";
-import { Loader2, Filter, Grid, List } from "lucide-react";
-import { revalidatePath } from "next/cache";
+"use client";
 
-function FilterSection({ categories, websiteTypes, selectedCategory, selectedType }: {
-  categories: string[];
-  websiteTypes: string[];
-  selectedCategory?: string;
-  selectedType?: string;
-}) {
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { useDashboard } from "../DashboardContext";
+import { templateList, type TemplateInfo } from "@/lib/store-templates/registry";
+import { Button } from "@/components/ui/button";
+import {
+  Palette, Filter, Grid, List, Eye, Wand2, ArrowRight,
+  ShoppingBag, UtensilsCrossed, Briefcase, GraduationCap,
+  Scissors, Pill, Monitor, Sparkles,
+} from "lucide-react";
+
+const websiteTypeIcons: Record<string, React.ReactNode> = {
+  ecommerce: <ShoppingBag size={14} />,
+  restaurant: <UtensilsCrossed size={14} />,
+  corporate: <Briefcase size={14} />,
+  portfolio: <Monitor size={14} />,
+  education: <GraduationCap size={14} />,
+  salon: <Scissors size={14} />,
+  pharmacy: <Pill size={14} />,
+};
+
+const websiteTypes = ["ecommerce", "restaurant", "corporate", "portfolio", "education", "salon", "pharmacy"];
+const categories = ["general", "fashion", "food", "electronics", "beauty", "health", "education"];
+
+function TemplateCard({ template, activeStore }: { template: TemplateInfo; activeStore: any }) {
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm space-y-6">
-      <div>
-        <h3 className="font-semibold mb-3">Website Type</h3>
-        <div className="space-y-2">
-          <Link
-            href="/dashboard/templates"
-            className={`block px-3 py-2 rounded-lg text-sm transition ${
-              !selectedType ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"
-            }`}
-          >
-            All Types
-          </Link>
-          {websiteTypes.map((type) => (
-            <Link
-              key={type}
-              href={`/dashboard/templates?websiteType=${type}`}
-              className={`block px-3 py-2 rounded-lg text-sm capitalize transition ${
-                selectedType === type ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"
-              }`}
-            >
-              {type.toLowerCase()}
-            </Link>
-          ))}
+    <div className="dark-card fade-in group overflow-hidden">
+      {/* Color preview */}
+      <div className="relative h-40 overflow-hidden">
+        <div className={`absolute inset-0 bg-gradient-to-br ${template.color}`} />
+        <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
+        <div className="absolute bottom-3 left-3 right-3">
+          <div className="flex gap-2">
+            {Object.entries(template.defaultColors).map(([key, color]) => (
+              <div
+                key={key}
+                className="w-6 h-6 rounded-full border-2 border-white/30 shadow-lg"
+                style={{ backgroundColor: color }}
+                title={`${key}: ${color}`}
+              />
+            ))}
+          </div>
         </div>
+        {template.isPremium && (
+          <span className="absolute top-3 right-3 px-2 py-1 rounded-full text-[10px] font-bold" style={{ background: "rgba(245, 158, 11, 0.9)", color: "#fff" }}>
+            PREMIUM
+          </span>
+        )}
       </div>
 
-      <div>
-        <h3 className="font-semibold mb-3">Category</h3>
-        <div className="space-y-2">
-          <Link
-            href="/dashboard/templates"
-            className={`block px-3 py-2 rounded-lg text-sm transition ${
-              !selectedCategory ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"
-            }`}
-          >
-            All Categories
-          </Link>
-          {categories.map((cat) => (
-            <Link
-              key={cat}
-              href={`/dashboard/templates?category=${cat}`}
-              className={`block px-3 py-2 rounded-lg text-sm transition ${
-                selectedCategory === cat ? "bg-blue-50 text-blue-600" : "hover:bg-gray-50"
-              }`}
-            >
-              {cat}
-            </Link>
+      <div className="p-4 space-y-3">
+        <div>
+          <h3 className="font-semibold" style={{ color: "#1F2937" }}>{template.name}</h3>
+          <p className="text-xs" style={{ color: "#6B7280" }}>{template.tagline}</p>
+        </div>
+        <p className="text-sm line-clamp-2" style={{ color: "#6B7280" }}>{template.description}</p>
+
+        {/* Features */}
+        <div className="flex flex-wrap gap-1">
+          {template.features.slice(0, 3).map((f) => (
+            <span key={f} className="px-2 py-0.5 rounded-full text-[10px] font-medium" style={{ background: "rgba(37,99,235,0.06)", color: "#6B7280" }}>
+              {f}
+            </span>
           ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-2">
+          <Link
+            href={`/preview/${template.id}`}
+            target="_blank"
+            className="flex-1"
+          >
+            <Button variant="outline" size="sm" className="w-full text-xs" style={{ borderColor: "#E5E7EB", color: "#6B7280" }}>
+              <Eye size={12} className="mr-1" /> Preview
+            </Button>
+          </Link>
+          <Link
+            href={`/dashboard/ai-builder?template=${template.id}`}
+            className="flex-1"
+          >
+            <Button size="sm" className="w-full text-xs bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+              <Wand2 size={12} className="mr-1" /> Use Template
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
   );
 }
 
-export default async function TemplateMarketplacePage({
-  searchParams,
-}: {
-  searchParams: { category?: string; websiteType?: string };
-}) {
-  const session = await getSession();
-  const selectedCategory = searchParams.category;
-  const selectedType = searchParams.websiteType;
+export default function TemplatesPage() {
+  const { activeStore } = useDashboard();
+  const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  // Build where clause
-  const where: any = { isPublic: true };
-  if (selectedCategory) where.category = selectedCategory;
-  if (selectedType) where.websiteType = selectedType.toUpperCase();
-
-  // Fetch templates
-  const [templates, categories, websiteTypes] = await Promise.all([
-    prisma.template.findMany({
-      where,
-      orderBy: [
-        { isBuiltIn: "desc" },
-        { downloads: "desc" },
-      ],
-    }),
-    prisma.template.groupBy({
-      by: ["category"],
-      where: { isPublic: true },
-      _count: { category: true },
-    }),
-    prisma.template.groupBy({
-      by: ["websiteType"],
-      where: { isPublic: true },
-      _count: { websiteType: true },
-    }),
-  ]);
+  const filteredTemplates = useMemo(() => {
+    let filtered = [...templateList];
+    if (selectedType) {
+      filtered = filtered.filter((t) => {
+        const typeMap: Record<string, string[]> = {
+          ecommerce: ["default", "roseo", "shopify", "shopnest", "food", "electro", "boutique", "grocer"],
+          restaurant: ["food"],
+          corporate: ["corporate"],
+          portfolio: ["portfolio"],
+          education: ["tuition"],
+          salon: ["salon"],
+          pharmacy: ["pharmacy", "clinic"],
+        };
+        return typeMap[selectedType]?.includes(t.id) ?? false;
+      });
+    }
+    if (selectedCategory) {
+      // Simple category matching
+      const catMap: Record<string, string[]> = {
+        fashion: ["roseo", "shopnest", "boutique"],
+        food: ["food", "grocer"],
+        electronics: ["electro"],
+        beauty: ["salon"],
+        health: ["pharmacy", "clinic"],
+        education: ["tuition"],
+        general: ["default", "shopify", "corporate", "portfolio"],
+      };
+      const ids = catMap[selectedCategory] || [];
+      filtered = filtered.filter((t) => ids.includes(t.id));
+    }
+    return filtered;
+  }, [selectedType, selectedCategory]);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold">Template Marketplace</h1>
-            <p className="text-gray-600 mt-2">
-              Choose a template to start building your site
-            </p>
-          </div>
-          {session?.user?.role === "ADMIN" && (
-            <Link href="/dashboard/templates/upload">
-              <Button>Upload Template</Button>
-            </Link>
-          )}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold flex items-center gap-2" style={{ color: "#1F2937" }}>
+            <Palette size={24} className="text-purple-500" /> Template Gallery
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "#6B7280" }}>
+            {activeStore
+              ? `Choose a template for ${activeStore.name}`
+              : "Browse templates and start building your website. No store required."}
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Filters - hidden on mobile, shown via sheet */}
-          <div className="hidden lg:block">
-            <FilterSection
-              categories={categories.map((c) => c.category)}
-              websiteTypes={websiteTypes.map((t) => t.websiteType)}
-              selectedCategory={selectedCategory}
-              selectedType={selectedType}
-            />
-          </div>
-
-          {/* Template Grid */}
-          <div className="lg:col-span-3">
-            {templates.length === 0 ? (
-              <div className="bg-white rounded-lg p-8 text-center">
-                <p className="text-gray-500">No templates found.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {templates.map((template) => (
-                  <div
-                    key={template.id}
-                    className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition"
-                  >
-                    <div className="aspect-video bg-gray-100">
-                      <TemplatePreview
-                        templateId={template.slug}
-                        name={template.name}
-                        websiteType={template.websiteType.toLowerCase()}
-                      />
-                    </div>
-                    <div className="p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold">{template.name}</h3>
-                        {template.isPremium && (
-                          <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
-                            Premium
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-3">
-                        {template.description || "A beautiful template"}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-500">
-                        <span className="capitalize">{template.websiteType.toLowerCase()}</span>
-                        <span>•</span>
-                        <span>{template.category}</span>
-                        <span>•</span>
-                        <span>{template.downloads} downloads</span>
-                      </div>
-                      <div className="mt-4 flex gap-2">
-                        <Link
-                          href={`/preview/${template.slug}?websiteType=${template.websiteType.toLowerCase()}`}
-                          target="_blank"
-                          className="flex-1"
-                        >
-                          <Button variant="outline" size="sm" className="w-full">
-                            Preview
-                          </Button>
-                        </Link>
-                        <Link href={`/register?template=${template.slug}`} className="flex-1">
-                          <Button size="sm" className="w-full">
-                            Use Template
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`p-2 rounded-lg transition-colors ${viewMode === "grid" ? "bg-blue-50" : ""}`}
+            style={{ color: viewMode === "grid" ? "#2563EB" : "#6B7280" }}
+          >
+            <Grid size={16} />
+          </button>
+          <button
+            onClick={() => setViewMode("list")}
+            className={`p-2 rounded-lg transition-colors ${viewMode === "list" ? "bg-blue-50" : ""}`}
+            style={{ color: viewMode === "list" ? "#2563EB" : "#6B7280" }}
+          >
+            <List size={16} />
+          </button>
         </div>
       </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setSelectedType(null)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            !selectedType ? "text-white" : ""
+          }`}
+          style={!selectedType ? { background: "linear-gradient(135deg, #7c3aed, #a855f7)" } : { background: "#F3F4F6", color: "#6B7280" }}
+        >
+          All Types
+        </button>
+        {websiteTypes.map((type) => (
+          <button
+            key={type}
+            onClick={() => setSelectedType(selectedType === type ? null : type)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 ${
+              selectedType === type ? "text-white" : ""
+            }`}
+            style={selectedType === type ? { background: "linear-gradient(135deg, #7c3aed, #a855f7)" } : { background: "#F3F4F6", color: "#6B7280" }}
+          >
+            {websiteTypeIcons[type]} {type.charAt(0).toUpperCase() + type.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Template Grid */}
+      {filteredTemplates.length === 0 ? (
+        <div className="dark-card p-12 text-center">
+          <Palette size={40} className="mx-auto mb-3" style={{ color: "#9CA3AF", opacity: 0.3 }} />
+          <p style={{ color: "#6B7280" }}>No templates match your filters.</p>
+          <button
+            onClick={() => { setSelectedType(null); setSelectedCategory(null); }}
+            className="mt-3 text-sm font-medium"
+            style={{ color: "#8B5CF6" }}
+          >
+            Clear filters
+          </button>
+        </div>
+      ) : (
+        <div className={`grid gap-4 ${viewMode === "grid" ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" : "grid-cols-1"}`}>
+          {filteredTemplates.map((template) => (
+            <TemplateCard key={template.id} template={template} activeStore={activeStore} />
+          ))}
+        </div>
+      )}
+
+      {/* CTA */}
+      {!activeStore && (
+        <div className="dark-card p-6 text-center" style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.06), rgba(168,85,247,0.06))" }}>
+          <Sparkles size={24} className="mx-auto mb-3" style={{ color: "#8B5CF6" }} />
+          <h3 className="font-semibold mb-1" style={{ color: "#1F2937" }}>Ready to build?</h3>
+          <p className="text-sm mb-4" style={{ color: "#6B7280" }}>Use any template with the AI builder, or create a store to publish your website.</p>
+          <div className="flex items-center justify-center gap-3">
+            <Link href="/dashboard/ai-builder">
+              <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white">
+                <Wand2 size={16} className="mr-1.5" /> AI Builder
+              </Button>
+            </Link>
+            <Link href="/dashboard/new-store">
+              <Button variant="outline" style={{ borderColor: "#E5E7EB", color: "#6B7280" }}>
+                Create Store
+              </Button>
+            </Link>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

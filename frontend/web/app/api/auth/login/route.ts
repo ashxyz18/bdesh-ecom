@@ -16,11 +16,33 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { email, password } = loginSchema.parse(body);
 
-    const user = await prisma.user.findUnique({
-      where: { email },
-    }) as any;
+    // Validate input
+    let parsed;
+    try {
+      parsed = loginSchema.parse(body);
+    } catch {
+      return NextResponse.json(
+        { message: "Please enter a valid email and password (min 6 characters)" },
+        { status: 400 }
+      );
+    }
+
+    const { email, password } = parsed;
+
+    // Query user from database
+    let user;
+    try {
+      user = await prisma.user.findUnique({
+        where: { email },
+      }) as any;
+    } catch (dbError: any) {
+      console.error("[auth/login] Database error:", dbError.message);
+      return NextResponse.json(
+        { message: "Service temporarily unavailable. Please try again in a moment." },
+        { status: 503 }
+      );
+    }
 
     if (!user) {
       return NextResponse.json(
@@ -29,7 +51,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const valid = await verifyPassword(password, user.password);
+    // Verify password
+    let valid;
+    try {
+      valid = await verifyPassword(password, user.password);
+    } catch (authError: any) {
+      console.error("[auth/login] Password verification error:", authError.message);
+      return NextResponse.json(
+        { message: "Authentication service error. Please try again." },
+        { status: 500 }
+      );
+    }
+
     if (!valid) {
       return NextResponse.json(
         { message: "Invalid email or password" },
@@ -37,7 +70,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const token = await createSession(user.id);
+    // Create session
+    let token;
+    try {
+      token = await createSession(user.id);
+    } catch (sessionError: any) {
+      console.error("[auth/login] Session creation error:", sessionError.message);
+      return NextResponse.json(
+        { message: "Could not create session. Please try again." },
+        { status: 500 }
+      );
+    }
 
     const response = NextResponse.json({
       user: {
@@ -58,9 +101,10 @@ export async function POST(req: NextRequest) {
 
     return response;
   } catch (error: any) {
+    console.error("[auth/login] Unexpected error:", error.message);
     return NextResponse.json(
-      { message: error.message || "Something went wrong" },
-      { status: 400 }
+      { message: "An unexpected error occurred. Please try again." },
+      { status: 500 }
     );
   }
 }

@@ -25,54 +25,70 @@ export default function CustomizePage() {
   });
 
   const fetchStore = useCallback(async () => {
-    if (!storeId) return;
-    try {
-      const res = await fetch(`/api/stores/${storeId}`);
-      if (res.ok) {
-        const data = await res.json();
-        const theme = typeof data.theme === "string" ? JSON.parse(data.theme) : data.theme || {};
-        const settings = typeof data.settings === "string" ? JSON.parse(data.settings) : data.settings || {};
-        setForm({
-          templateId: theme.templateId || "default",
-          primaryColor: theme.primaryColor || "#006A4E",
-          secondaryColor: theme.secondaryColor || "#F42A41",
-          announcementText: settings.announcementText || "",
-          heroTitle: settings.heroTitle || "",
-          heroSubtitle: settings.heroSubtitle || "",
-        });
+    if (storeId) {
+      try {
+        const res = await fetch(`/api/stores/${storeId}`);
+        if (res.ok) {
+          const data = await res.json();
+          const theme = typeof data.theme === "string" ? JSON.parse(data.theme) : data.theme || {};
+          const settings = typeof data.settings === "string" ? JSON.parse(data.settings) : data.settings || {};
+          setForm({
+            templateId: theme.templateId || "default",
+            primaryColor: theme.primaryColor || "#006A4E",
+            secondaryColor: theme.secondaryColor || "#F42A41",
+            announcementText: settings.announcementText || "",
+            heroTitle: settings.heroTitle || "",
+            heroSubtitle: settings.heroSubtitle || "",
+          });
+        }
+      } catch {
+        // Ignore
       }
-    } catch {
-      // Ignore
+    } else {
+      // Demo mode — load from localStorage
+      try {
+        const saved = localStorage.getItem("customize-demo-form");
+        if (saved) {
+          setForm(JSON.parse(saved));
+        }
+      } catch {
+        // Ignore
+      }
     }
   }, [storeId]);
 
   useEffect(() => { fetchStore(); }, [fetchStore]);
 
   const handleSave = async () => {
-    if (!storeId) return;
     setSaving(true);
     setMessage(null);
     try {
-      const themeRes = await fetch(`/api/stores/${storeId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          theme: JSON.stringify({
-            templateId: form.templateId,
-            primaryColor: form.primaryColor,
-            secondaryColor: form.secondaryColor,
+      if (storeId) {
+        const themeRes = await fetch(`/api/stores/${storeId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            theme: JSON.stringify({
+              templateId: form.templateId,
+              primaryColor: form.primaryColor,
+              secondaryColor: form.secondaryColor,
+            }),
+            settings: JSON.stringify({
+              announcementText: form.announcementText,
+              heroTitle: form.heroTitle,
+              heroSubtitle: form.heroSubtitle,
+            }),
           }),
-          settings: JSON.stringify({
-            announcementText: form.announcementText,
-            heroTitle: form.heroTitle,
-            heroSubtitle: form.heroSubtitle,
-          }),
-        }),
-      });
-      if (themeRes.ok) {
-        setMessage({ type: "success", text: "Store customized successfully!" });
+        });
+        if (themeRes.ok) {
+          setMessage({ type: "success", text: "Store customized successfully!" });
+        } else {
+          setMessage({ type: "error", text: "Failed to save changes" });
+        }
       } else {
-        setMessage({ type: "error", text: "Failed to save changes" });
+        // Demo mode — save to localStorage
+        localStorage.setItem("customize-demo-form", JSON.stringify(form));
+        setMessage({ type: "success", text: "Design saved locally! Create a store to publish." });
       }
     } catch {
       setMessage({ type: "error", text: "Network error" });
@@ -92,18 +108,7 @@ export default function CustomizePage() {
     }
   };
 
-  if (!activeStore) {
-    return (
-      <div className="max-w-lg mx-auto text-center py-24">
-        <Paintbrush className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-        <h2 className="text-xl font-bold text-slate-900 mb-2">No Store Yet</h2>
-        <p className="text-slate-500 mb-6">Create a store first to customize its appearance.</p>
-        <Link href="/dashboard/new-store">
-          <Button className="bg-emerald-600 hover:bg-emerald-700">Create Store</Button>
-        </Link>
-      </div>
-    );
-  }
+  const isDemo = !activeStore;
 
   const previewWidth = previewDevice === "desktop" ? "100%" : previewDevice === "tablet" ? "768px" : "375px";
 
@@ -111,21 +116,35 @@ export default function CustomizePage() {
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Customize Store</h1>
-          <p className="text-slate-500 mt-1">Personalize the look and feel of <span className="font-medium text-slate-700">{activeStore.name}</span></p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Customize {isDemo ? "Website" : "Store"}
+          </h1>
+          <p className="text-slate-500 mt-1">
+            {isDemo
+              ? <span>Design your website in demo mode. <Link href="/dashboard/new-store" className="text-emerald-600 font-medium hover:underline">Create a store</Link> to publish.</span>
+              : <>Personalize the look and feel of <span className="font-medium text-slate-700">{activeStore.name}</span></>
+            }
+          </p>
         </div>
         <div className="flex items-center gap-3">
-          <a
-            href={`/store?subdomain=${activeStore.subdomain}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
-          >
-            <ExternalLink size={14} /> View Store
-          </a>
+          {activeStore && (
+            <a
+              href={`/store?subdomain=${activeStore.subdomain}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+            >
+              <ExternalLink size={14} /> View Store
+            </a>
+          )}
+          {isDemo && (
+            <Link href="/dashboard/new-store">
+              <Button variant="outline" className="text-emerald-600 border-emerald-300 hover:bg-emerald-50">Create Store to Publish</Button>
+            </Link>
+          )}
           <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            Save Changes
+            {isDemo ? "Save Demo" : "Save Changes"}
           </Button>
         </div>
       </div>
@@ -254,7 +273,7 @@ export default function CustomizePage() {
               <div className="p-4">
                 <div className="h-20 rounded-lg mb-3 flex items-center justify-center" style={{ backgroundColor: `${form.primaryColor}15` }}>
                   <div className="text-center">
-                    <p className="text-xs font-bold" style={{ color: form.primaryColor }}>{form.heroTitle || activeStore.name}</p>
+                    <p className="text-xs font-bold" style={{ color: form.primaryColor }}>{form.heroTitle || activeStore?.name || "Your Website"}</p>
                     <p className="text-[9px] text-slate-500 mt-0.5">{form.heroSubtitle || "Your store description here"}</p>
                   </div>
                 </div>

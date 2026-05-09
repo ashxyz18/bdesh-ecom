@@ -6,7 +6,16 @@ export type BlockType =
   | "contact" 
   | "testimonials" 
   | "hours"
-  | "contactForm";
+  | "contactForm"
+  | "pricing"
+  | "features"
+  | "faq"
+  | "team"
+  | "newsletter"
+  | "stats"
+  | "productGrid"
+  | "featuredProducts"
+  | "cartSummary";
 
 export interface BlockData {
   id: string;

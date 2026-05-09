@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { storeId, items, customerInfo, paymentMethod, total, shipping } = body;
 
-    const orderNumber = `ORD-${Date.now()}`;
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
 
     const order = await prisma.order.create({
       data: {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
           }),
         },
       },
-      include: { payment: true },
+      include: { payment: true, items: true, shipping: true },
     });
 
     // If not COD, create a payment intent with the configured gateway
