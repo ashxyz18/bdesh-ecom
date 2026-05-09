@@ -8,7 +8,7 @@ import {
   LogOut, Menu, X, ChevronDown, Shield, Plus, ExternalLink,
   Sparkles, Palette, Search, Bell, ChevronRight, Keyboard,
   Paintbrush, Megaphone, Globe, Mail, Share2, Tag,
-  BarChart3, Wand2, CreditCard, MonitorSmartphone, Box,
+  BarChart3, CreditCard, Box,
   MapPin, Truck, ClipboardCheck, CheckCircle2, Brain,
 } from "lucide-react";
 import { DashboardProvider, useDashboard } from "./DashboardContext";
@@ -63,12 +63,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           ],
         },
         {
-          label: "Website Builder",
+          label: "Design",
           items: [
-            { href: "/dashboard/ai-builder", icon: Wand2, label: "AI Builder" },
-            { href: "/dashboard/builder", icon: MonitorSmartphone, label: "Visual Builder" },
-            { href: "/dashboard/customize", icon: Paintbrush, label: "Customize" },
             { href: "/dashboard/templates", icon: Palette, label: "Templates" },
+            { href: "/dashboard/customize", icon: Paintbrush, label: "Customize" },
           ],
         },
         {
@@ -98,12 +96,10 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
           ],
         },
         {
-          label: "Website Builder",
+          label: "Design",
           items: [
-            { href: "/dashboard/ai-builder", icon: Wand2, label: "AI Builder" },
-            { href: "/dashboard/builder", icon: MonitorSmartphone, label: "Visual Builder" },
-            { href: "/dashboard/customize", icon: Paintbrush, label: "Customize" },
             { href: "/dashboard/templates", icon: Palette, label: "Templates" },
+            { href: "/dashboard/customize", icon: Paintbrush, label: "Customize" },
           ],
         },
         {

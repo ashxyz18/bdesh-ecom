@@ -28,9 +28,8 @@ const productsMenu: { columns: MenuColumn[]; promo: { title: string; card: { tit
     {
       title: "BUILD YOUR WEBSITE",
       items: [
-        { icon: Sparkles, label: "AI Website Builder", desc: "Generate from any image", href: "/ai-builder" },
-        { icon: Monitor, label: "Website Builder", desc: "Build without code", href: "/#templates" },
-        { icon: Palette, label: "Themes", desc: "Customizable templates", href: "/#templates" },
+        { icon: Palette, label: "Templates", desc: "Pre-built store designs", href: "/#templates" },
+        { icon: Monitor, label: "Customize", desc: "Personalize your store", href: "/register" },
         { icon: Globe, label: "Domains", desc: "Custom URLs", href: "/register" },
         { icon: User, label: "Customer Accounts", desc: "Login management", href: "/login" },
         { icon: Sparkles, label: "Sidekick", desc: "AI assistant", href: "/#features" },

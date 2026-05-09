@@ -7,7 +7,7 @@ import {
   ArrowRight, ExternalLink, BarChart3, Clock, CheckCircle2,
   XCircle, ChevronRight, Zap, Settings, Palette, Star,
   Truck, CreditCard, Globe, Sparkles, ArrowUpRight, ArrowDownRight,
-  ShoppingBag, Eye, Wand2, MapPin, Box, Check, MonitorSmartphone,
+  ShoppingBag, Eye, MapPin, Box, Check, Paintbrush,
 } from "lucide-react";
 import { useDashboard } from "./DashboardContext";
 import "./dashboard.css";
@@ -137,7 +137,7 @@ function OnboardingChecklist({ stores, stats }: { stores: any[]; stats: Dashboar
   const steps = [
     { label: "Create your store", done: stores.length > 0, href: "/dashboard/new-store" },
     { label: "Add your first product", done: stats.totalProducts > 0, href: "/dashboard/products/new" },
-    { label: "Customize your store design", done: false, href: "/dashboard/ai-builder" },
+    { label: "Customize your store design", done: false, href: "/dashboard/templates" },
     { label: "Set up payment methods", done: false, href: "/dashboard/settings" },
     { label: "Add delivery partners", done: false, href: "/dashboard/delivery" },
   ];
@@ -278,45 +278,27 @@ export default function DashboardPage() {
             Welcome to BdeshShop!
           </h1>
           <p className="mb-2 leading-relaxed max-w-md mx-auto" style={{ color: "#6B7280" }}>
-            Start by building your website with AI, or create a store to sell online.
+            Start exploring templates, or create a store to sell online.
           </p>
         </div>
 
         {/* Quick Start Cards */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">
           <Link
-            href="/dashboard/ai-builder"
+            href="/dashboard/templates"
             className="dark-card fade-in group cursor-pointer hover:border-purple-200 transition-all"
           >
             <div className="flex items-center gap-3 mb-3">
               <div className="dark-card-icon" style={{ background: "rgba(139,92,246,0.1)" }}>
-                <Wand2 size={18} style={{ color: "#8B5CF6" }} />
+                <Sparkles size={18} style={{ color: "#8B5CF6" }} />
               </div>
-              <h3 className="font-semibold" style={{ color: "#1F2937" }}>AI Website Builder</h3>
+              <h3 className="font-semibold" style={{ color: "#1F2937" }}>Templates</h3>
             </div>
             <p className="text-sm" style={{ color: "#6B7280" }}>
-              Upload a logo or describe your business — AI generates a complete website design instantly.
+              Choose from pre-built templates to customize your store design.
             </p>
             <div className="flex items-center gap-1 mt-3 text-sm font-medium" style={{ color: "#8B5CF6" }}>
-              Get started <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-
-          <Link
-            href="/dashboard/builder"
-            className="dark-card fade-in group cursor-pointer hover:border-blue-200 transition-all"
-          >
-            <div className="flex items-center gap-3 mb-3">
-              <div className="dark-card-icon" style={{ background: "rgba(37,99,235,0.1)" }}>
-                <MonitorSmartphone size={18} style={{ color: "#2563EB" }} />
-              </div>
-              <h3 className="font-semibold" style={{ color: "#1F2937" }}>Visual Builder</h3>
-            </div>
-            <p className="text-sm" style={{ color: "#6B7280" }}>
-              Drag and drop sections to build your website visually. No coding required.
-            </p>
-            <div className="flex items-center gap-1 mt-3 text-sm font-medium" style={{ color: "#2563EB" }}>
-              Start building <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+              Browse templates <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </div>
           </Link>
 
@@ -359,7 +341,7 @@ export default function DashboardPage() {
             ].map((tpl) => (
               <Link
                 key={tpl.name}
-                href="/dashboard/ai-builder"
+                href="/dashboard/templates"
                 className="dark-card fade-in group cursor-pointer"
               >
                 <div className="flex items-center gap-3 mb-2">
@@ -400,7 +382,7 @@ export default function DashboardPage() {
   const quickActions = [
     { href: "/dashboard/products/new", icon: Package, label: "Add Product", color: "#2563EB" },
     { href: "/dashboard/orders", icon: ShoppingCart, label: "View Orders", color: "#10B981" },
-    { href: "/dashboard/ai-builder", icon: Wand2, label: "AI Builder", color: "#8B5CF6" },
+    { href: "/dashboard/templates", icon: Sparkles, label: "Templates", color: "#8B5CF6" },
     { href: "/dashboard/tracking", icon: MapPin, label: "Tracking", color: "#FB923C" },
     { href: "/dashboard/delivery", icon: Truck, label: "Delivery", color: "#EC4899" },
     { href: "/dashboard/settings", icon: Settings, label: "Settings", color: "#38BDF8" },
