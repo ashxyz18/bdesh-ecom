@@ -55,7 +55,7 @@ export default function LandingPage() {
       </LazySection>
 
       {/* Website Templates Section */}
-      <WebsiteTemplatesSection maxTemplates={8} showBrowseAll={true} />
+      <WebsiteTemplatesSection showBrowseAll={true} />
 
       {/* How It Works */}
       <LazySection className="py-20 md:py-28 bg-white" placeholderHeight={400}>

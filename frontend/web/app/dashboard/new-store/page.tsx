@@ -2,95 +2,36 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Store, Loader2, ArrowLeft, ArrowRight, Check, Sparkles, ShoppingBag, Minimize2, Shirt, Globe, Eye, UtensilsCrossed, Cpu, Flower2, Leaf } from "lucide-react";
+import {
+  Sparkles, ShoppingBag, Minimize2, Eye, Check, ArrowLeft, ArrowRight,
+  Loader2, Globe, Flower2, Leaf, Cpu, UtensilsCrossed, Shirt,
+  Scissors, BookOpen, Stethoscope, Pill, Briefcase, Blocks, Map,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useDashboard } from "../DashboardContext";
+import { templateList } from "@/lib/store-templates/registry";
+import type { TemplateInfo } from "@/lib/store-templates/registry";
 
-const templates = [
-  {
-    id: "roseo",
-    name: "Roseo",
-    tagline: "Premium & Luxurious",
-    description: "Dark, elegant design for leather goods, fashion, and premium products",
-    icon: Sparkles,
-    color: "from-stone-800 to-amber-800",
-    features: ["Dark luxury aesthetic", "Product quick view", "Wishlist & cart", "Customer reviews"],
-    isPremium: false,
-  },
-  {
-    id: "default",
-    name: "Modern Shop",
-    tagline: "Clean & Professional",
-    description: "Bright, modern layout perfect for any type of product store",
-    icon: ShoppingBag,
-    color: "from-emerald-600 to-teal-700",
-    features: ["Clean product grid", "Collection filters", "Fast checkout", "Mobile-first"],
-    isPremium: false,
-  },
-  {
-    id: "shopify",
-    name: "Minimal",
-    tagline: "Simple & Fast",
-    description: "Minimalist design focused on speed and conversion for any store",
-    icon: Minimize2,
-    color: "from-slate-700 to-slate-900",
-    features: ["Ultra-fast loading", "One-page checkout", "Smart search", "Inventory alerts"],
-    isPremium: false,
-  },
-  {
-    id: "shopnest",
-    name: "Shopnest",
-    tagline: "Fashion Forward",
-    description: "Warm, sophisticated design for fashion and lifestyle brands",
-    icon: Shirt,
-    color: "from-[#1a1a1a] to-[#be9f7e]",
-    features: ["Fashion-first design", "Quick add to cart", "Collection filters", "Premium feel"],
-    isPremium: true,
-  },
-  {
-    id: "food",
-    name: "Food & Restaurant",
-    tagline: "Tasty & Fast",
-    description: "Vibrant food and restaurant template with online ordering and delivery",
-    icon: UtensilsCrossed,
-    color: "from-orange-500 to-red-500",
-    features: ["Online ordering", "Delivery tracking", "Menu categories", "WhatsApp ordering"],
-    isPremium: false,
-  },
-  {
-    id: "electro",
-    name: "Electro",
-    tagline: "Tech & Gadgets",
-    description: "Dark, futuristic electronics store with spec-driven layouts and neon accents",
-    icon: Cpu,
-    color: "from-cyan-600 to-blue-800",
-    features: ["Spec-driven product cards", "Compare products", "Deal countdowns", "Dark tech aesthetic"],
-    isPremium: false,
-  },
-  {
-    id: "boutique",
-    name: "Boutique",
-    tagline: "Elegant & Feminine",
-    description: "Soft, editorial fashion template with lookbook layouts and blush tones",
-    icon: Flower2,
-    color: "from-pink-400 to-rose-600",
-    features: ["Editorial lookbook layout", "Outfit builder", "Size filters", "Soft feminine aesthetic"],
-    isPremium: true,
-  },
-  {
-    id: "grocer",
-    name: "Grocer",
-    tagline: "Fresh & Organic",
-    description: "Fresh grocery template with category-driven layout, bulk pricing, and delivery slots",
-    icon: Leaf,
-    color: "from-green-500 to-lime-600",
-    features: ["Category-driven homepage", "Bulk pricing display", "Delivery slot picker", "Fresh today badges"],
-    isPremium: false,
-  },
-];
+// Map template IDs to their display icons
+const templateIcons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
+  roseo: Sparkles,
+  default: ShoppingBag,
+  shopify: Minimize2,
+  shopnest: Shirt,
+  food: UtensilsCrossed,
+  electro: Cpu,
+  boutique: Flower2,
+  grocer: Leaf,
+  salon: Scissors,
+  tuition: BookOpen,
+  clinic: Stethoscope,
+  pharmacy: Pill,
+  corporate: Briefcase,
+  portfolio: Blocks,
+};
 
 function LoadingSkeleton() {
   return (
@@ -118,6 +59,12 @@ function LoadingSkeleton() {
     </div>
   );
 }
+
+/** Merge the registry template info with icons for the new-store page */
+const templates: (TemplateInfo & { icon: React.ComponentType<{ className?: string; size?: number }> })[] = templateList.map(t => ({
+  ...t,
+  icon: templateIcons[t.id] || Blocks,
+}));
 
 export default function NewStorePage() {
   return (
@@ -172,17 +119,13 @@ function NewStorePageInner() {
   };
 
   const getTemplateTheme = (id: string) => {
-    const themes: Record<string, { primaryColor: string; secondaryColor: string }> = {
-      roseo: { primaryColor: "#1a1a1a", secondaryColor: "#D4A574" },
-      default: { primaryColor: "#006A4E", secondaryColor: "#F42A41" },
-      shopify: { primaryColor: "#0a1929", secondaryColor: "#F42A41" },
-      shopnest: { primaryColor: "#1a1a1a", secondaryColor: "#be9f7e" },
-      food: { primaryColor: "#ea580c", secondaryColor: "#dc2626" },
-      electro: { primaryColor: "#0a0a0a", secondaryColor: "#00d4ff" },
-      boutique: { primaryColor: "#881337", secondaryColor: "#f9a8d4" },
-      grocer: { primaryColor: "#16a34a", secondaryColor: "#eab308" },
+    const tpl = templates.find(t => t.id === id);
+    const colors = tpl?.defaultColors ?? {
+      primary: "#006A4E",
+      secondary: "#F42A41",
+      accent: "#059669",
     };
-    return themes[id] || themes.default;
+    return colors;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -217,7 +160,6 @@ function NewStorePageInner() {
         return;
       }
 
-      // Refresh the store list in the sidebar before navigating
       await refreshStores();
       router.push("/dashboard");
       router.refresh();
@@ -254,6 +196,7 @@ function NewStorePageInner() {
           Choose Template
         </button>
         <div className="h-px flex-1 bg-slate-200" />
+        <div className="h-px flex-1 bg-slate-200" />
         <button
           className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
             step === "details" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "bg-slate-100 text-slate-400 cursor-not-allowed"
@@ -280,61 +223,64 @@ function NewStorePageInner() {
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            {templates.map((tpl) => (
-              <button
-                key={tpl.id}
-                type="button"
-                onClick={() => setSelectedTemplate(tpl.id)}
-                className={`text-left rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
-                  selectedTemplate === tpl.id
-                    ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg"
-                    : "border-slate-200 hover:border-slate-300 hover:shadow-md"
-                }`}
-              >
-                {/* Preview */}
-                <div className={`h-36 bg-gradient-to-br ${tpl.color} p-5 flex flex-col justify-between relative`}>
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
-                      <tpl.icon className="w-4 h-4 text-white" />
+            {templates.map((tpl) => {
+              const Icon = tpl.icon;
+              return (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => setSelectedTemplate(tpl.id)}
+                  className={`text-left rounded-2xl border-2 overflow-hidden transition-all duration-200 ${
+                    selectedTemplate === tpl.id
+                      ? "border-emerald-500 ring-2 ring-emerald-500/20 shadow-lg"
+                      : "border-slate-200 hover:border-slate-300 hover:shadow-md"
+                  }`}
+                >
+                  {/* Preview */}
+                  <div className={`h-36 bg-gradient-to-br ${tpl.color} p-5 flex flex-col justify-between relative`}>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                        <Icon className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-white font-bold text-sm">{tpl.name}</span>
+                      {tpl.isPremium && (
+                        <span className="text-[10px] font-bold bg-amber-400/90 text-amber-900 px-2 py-0.5 rounded-full">PREMIUM</span>
+                      )}
                     </div>
-                    <span className="text-white font-bold text-sm">{tpl.name}</span>
-                    {tpl.isPremium && (
-                      <span className="text-[10px] font-bold bg-amber-400/90 text-amber-900 px-2 py-0.5 rounded-full">PREMIUM</span>
-                    )}
+                    <p className="text-white/70 text-xs">{tpl.tagline}</p>
+                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                      <a
+                        href={`/preview/${tpl.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="w-7 h-7 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-white" />
+                      </a>
+                      {selectedTemplate === tpl.id && (
+                        <div className="w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-white/70 text-xs">{tpl.tagline}</p>
-                  <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                    <a
-                      href={`/preview/${tpl.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-7 h-7 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
-                    >
-                      <Eye className="w-3.5 h-3.5 text-white" />
-                    </a>
-                    {selectedTemplate === tpl.id && (
-                      <div className="w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
-                        <Check className="w-4 h-4 text-white" />
-                      </div>
-                    )}
+                  {/* Info */}
+                  <div className="p-5">
+                    <h3 className="font-bold text-sm text-slate-900 mb-1">{tpl.name}</h3>
+                    <p className="text-xs text-slate-500 mb-3">{tpl.description}</p>
+                    <div className="space-y-1.5">
+                      {tpl.features.map((f) => (
+                        <div key={f} className="flex items-center gap-1.5 text-xs text-slate-600">
+                          <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                          {f}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                {/* Info */}
-                <div className="p-5">
-                  <h3 className="font-bold text-sm text-slate-900 mb-1">{tpl.name}</h3>
-                  <p className="text-xs text-slate-500 mb-3">{tpl.description}</p>
-                  <div className="space-y-1.5">
-                    {tpl.features.map((f) => (
-                      <div key={f} className="flex items-center gap-1.5 text-xs text-slate-600">
-                        <Check className="w-3 h-3 text-emerald-600 shrink-0" />
-                        {f}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
 
           <div className="mt-8 flex justify-end">
@@ -381,7 +327,7 @@ function NewStorePageInner() {
                 <Label className={labelClass}>Store Name *</Label>
                 <Input
                   value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  onSubmit={() => setForm({ ...form, name: form.name })}
                   placeholder="My Store"
                   className={inputClass}
                   required
@@ -409,10 +355,10 @@ function NewStorePageInner() {
                   </p>
                 )}
                 {subdomainAvailable === true && (
-                  <p className="text-xs text-emerald-600 mt-1.5 font-medium">✓ Available!</p>
+                  <p className="text-xs text-emerald-600 mt-1.5 font-medium">Available!</p>
                 )}
                 {subdomainAvailable === false && (
-                  <p className="text-xs text-red-600 mt-1.5 font-medium">✗ Already taken</p>
+                  <p className="text-xs text-red-600 mt-1.5 font-medium">Already taken</p>
                 )}
               </div>
 

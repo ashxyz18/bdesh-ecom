@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import {
   Sparkles, Upload, Loader2, Check, Palette, X, RefreshCw, Eye,
@@ -12,6 +13,7 @@ import { useDashboard } from "../DashboardContext";
 import Link from "next/link";
 import type { TemplateConfig, HomeSectionConfig } from "@/lib/store-templates/engine/types";
 import { StoreProviders } from "@/app/store/[[...path]]/providers";
+import { getTemplateInfo } from "@/lib/store-templates/registry";
 
 // Lazy-load ConfigTemplate for the live preview (avoids heavy bundle on initial page load)
 const ConfigTemplate = dynamic(() => import("@/lib/store-templates/engine/ConfigTemplate"), { ssr: false });

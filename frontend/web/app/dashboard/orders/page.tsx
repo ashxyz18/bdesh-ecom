@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Loader2, Package, Truck, CheckCircle, XCircle } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 function getStatusColor(status: string) {
   switch (status) {
     case "DELIVERED": return "text-green-600 bg-green-50";

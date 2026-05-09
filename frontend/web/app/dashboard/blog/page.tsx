@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { Button } from "@/components/ui/button";
 import { Loader2, FileText, Eye, Trash2, Pencil } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 function getStatusColor(status: string) {
   switch (status) {
     case "PUBLISHED": return "text-green-600 bg-green-50";

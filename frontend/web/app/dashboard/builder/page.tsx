@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useDashboard } from "../DashboardContext";
+import { useSearchParams } from "next/navigation";
 import { BuilderEditor, PreviewMode } from "@/lib/builder/components/BuilderEditor";
 import { Loader2, MonitorSmartphone, Undo, Redo, Monitor, Smartphone, Tablet, History, X, Check, AlertTriangle, LayoutTemplate } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +23,7 @@ interface BuilderHistory {
 
 export default function BuilderPage() {
   const { activeStore } = useDashboard();
+  const searchParams = useSearchParams();
   const [saving, setSaving] = useState(false);
   const [blocks, setBlocks] = useState<BlockData[]>([]);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("desktop");
@@ -32,11 +34,36 @@ export default function BuilderPage() {
   const [showTemplates, setShowTemplates] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "info" } | null>(null);
   const [builderKey, setBuilderKey] = useState(0);
+  const [initDone, setInitDone] = useState(false);
   const maxHistorySize = 50;
   const isUndoing = useRef(false);
 
   // Load blocks from store theme or localStorage (for demo mode without store)
+  // Also check for ?template=... query param to pre-load a template
   useEffect(() => {
+    if (initDone) return;
+    setInitDone(true);
+
+    const urlTemplateId = searchParams.get("template");
+    const urlTemplate = urlTemplateId ? websiteTemplates.find(t => t.id === urlTemplateId) : null;
+
+    if (urlTemplate) {
+      // Pre-load builder template from query param
+      const loadedBlocks = urlTemplate.blocks;
+      setBlocks(loadedBlocks);
+      const initialState: HistoryState = {
+        blocks: [...loadedBlocks],
+        timestamp: Date.now(),
+        description: `Loaded template: ${urlTemplate.name}`
+      };
+      setHistory({
+        states: [initialState],
+        currentIndex: 0
+      });
+      setToast({ message: `Loaded template: ${urlTemplate.name}`, type: "success" });
+      return;
+    }
+
     if (activeStore?.theme) {
       const themeData = typeof activeStore.theme === "string" 
         ? JSON.parse(activeStore.theme) 
@@ -87,7 +114,7 @@ export default function BuilderPage() {
         });
       }
     }
-  }, [activeStore]);
+  }, [activeStore, searchParams, initDone]);
 
   // Update canUndo/canRedo when history changes
   useEffect(() => {

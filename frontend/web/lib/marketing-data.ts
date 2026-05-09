@@ -16,9 +16,11 @@ export interface Template {
   features: string[];
   isNew?: boolean;
   isPopular?: boolean;
+  isBuilder?: boolean;
 }
 
-export const templates: Template[] = [
+/** ─── Store Templates (e-commerce) ───────────────────────────────── */
+const storeTemplates: Template[] = [
   {
     id: "roseo",
     name: "Roseo",
@@ -171,10 +173,107 @@ export const templates: Template[] = [
   },
 ];
 
-export const templateCategories = ["All", "General", "Fashion", "Food", "Electronics", "Grocery", "Salon", "Tuition", "Clinic", "Pharmacy", "Corporate", "Portfolio"];
+/** ─── Builder/Website Templates (pre-built) ─────────────────────────── */
+const builderTemplates: Template[] = [
+  {
+    id: "startup-saas",
+    name: "Startup SaaS",
+    tagline: "Modern SaaS Landing",
+    description: "Modern SaaS landing page with hero, features, pricing, and FAQ. Perfect for startups.",
+    color: "from-indigo-500 to-purple-600",
+    accent: "text-indigo-400",
+    category: "Business",
+    features: ["Hero section", "Feature grid", "Pricing tables", "FAQ", "Testimonials"],
+    isNew: true,
+    isBuilder: true,
+  },
+  {
+    id: "restaurant-bistro",
+    name: "Bistro & Grill",
+    tagline: "Restaurant & Cafe",
+    description: "Elegant restaurant website with menu, gallery, hours, and contact. Perfect for restaurants.",
+    color: "from-red-600 to-orange-500",
+    accent: "text-red-400",
+    category: "Restaurant",
+    features: ["Menu showcase", "Image gallery", "Hours & location", "Reservations", "Testimonials"],
+    isNew: true,
+    isBuilder: true,
+  },
+  {
+    id: "law-firm",
+    name: "Legal Partners",
+    tagline: "Professional Law",
+    description: "Professional law firm website with services, team profiles, testimonials, and contact form.",
+    color: "from-slate-800 to-slate-900",
+    accent: "text-slate-400",
+    category: "Professional",
+    features: ["Practice areas", "Team profiles", "Client testimonials", "Contact form", "Case stats"],
+    isNew: true,
+    isBuilder: true,
+  },
+  {
+    id: "creative-agency",
+    name: "Creative Studio",
+    tagline: "Bold & Creative",
+    description: "Bold creative agency website with portfolio, services, team, and stats. For agencies.",
+    color: "from-pink-500 to-rose-600",
+    accent: "text-pink-400",
+    category: "Creative",
+    features: ["Portfolio gallery", "Services showcase", "Team section", "Stats counter", "Testimonials"],
+    isNew: true,
+    isBuilder: true,
+  },
+  {
+    id: "medical-clinic",
+    name: "HealthFirst Clinic",
+    tagline: "Medical & Healthcare",
+    description: "Trustworthy medical clinic website with services, team, hours, testimonials, and contact.",
+    color: "from-emerald-500 to-teal-600",
+    accent: "text-teal-400",
+    category: "Healthcare",
+    features: ["Service listings", "Doctor profiles", "Patient testimonials", "FAQ", "Contact"],
+    isNew: true,
+    isBuilder: true,
+  },
+  {
+    id: "fitness-gym",
+    name: "PowerFit Gym",
+    tagline: "Fitness & Wellness",
+    description: "Motivating fitness website with features, pricing, team, and testimonials. For gyms.",
+    color: "from-orange-500 to-amber-600",
+    accent: "text-amber-400",
+    category: "Fitness",
+    features: ["Membership plans", "Trainer profiles", "Class schedules", "Stats", "Contact"],
+    isNew: true,
+    isBuilder: true,
+  },
+  {
+    id: "nike-ecommerce",
+    name: "Nike Style Store",
+    tagline: "Athletic Store",
+    description: "Bold athletic footwear and apparel store inspired by Nike's iconic design. Features product showcase, categories, and member benefits.",
+    color: "from-black to-slate-800",
+    accent: "text-slate-400",
+    category: "E-Commerce",
+    features: ["Product showcase", "Categories", "Member benefits", "Testimonials", "Newsletter"],
+    isNew: true,
+    isPopular: true,
+    isBuilder: true,
+  },
+];
 
-// Category group mapping for the new website template section
+/** ─── Merged template list ───────────────────────────────────────── */
+export const templates: Template[] = [...storeTemplates, ...builderTemplates];
+
+export const templateCategories = [
+  "All", "General", "Fashion", "Food", "Electronics", "Grocery",
+  "Salon", "Tuition", "Cl Clinic", "Pharmacy", "Corporate", "Portfolio",
+  "Business", "Restaurant", "Professional", "Creative", "Healthcare", "Fitness", "E-Commerce",
+];
+
+// Category group mapping for the website template section
 export const categoryGroups: Record<string, string> = {
+  // Store templates
   General: "Online Store",
   Electronics: "Online Store",
   Grocery: "Online Store",
@@ -186,6 +285,14 @@ export const categoryGroups: Record<string, string> = {
   Clinic: "Health & Fitness",
   Pharmacy: "Health & Fitness",
   Food: "Restaurants & Food",
+  // Builder templates
+  Business: "Business",
+  Restaurant: "Restaurants & Food",
+  Professional: "Business",
+  Creative: "Creative",
+  Healthcare: "Health & Fitness",
+  Fitness: "Health & Fitness",
+  "E-Commerce": "Online Store",
 };
 
 export const websiteTemplateCategories = [
@@ -196,6 +303,8 @@ export const websiteTemplateCategories = [
   "Home Services",
   "Health & Fitness",
   "Restaurants & Food",
+  "Business",
+  "Creative",
 ];
 
 export function getTemplatesByGroup(group: string): Template[] {
