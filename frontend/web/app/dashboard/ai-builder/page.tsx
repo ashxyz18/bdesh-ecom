@@ -314,6 +314,75 @@ export default function AIBuilderDashboardPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // ─── Auto-init from ?template= query param ─────────────────────────────
+  const searchParams = useSearchParams();
+  const [templateInitDone, setTemplateInitDone] = useState(false);
+
+  useEffect(() => {
+    if (templateInitDone || result) return;
+    const templateId = searchParams.get("template");
+    if (!templateId) return;
+
+    const templateInfo = getTemplateInfo(templateId);
+    if (!templateInfo) return;
+
+    setTemplateInitDone(true);
+    setBusinessName(activeStore?.name || templateInfo.name);
+    setBusinessType(templateInfo.id);
+
+    const primary = templateInfo.defaultColors.primary;
+    const secondary = templateInfo.defaultColors.secondary;
+    const accent = templateInfo.defaultColors.accent;
+    const bg = "#ffffff";
+    const text = "#111827";
+    const storeName = activeStore?.name || templateInfo.name;
+
+    const websiteTypeMap: Record<string, string> = {
+      portfolio: "portfolio",
+      corporate: "corporate",
+      salon: "portfolio",
+      education: "education",
+      clinic: "healthcare",
+      pharmacy: "healthcare",
+      tuition: "education",
+    };
+    const detectedType = websiteTypeMap[templateInfo.id] || "ecommerce";
+    setWebsiteType(detectedType);
+
+    const fallbackConfig = buildFallbackTemplateConfig(
+      primary, secondary, accent, bg, text, storeName, detectedType
+    );
+
+    setTimeout(() => {
+      setResult({
+        detectedColors: {
+          primary,
+          secondary,
+          accent,
+          background: bg,
+          text,
+          palette: [primary, secondary, accent, bg, text],
+        },
+        detectedStyle: {
+          vibe: "modern",
+          typography: ["Inter", "Noto Sans Bengali"],
+          layout: "centered",
+          mood: ["professional", "clean"],
+        },
+        detectedIndustry: templateInfo.id,
+        detectedElements: [],
+        suggestedTemplateId: templateInfo.id,
+        templateConfig: fallbackConfig,
+        previewColors: [primary, secondary, accent, bg],
+        marketingTips: [
+          `Using ${templateInfo.name} template colors — customize further with AI`,
+          "Add high-quality content matching your brand colors",
+          "Upload an image above to re-style with AI detection",
+        ],
+      });
+    }, 100);
+  }, [searchParams, templateInitDone, result, activeStore]);
+
   // ─── Preview store (mock data for ConfigTemplate rendering) ────────────────
 
   const previewStore = useMemo(() => ({
