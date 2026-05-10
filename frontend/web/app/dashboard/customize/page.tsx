@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDashboard } from "../DashboardContext";
-import { templateList } from "@/lib/store-templates/registry";
 
 export default function CustomizePage() {
   const { activeStore } = useDashboard();
@@ -98,14 +97,11 @@ export default function CustomizePage() {
   };
 
   const handleReset = () => {
-    const tpl = templateList.find(t => t.id === form.templateId);
-    if (tpl) {
-      setForm(f => ({
-        ...f,
-        primaryColor: tpl.defaultColors.primary,
-        secondaryColor: tpl.defaultColors.secondary,
-      }));
-    }
+    setForm(f => ({
+      ...f,
+      primaryColor: "#006A4E",
+      secondaryColor: "#F42A41",
+    }));
   };
 
   const isDemo = !activeStore;
@@ -158,32 +154,6 @@ export default function CustomizePage() {
       <div className="grid gap-8 lg:grid-cols-2">
         {/* Left: Settings */}
         <div className="space-y-6">
-          {/* Template Selection */}
-          <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">
-            <h2 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Palette size={18} className="text-emerald-600" /> Template
-            </h2>
-            <div className="grid grid-cols-2 gap-3">
-              {templateList.map(tpl => (
-                <button
-                  key={tpl.id}
-                  onClick={() => {
-                    setForm(f => ({ ...f, templateId: tpl.id }));
-                    setForm(f => ({ ...f, primaryColor: tpl.defaultColors.primary, secondaryColor: tpl.defaultColors.secondary }));
-                  }}
-                  className={`text-left p-3 rounded-xl border-2 transition-all ${
-                    form.templateId === tpl.id
-                      ? "border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50/50"
-                      : "border-slate-200 hover:border-slate-300"
-                  }`}
-                >
-                  <div className={`h-8 rounded-lg bg-gradient-to-br ${tpl.color} mb-2`} />
-                  <p className="text-sm font-medium text-slate-900">{tpl.name}</p>
-                  <p className="text-xs text-slate-500">{tpl.tagline}</p>
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Colors */}
           <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-sm">

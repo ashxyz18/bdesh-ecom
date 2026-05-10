@@ -4,12 +4,9 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/shared/Button";
 import { StepIndicator } from "./StepIndicator";
-import { TemplatePicker } from "./TemplatePicker";
 import { CustomizationPanel } from "./CustomizationPanel";
 import { BackgroundPreview } from "./BackgroundPreview";
 import { SectionManager } from "./SectionManager";
-import { templates } from "@/lib/marketing-data";
-import type { TemplateColors, TemplateTypography, TemplateLayout } from "@/lib/store-templates/engine/types";
 import { ArrowRight, ArrowLeft, Sparkles, Globe, ShoppingBag, Check, Loader2 } from "lucide-react";
 
 export interface OnboardingStep {
@@ -23,7 +20,6 @@ const STEPS: OnboardingStep[] = [
   { id: "details", label: "Details", labelBn: "বিস্তারিত" },
   { id: "goals", label: "Goals", labelBn: "লক্ষ্য" },
   { id: "style", label: "Style", labelBn: "স্টাইল" },
-  { id: "template", label: "Template", labelBn: "টেমপ্লেট" },
   { id: "finalize", label: "Finalize", labelBn: "চূড়ান্ত" },
 ];
 
@@ -44,11 +40,37 @@ const businessTypes: { id: string; label: string; labelBn: string }[] = [
   { id: "corporate", label: "Corporate", labelBn: "কর্পোরেট" },
 ];
 
+interface CustomColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  text: string;
+  textMuted: string;
+  border: string;
+  success: string;
+  error: string;
+}
+
+interface CustomTypography {
+  headingFont: string;
+  bodyFont: string;
+  headingWeight: string;
+  borderRadius: string;
+}
+
+interface CustomLayout {
+  maxWidth: string;
+  sectionSpacing: string;
+  cardStyle: string;
+  productColumns: number;
+}
+
 export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [businessType, setBusinessType] = useState("");
-  const [selectedTemplate, setSelectedTemplate] = useState("");
   const [storeName, setStoreName] = useState("");
   const [subdomain, setSubdomain] = useState("");
   const [location, setLocation] = useState("");
@@ -59,9 +81,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
   const [loading, setLoading] = useState(false);
   const [aiRecommending, setAiRecommending] = useState(false);
 
-  const selectedTpl = templates.find((t) => t.id === selectedTemplate);
-
-  const defaultColors: TemplateColors = {
+  const defaultColors: CustomColors = {
     primary: "#006A4E",
     secondary: "#F42A41",
     accent: "#059669",
@@ -74,14 +94,14 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
     error: "#ef4444",
   };
 
-  const defaultTypography: TemplateTypography = {
+  const defaultTypography: CustomTypography = {
     headingFont: "Inter",
     bodyFont: "Inter",
     headingWeight: "700",
     borderRadius: "lg",
   };
 
-  const defaultLayout: TemplateLayout = {
+  const defaultLayout: CustomLayout = {
     maxWidth: "1280px",
     sectionSpacing: "normal",
     cardStyle: "shadowed",
@@ -107,10 +127,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           }),
         });
         const data = await res.json();
-        if (data.templateId) {
-          setSelectedTemplate(data.templateId);
-          if (data.colors) setColors(prev => ({ ...prev, ...data.colors }));
-        }
+        if (data.colors) setColors(prev => ({ ...prev, ...data.colors }));
       } catch (err) {
         console.error("AI recommendation failed", err);
       } finally {
@@ -135,7 +152,6 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           subdomain: subdomain || storeName.toLowerCase().replace(/[^a-z0-9-]/g, ""),
           category: businessType,
           theme: JSON.stringify({
-            templateId: selectedTemplate,
             primaryColor: colors.primary,
             secondaryColor: colors.secondary,
           }),
@@ -166,8 +182,8 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
           </h2>
           <p className="text-gray-500 mb-8">
             {lang === "bn"
-              ? "আমরা আপনার জন্য সেরা টেমপ্লেট এবং সেটিংস সুপারিশ করবো।"
-              : "We'll recommend the best template and settings for you."}
+              ? "আমরা আপনার জন্য সেরা সেটিংস সুপারিশ করবো।"
+              : "We'll recommend the best settings for you."}
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {businessTypes.map((bt) => (
@@ -290,14 +306,6 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
       )}
 
       {step === 4 && (
-        <TemplatePicker
-          selected={selectedTemplate}
-          onSelect={setSelectedTemplate}
-          lang={lang}
-        />
-      )}
-
-      {step === 5 && (
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-gray-900">
@@ -315,10 +323,6 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
               <div className="flex justify-between border-b border-gray-200 pb-2">
                 <span className="text-gray-500 font-medium">Domain</span>
                 <span className="text-gray-900 font-semibold">{subdomain || storeName.toLowerCase().replace(/[^a-z0-9-]/g, "")}.bdesh.shop</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500 font-medium">Template</span>
-                <span className="text-gray-900 font-semibold capitalize">{selectedTemplate}</span>
               </div>
             </div>
             
@@ -355,7 +359,7 @@ export function OnboardingWizard({ lang }: OnboardingWizardProps) {
         </div>
       )}
 
-      {step > 0 && step < 5 && (
+      {step > 0 && step < 4 && (
         <div className="flex justify-between mt-8">
           <Button variant="ghost" onClick={handleBack}>
             <ArrowLeft size={16} className="mr-1.5" />

@@ -11,7 +11,6 @@ import { useAdmin, AdminProvider } from "./AdminContext";
 
 const navItems = [
   { href: "/admin", icon: LayoutDashboard, label: "Overview" },
-  { href: "/admin/templates", icon: Palette, label: "Templates" },
   { href: "/admin/stores", icon: Store, label: "Stores" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },

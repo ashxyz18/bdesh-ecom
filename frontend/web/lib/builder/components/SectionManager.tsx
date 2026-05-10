@@ -1,10 +1,15 @@
 "use client";
 
 import { GripVertical, Eye, EyeOff, Trash2, ArrowUp, ArrowDown, Copy } from "lucide-react";
-import type { HomeSectionConfig } from "@/lib/store-templates/engine/types";
+
+interface SectionConfig {
+  type: string;
+  visible?: boolean;
+  [key: string]: unknown;
+}
 
 interface SectionManagerProps {
-  sections: HomeSectionConfig[];
+  sections: SectionConfig[];
   onReorder: (from: number, to: number) => void;
   onRemove: (index: number) => void;
   onDuplicate: (index: number) => void;
@@ -80,7 +85,7 @@ export function SectionManager({
                 onClick={() => onToggleVisibility(i)}
                 className="p-1 text-gray-400 hover:text-gray-600 rounded"
               >
-                {false ? <EyeOff size={14} /> : <Eye size={14} />}
+                {section.visible === false ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
               <button
                 onClick={() => onDuplicate(i)}

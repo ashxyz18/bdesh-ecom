@@ -5,17 +5,25 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   Sparkles, ShoppingBag, Minimize2, Eye, Check, ArrowLeft, ArrowRight,
   Loader2, Globe, Flower2, Leaf, Cpu, UtensilsCrossed, Shirt,
-  Scissors, BookOpen, Stethoscope, Pill, Briefcase, Blocks, Map,
+  Scissors, BookOpen, Stethoscope, Pill, Briefcase, Blocks,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useDashboard } from "../DashboardContext";
-import { templateList } from "@/lib/store-templates/registry";
-import type { TemplateInfo } from "@/lib/store-templates/registry";
 
-// Map template IDs to their display icons
+interface StoreTemplate {
+  id: string;
+  name: string;
+  tagline: string;
+  description: string;
+  color: string;
+  features: string[];
+  isPremium: boolean;
+  defaultColors: { primary: string; secondary: string; accent: string };
+}
+
 const templateIcons: Record<string, React.ComponentType<{ className?: string; size?: number }>> = {
   roseo: Sparkles,
   default: ShoppingBag,
@@ -31,7 +39,25 @@ const templateIcons: Record<string, React.ComponentType<{ className?: string; si
   pharmacy: Pill,
   corporate: Briefcase,
   portfolio: Blocks,
+  koskii: Sparkles,
 };
+
+const templateList: StoreTemplate[] = [
+  { id: "default", name: "Modern Shop", tagline: "Clean & Professional", description: "Bright, modern layout perfect for any type of product store", color: "from-emerald-600 to-teal-700", features: ["Clean product grid", "Collection filters", "Fast checkout", "Mobile-first"], isPremium: false, defaultColors: { primary: "#006A4E", secondary: "#F42A41", accent: "#059669" } },
+  { id: "roseo", name: "Roseo", tagline: "Premium & Luxurious", description: "Dark, elegant design for leather goods, fashion, and premium products", color: "from-stone-900 to-amber-900", features: ["Dark luxury aesthetic", "Product quick view", "Wishlist & cart", "Customer reviews"], isPremium: true, defaultColors: { primary: "#1c1917", secondary: "#b45309", accent: "#d97706" } },
+  { id: "shopify", name: "Minimal", tagline: "Simple & Fast", description: "Minimalist design focused on speed and conversion for any store", color: "from-blue-600 to-indigo-700", features: ["Ultra-fast loading", "Minimal design", "One-page checkout", "SEO optimized"], isPremium: false, defaultColors: { primary: "#2563eb", secondary: "#4f46e5", accent: "#3b82f6" } },
+  { id: "shopnest", name: "ShopNest", tagline: "Colorful & Fun", description: "Vibrant, colorful design for fashion and lifestyle brands", color: "from-pink-500 to-rose-600", features: ["Colorful design", "Instagram-style", "Size guide", "Wishlist"], isPremium: false, defaultColors: { primary: "#ec4899", secondary: "#f43f5e", accent: "#f97316" } },
+  { id: "food", name: "Foodie", tagline: "Delicious & Appetizing", description: "Mouth-watering design for restaurants, bakeries, and food delivery", color: "from-orange-500 to-red-600", features: ["Menu display", "Online ordering", "Delivery tracking", "Reservation system"], isPremium: false, defaultColors: { primary: "#ea580c", secondary: "#dc2626", accent: "#f97316" } },
+  { id: "grocer", name: "Grocer", tagline: "Fresh & Organized", description: "Clean, organized layout for grocery and everyday essentials", color: "from-green-500 to-emerald-600", features: ["Category navigation", "Bulk pricing", "Subscription options", "Quick reorder"], isPremium: false, defaultColors: { primary: "#16a34a", secondary: "#059669", accent: "#22c55e" } },
+  { id: "salon", name: "Salon", tagline: "Elegant & Beautiful", description: "Sophisticated design for salons, spas, and beauty services", color: "from-purple-500 to-violet-600", features: ["Service booking", "Gallery showcase", "Team profiles", "Online payments"], isPremium: false, defaultColors: { primary: "#7c3aed", secondary: "#8b5cf6", accent: "#a855f7" } },
+  { id: "pharmacy", name: "Pharmacy", tagline: "Trusted & Professional", description: "Clean, trustworthy design for pharmacies and health stores", color: "from-teal-500 to-cyan-600", features: ["Product search", "Upload prescription", "Health blog", "Delivery options"], isPremium: false, defaultColors: { primary: "#0d9488", secondary: "#0891b2", accent: "#14b8a6" } },
+  { id: "koskii", name: "Koskii", tagline: "Women's Ethnic Fashion", description: "Elegant ethnic fashion e-commerce with silk sarees, salwar suits, lehengas, and gowns. Features product sliders, wishlists, and premium shopping experience.", color: "from-stone-800 to-amber-700", features: ["Product sliders with quick add", "Wishlist functionality", "Shopping cart drawer", "Search overlay", "Mobile bottom navigation", "Testimonials", "Newsletter signup"], isPremium: true, defaultColors: { primary: "#1a1a1a", secondary: "#d4af37", accent: "#d4af37" } },
+];
+
+const templates = templateList.map(t => ({
+  ...t,
+  icon: templateIcons[t.id] || Blocks,
+}));
 
 function LoadingSkeleton() {
   return (
@@ -59,12 +85,6 @@ function LoadingSkeleton() {
     </div>
   );
 }
-
-/** Merge the registry template info with icons for the new-store page */
-const templates: (TemplateInfo & { icon: React.ComponentType<{ className?: string; size?: number }> })[] = templateList.map(t => ({
-  ...t,
-  icon: templateIcons[t.id] || Blocks,
-}));
 
 export default function NewStorePage() {
   return (
@@ -133,6 +153,9 @@ function NewStorePageInner() {
     setError("");
     setLoading(true);
 
+    const prebuiltWebsites = ["koskii"];
+    const isPrebuilt = prebuiltWebsites.includes(selectedTemplate);
+
     try {
       const theme = getTemplateTheme(selectedTemplate);
       const res = await fetch("/api/stores", {
@@ -143,6 +166,7 @@ function NewStorePageInner() {
           category: selectedTemplate,
           theme: JSON.stringify({
             templateId: selectedTemplate,
+            prebuiltWebsiteId: isPrebuilt ? selectedTemplate : null,
             ...theme,
           }),
         }),
@@ -193,7 +217,7 @@ function NewStorePageInner() {
           }`}
         >
           <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">1</span>
-          Choose Template
+          Choose Design
         </button>
         <div className="h-px flex-1 bg-slate-200" />
         <div className="h-px flex-1 bg-slate-200" />
@@ -219,7 +243,7 @@ function NewStorePageInner() {
         <div>
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-slate-900">Choose Your Store Design</h1>
-            <p className="text-slate-500 mt-1">Pick a template that matches your brand. You can always change it later.</p>
+            <p className="text-slate-500 mt-1">Pick a design that matches your brand. You can always change it later.</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -248,16 +272,7 @@ function NewStorePageInner() {
                       )}
                     </div>
                     <p className="text-white/70 text-xs">{tpl.tagline}</p>
-                    <div className="absolute top-3 right-3 flex items-center gap-1.5">
-                      <a
-                        href={`/preview/${tpl.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="w-7 h-7 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-white" />
-                      </a>
+                    <div className="absolute top-3 right-3">
                       {selectedTemplate === tpl.id && (
                         <div className="w-7 h-7 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
                           <Check className="w-4 h-4 text-white" />
@@ -292,7 +307,7 @@ function NewStorePageInner() {
               size="lg"
               className="px-8 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20"
             >
-              Continue with {selectedTpl?.name || "Template"}
+              Continue with {selectedTpl?.name || "Design"}
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </div>
@@ -304,7 +319,7 @@ function NewStorePageInner() {
         <div>
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-slate-900">Name Your Store</h1>
-            <p className="text-slate-500 mt-1">Using the <span className="font-semibold text-slate-700">{selectedTpl?.name}</span> template</p>
+            <p className="text-slate-500 mt-1">Using the <span className="font-semibold text-slate-700">{selectedTpl?.name}</span> design</p>
           </div>
 
           <div className="bg-white rounded-2xl border border-slate-200/80 p-8 max-w-lg shadow-sm">

@@ -2,7 +2,6 @@
 
 import { Navbar } from "@/components/marketing/Navbar";
 import { HeroSection } from "@/components/marketing/HeroSection";
-import { WebsiteTemplatesSection } from "@/components/marketing/WebsiteTemplatesSection";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button } from "@/components/shared/Button";
@@ -12,17 +11,39 @@ import {
   ArrowRight, Check, Star,
   Zap, Palette,
 } from "lucide-react";
-import {
-  features,
-  testimonials,
-  stats,
-  pricingPlans,
-} from "@/lib/marketing-data";
 
 const AIWebsiteBuilder = dynamic(() => import("@/components/ai/AIWebsiteBuilder").then(mod => ({ default: mod.AIWebsiteBuilder })), { ssr: false });
 
+const stats = [
+  { value: "10,000+", label: "Active Stores" },
+  { value: "50,000+", label: "Products Listed" },
+  { value: "99.9%", label: "Uptime" },
+  { value: "24/7", label: "Support" },
+];
+
+const features = [
+  { title: "Easy Setup", description: "Create your store in minutes with our intuitive dashboard. No coding required.", icon: Zap },
+  { title: "Secure Payments", description: "Accept payments via bKash, Nagad, SSLCommerz, and cash on delivery.", icon: Store },
+  { title: "Mobile First", description: "Your store looks great on any device. Optimized for mobile shopping.", icon: Palette },
+  { title: "AI Powered", description: "Let AI help you design your store, write product descriptions, and optimize for sales.", icon: Star },
+  { title: "Analytics", description: "Track your sales, visitors, and growth with built-in analytics dashboard.", icon: Zap },
+  { title: "Bangladesh Focus", description: "Built for Bangladeshi businesses with local payment methods and shipping.", icon: Store },
+];
+
+const testimonials = [
+  { name: "Rahim Ahmed", role: "Fashion Entrepreneur", company: "Dhaka Styles", quote: "BdeshShop made it incredibly easy to take my boutique online. Sales doubled within the first month!", rating: 5 },
+  { name: "Fatima Begum", role: "Restaurant Owner", company: "Chittagong Eats", quote: "The food template was perfect. Customers can now order online and we handle delivery seamlessly.", rating: 5 },
+  { name: "Kamal Hossain", role: "Electronics Seller", company: "TechBD", quote: "From setup to first sale in under 30 minutes. The AI builder understood exactly what I needed.", rating: 5 },
+];
+
+const pricingPlans = [
+  { name: "Starter", price: "0", period: "month", description: "Perfect for trying out", highlighted: false, cta: "Start Free", features: ["1 Store", "Up to 50 Products", "Basic Analytics", "bKash Payments", "Community Support"] },
+  { name: "Pro", price: "499", period: "month", description: "For growing businesses", highlighted: true, cta: "Start Pro Trial", features: ["5 Stores", "Unlimited Products", "Advanced Analytics", "All Payment Methods", "Priority Support", "Custom Domain", "AI Assistant"] },
+  { name: "Enterprise", price: "1999", period: "month", description: "For large operations", highlighted: false, cta: "Contact Sales", features: ["Unlimited Stores", "Unlimited Products", "Custom Analytics", "All Payment Methods", "Dedicated Support", "Custom Domain", "AI Assistant", "API Access", "White Label"] },
+];
+
 const steps = [
-  { number: "01", title: "Pick a Template", description: "Choose from our collection", icon: Palette },
+  { number: "01", title: "Set Up Your Store", description: "Create and customize in minutes", icon: Palette },
   { number: "02", title: "Add Your Products", description: "Upload products with images and prices", icon: ShoppingBag },
   { number: "03", title: "Go Live!", description: "Your store is instantly live with payments", icon: Zap },
 ];
@@ -53,9 +74,6 @@ export default function LandingPage() {
           <AIWebsiteBuilder />
         </div>
       </LazySection>
-
-      {/* Website Templates Section */}
-      <WebsiteTemplatesSection showBrowseAll={true} />
 
       {/* How It Works */}
       <LazySection className="py-20 md:py-28 bg-white" placeholderHeight={400}>

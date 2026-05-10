@@ -2,15 +2,41 @@
 
 import { useState } from "react";
 import { Palette, Type, Layout, Eye } from "lucide-react";
-import type { TemplateColors, TemplateTypography, TemplateLayout } from "@/lib/store-templates/engine/types";
+
+interface CustomColors {
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+  surface: string;
+  text: string;
+  textMuted: string;
+  border: string;
+  success: string;
+  error: string;
+}
+
+interface CustomTypography {
+  headingFont: string;
+  bodyFont: string;
+  headingWeight: string;
+  borderRadius: string;
+}
+
+interface CustomLayout {
+  maxWidth: string;
+  sectionSpacing: string;
+  cardStyle: string;
+  productColumns: number;
+}
 
 interface CustomizationPanelProps {
-  colors: TemplateColors;
-  typography: TemplateTypography;
-  layout: TemplateLayout;
-  onColorsChange: (colors: Partial<TemplateColors>) => void;
-  onTypographyChange: (typography: Partial<TemplateTypography>) => void;
-  onLayoutChange: (layout: Partial<TemplateLayout>) => void;
+  colors: CustomColors;
+  typography: CustomTypography;
+  layout: CustomLayout;
+  onColorsChange: (colors: Partial<CustomColors>) => void;
+  onTypographyChange: (typography: Partial<CustomTypography>) => void;
+  onLayoutChange: (layout: Partial<CustomLayout>) => void;
   lang: "en" | "bn";
 }
 
@@ -86,13 +112,13 @@ export function CustomizationPanel({
               <div className="flex items-center gap-2">
                 <input
                   type="color"
-                  value={colors[key as keyof TemplateColors]}
+                  value={colors[key as keyof CustomColors]}
                   onChange={(e) => onColorsChange({ [key]: e.target.value })}
                   className="w-9 h-9 rounded-lg border border-gray-200 cursor-pointer shrink-0"
                 />
                 <input
                   type="text"
-                  value={colors[key as keyof TemplateColors]}
+                  value={colors[key as keyof CustomColors]}
                   onChange={(e) => onColorsChange({ [key]: e.target.value })}
                   className={`${inputClass} font-mono`}
                 />
@@ -162,7 +188,7 @@ export function CustomizationPanel({
               value={typography.borderRadius}
               onChange={(e) =>
                 onTypographyChange({
-                  borderRadius: e.target.value as TemplateTypography["borderRadius"],
+                  borderRadius: e.target.value,
                 })
               }
               className={inputClass}
@@ -207,7 +233,7 @@ export function CustomizationPanel({
               value={layout.sectionSpacing}
               onChange={(e) =>
                 onLayoutChange({
-                  sectionSpacing: e.target.value as TemplateLayout["sectionSpacing"],
+                  sectionSpacing: e.target.value,
                 })
               }
               className={inputClass}
@@ -231,7 +257,7 @@ export function CustomizationPanel({
               value={layout.cardStyle}
               onChange={(e) =>
                 onLayoutChange({
-                  cardStyle: e.target.value as TemplateLayout["cardStyle"],
+                  cardStyle: e.target.value,
                 })
               }
               className={inputClass}
@@ -250,7 +276,7 @@ export function CustomizationPanel({
               value={layout.productColumns}
               onChange={(e) =>
                 onLayoutChange({
-                  productColumns: Number(e.target.value) as TemplateLayout["productColumns"],
+                  productColumns: Number(e.target.value),
                 })
               }
               className={inputClass}

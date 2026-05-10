@@ -7,16 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useDashboard } from "../DashboardContext";
-import { templateList } from "@/lib/store-templates/registry";
-
-interface CustomTemplateItem {
-  id: string
-  name: string
-  slug: string
-  description: string | null
-  category: string
-  isPremium: boolean
-}
 
 export default function SettingsPage() {
   const { activeStore } = useDashboard();
@@ -24,7 +14,6 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [customTemplates, setCustomTemplates] = useState<CustomTemplateItem[]>([]);
   const [form, setForm] = useState({
     name: "",
     description: "",
@@ -52,23 +41,6 @@ export default function SettingsPage() {
   });
   const [gatewaySaving, setGatewaySaving] = useState(false);
   const [gatewayMessage, setGatewayMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  const fetchCustomTemplates = useCallback(async () => {
-    try {
-      const res = await fetch("/api/templates?includeConfig=false")
-      if (res.ok) {
-        const data = await res.json()
-        setCustomTemplates((data.templates || []).map((t: any) => ({
-          id: t.slug || t.id,
-          name: t.name,
-          slug: t.slug,
-          description: t.description,
-          category: t.category,
-          isPremium: t.isPremium,
-        })))
-      }
-    } catch {}
-  }, [])
 
   useEffect(() => {
     async function fetchStore() {
@@ -103,7 +75,6 @@ export default function SettingsPage() {
       }
     }
     fetchStore();
-    fetchCustomTemplates();
 
     // Fetch payment gateway config
     if (storeId) {
@@ -122,21 +93,7 @@ export default function SettingsPage() {
         })
         .catch(() => {});
     }
-  }, [storeId, fetchCustomTemplates]);
-
-  const handleTemplateChange = (templateId: string) => {
-    const tpl = templateList.find(t => t.id === templateId);
-    if (tpl) {
-      setForm(prev => ({
-        ...prev,
-        templateId,
-        primaryColor: tpl.defaultColors.primary,
-        secondaryColor: tpl.defaultColors.secondary,
-      }));
-    } else {
-      setForm(prev => ({ ...prev, templateId }));
-    }
-  };
+  }, [storeId]);
 
   const handleGatewaySave = async () => {
     if (!storeId) return;
@@ -286,99 +243,6 @@ export default function SettingsPage() {
                 <span className="text-sm text-slate-400 whitespace-nowrap">.bdesh.shop</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Template Selection */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
-                <Palette size={16} className="text-purple-600" />
-              </div>
-              <h2 className="font-semibold text-slate-900">Store Template</h2>
-            </div>
-            <Link href="/dashboard/templates" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1">
-              Manage Templates <ArrowRight size={14} />
-            </Link>
-          </div>
-          <p className="text-sm text-slate-500 mb-5 ml-10">Choose a template for your store. Switching templates will update your store's design instantly.</p>
-          <div className="grid gap-3">
-            {/* Built-in templates */}
-            {templateList.map(tpl => (
-              <button
-                key={tpl.id}
-                onClick={() => handleTemplateChange(tpl.id)}
-                className={`relative flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all ${
-                  form.templateId === tpl.id
-                    ? "border-emerald-500 bg-emerald-50/50"
-                    : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-                }`}
-              >
-                {form.templateId === tpl.id && (
-                  <div className="absolute top-3 right-3 w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center">
-                    <Check size={14} className="text-white" />
-                  </div>
-                )}
-                <div
-                  className="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center shadow-sm"
-                  style={{ background: `linear-gradient(135deg, ${tpl.defaultColors.primary}, ${tpl.defaultColors.secondary})` }}
-                >
-                  <span className="text-white font-bold text-lg">{tpl.name.charAt(0)}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-slate-900">{tpl.name}</h3>
-                    {tpl.isPremium && (
-                      <span className="text-[10px] font-bold bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">PREMIUM</span>
-                    )}
-                  </div>
-                  <p className="text-sm text-slate-500 mt-0.5">{tpl.tagline}</p>
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {tpl.features.slice(0, 3).map(f => (
-                      <span key={f} className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{f}</span>
-                    ))}
-                  </div>
-                </div>
-              </button>
-            ))}
-
-            {/* Custom templates */}
-            {customTemplates.length > 0 && (
-              <>
-                <div className="flex items-center gap-2 pt-3 pb-1">
-                  <FileJson size={14} className="text-purple-500" />
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Custom Templates</span>
-                </div>
-                {customTemplates.map(tpl => (
-                  <button
-                    key={tpl.slug}
-                    onClick={() => handleTemplateChange(tpl.slug)}
-                    className={`relative flex items-start gap-4 p-4 rounded-xl border-2 text-left transition-all ${
-                      form.templateId === tpl.slug
-                        ? "border-emerald-500 bg-emerald-50/50"
-                        : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-                    }`}
-                  >
-                    {form.templateId === tpl.slug && (
-                      <div className="absolute top-3 right-3 w-6 h-6 bg-emerald-600 rounded-full flex items-center justify-center">
-                        <Check size={14} className="text-white" />
-                      </div>
-                    )}
-                    <div className="w-14 h-14 rounded-xl flex-shrink-0 flex items-center justify-center shadow-sm bg-gradient-to-br from-purple-100 to-indigo-100">
-                      <FileJson size={24} className="text-purple-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-900">{tpl.name}</h3>
-                        <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{tpl.category}</span>
-                      </div>
-                      <p className="text-sm text-slate-500 mt-0.5">{tpl.description || "Custom template"}</p>
-                    </div>
-                  </button>
-                ))}
-              </>
-            )}
           </div>
         </div>
 

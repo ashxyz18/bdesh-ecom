@@ -2,7 +2,6 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Script from "next/script";
 import type { Metadata } from "next";
-import { getStoreTemplate, isBuiltInTemplate, getTemplateInfo } from "@/lib/store-templates/registry";
 import { StoreProviders } from "./providers";
 import { BlockData } from "@/lib/builder/blocks/types";
 import { 
@@ -64,10 +63,8 @@ export async function generateMetadata({ searchParams }: StorePageProps): Promis
   if (!store) return {};
 
   const theme = typeof store.theme === "string" ? JSON.parse(store.theme) : store.theme;
-  const templateId = theme?.templateId || "default";
-  const templateInfo = getTemplateInfo(templateId);
-  const title = store.name ? `${store.name} | ${templateInfo?.name || "Online Store"}` : "Online Store";
-  const description = store.description || templateInfo?.description || "Visit our online store";
+  const title = store.name ? `${store.name} | Online Store` : "Online Store";
+  const description = store.description || "Visit our online store";
   const url = `${process.env.NEXT_PUBLIC_APP_URL}/store?subdomain=${subdomain}`;
 
   return {
@@ -295,64 +292,10 @@ export default async function StorePage({ params, searchParams }: StorePageProps
     }
   }
 
-  // Build store JSX
+  // Build store JSX using visual builder blocks only
   let storeJSX: React.ReactNode;
 
-  // Check for payment callback params
-  const paymentStatus = (await searchParams).payment as string | undefined;
-  const paymentOrder = (await searchParams).order as string | undefined;
-
-  // 1. Check for specific system pages (Checkout, Cart, Track, etc.)
-  if (path && path[0] === "track") {
-  const { ConfigOrderTrackPage } = await import("@/lib/store-templates/engine/pages/ConfigOrderTrackPage");
-    const dummyConfig = {
-      id: "system",
-      theme: {
-        colors: { primary: "#008060", secondary: "#2c3e50", bg: "#ffffff", text: "#1a1a1a" },
-        fonts: { body: "Inter", heading: "Inter" },
-        radius: "md",
-        shadows: "sm"
-      }
-    };
-    
-    storeJSX = (
-      <StoreProviders storeId={parsedStore.id}>
-        <ConfigOrderTrackPage
-          config={dummyConfig as any}
-          store={parsedStore}
-          formatPrice={(p: number) => `৳${p.toLocaleString()}`}
-          storeLink={(sub: string) => `/store?subdomain=${parsedStore.subdomain}${sub ? `&path=${sub}` : ""}`}
-          orderNumber={path[1] || paymentOrder || ""}
-        />
-      </StoreProviders>
-    );
-  }
-  else if (path && path[0] === "checkout") {
-    const { ConfigCheckoutPage } = await import("../../../lib/store-templates/engine/pages/ConfigCheckoutPage");
-    // We need a dummy config for theme variables if using block builder
-    const dummyConfig = {
-      id: "system",
-      theme: {
-        colors: { primary: "#008060", secondary: "#2c3e50", bg: "#ffffff", text: "#1a1a1a" },
-        fonts: { body: "Inter", heading: "Inter" },
-        radius: "md",
-        shadows: "sm"
-      }
-    };
-    
-    storeJSX = (
-      <StoreProviders storeId={parsedStore.id}>
-        <ConfigCheckoutPage 
-          config={dummyConfig as any} 
-          store={parsedStore} 
-          formatPrice={(p: number) => `৳${p.toLocaleString()}`} 
-          storeLink={(sub: string) => `/store?subdomain=${parsedStore.subdomain}${sub ? `&path=${sub}` : ""}`} 
-        />
-      </StoreProviders>
-    );
-  }
-  // 2. Visual Builder blocks (Custom Drag-and-Drop)
-  else if (parsedStore.theme?.blocks?.length > 0) {
+  if (parsedStore.theme?.blocks?.length > 0) {
     storeJSX = (
       <StoreProviders storeId={parsedStore.id}>
         <main className="flex-1 bg-white min-h-screen">
@@ -379,50 +322,63 @@ export default async function StorePage({ params, searchParams }: StorePageProps
         </main>
       </StoreProviders>
     );
-  }
-  // 2. AI-generated template
-  else if (parsedStore.theme?.aiGenerated && parsedStore.theme?.templateConfig) {
-    const configJson = JSON.stringify(parsedStore.theme.templateConfig);
-    const { ConfigTemplateWrapper } = await import("@/lib/store-templates/engine/ConfigTemplateWrapper");
+  } else {
+    // Fallback: basic store page with products
     storeJSX = (
       <StoreProviders storeId={parsedStore.id}>
-        <ConfigTemplateWrapper store={parsedStore} path={path || []} configJson={configJson} />
-      </StoreProviders>
-    );
-  }
-  // 3. Built-in template
-  else if (isBuiltInTemplate(templateId)) {
-    const StoreTemplate = getStoreTemplate(templateId);
-    storeJSX = (
-      <StoreProviders storeId={parsedStore.id}>
-        <StoreTemplate store={parsedStore} path={path || []} />
-      </StoreProviders>
-    );
-  }
-  // 4. Custom/uploaded template
-  else {
-    const templateRecord = await prisma.template.findUnique({
-      where: { slug: templateId },
-      select: { config: true },
-    });
+        <main className="min-h-screen bg-white">
+          {/* Header */}
+          <header className="border-b border-gray-200" style={{ backgroundColor: parsedStore.theme?.primaryColor || "#006A4E" }}>
+            <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+              <h1 className="text-xl font-bold text-white">{parsedStore.name}</h1>
+              <nav className="flex items-center gap-4 text-white/80 text-sm">
+                <a href={`/store?subdomain=${parsedStore.subdomain}`}>Home</a>
+                <a href={`/store?subdomain=${parsedStore.subdomain}&path=products`}>Products</a>
+              </nav>
+            </div>
+          </header>
 
-    if (!templateRecord?.config) {
-      const StoreTemplate = getStoreTemplate("default");
-      storeJSX = (
-        <StoreProviders storeId={parsedStore.id}>
-          <StoreTemplate store={parsedStore} path={path || []} />
-        </StoreProviders>
-      );
-    } else {
-      const configJson =
-        typeof templateRecord.config === "string" ? templateRecord.config : JSON.stringify(templateRecord.config);
-      const { ConfigTemplateWrapper } = await import("@/lib/store-templates/engine/ConfigTemplateWrapper");
-      storeJSX = (
-        <StoreProviders storeId={parsedStore.id}>
-          <ConfigTemplateWrapper store={parsedStore} path={path || []} configJson={configJson} />
-        </StoreProviders>
-      );
-    }
+          {/* Hero */}
+          <section className="py-16 text-center" style={{ backgroundColor: `${parsedStore.theme?.primaryColor || "#006A4E"}10` }}>
+            <div className="max-w-4xl mx-auto px-4">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">{parsedStore.name}</h2>
+              {parsedStore.description && <p className="text-lg text-gray-600">{parsedStore.description}</p>}
+            </div>
+          </section>
+
+          {/* Products */}
+          <section className="max-w-7xl mx-auto px-4 py-12">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">Our Products</h3>
+            {parsedStore.products.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {parsedStore.products.map((product: any) => (
+                  <a
+                    key={product.id}
+                    href={`/store?subdomain=${parsedStore.subdomain}&path=product/${product.slug}`}
+                    className="group rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
+                  >
+                    <div className="aspect-square bg-gray-100">
+                      {product.images?.[0] && <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />}
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-semibold text-gray-900 group-hover:text-emerald-600 transition-colors">{product.name}</h4>
+                      <p className="text-lg font-bold mt-1" style={{ color: parsedStore.theme?.secondaryColor || "#F42A41" }}>৳{product.price}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-12">No products available yet.</p>
+            )}
+          </section>
+
+          {/* Footer */}
+          <footer className="border-t border-gray-200 py-8 text-center text-sm text-gray-500" style={{ backgroundColor: parsedStore.theme?.primaryColor || "#006A4E" }}>
+            <p className="text-white/80">&copy; {new Date().getFullYear()} {parsedStore.name}. All rights reserved.</p>
+          </footer>
+        </main>
+      </StoreProviders>
+    );
   }
 
   return (

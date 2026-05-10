@@ -2,7 +2,6 @@
 
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
-import type { TemplateConfig } from "@/lib/store-templates/engine/types"
 
 interface BuilderState {
   // Wizard state
@@ -13,7 +12,7 @@ interface BuilderState {
   description: string
   
   // Template config
-  templateConfig: Partial<TemplateConfig> | null
+  templateConfig: Record<string, unknown> | null
   
   // UI state
   previewMode: "desktop" | "tablet" | "mobile"
@@ -26,8 +25,8 @@ interface BuilderState {
   setIndustry: (industry: string) => void
   setWebsiteType: (type: string) => void
   setDescription: (desc: string) => void
-  setTemplateConfig: (config: Partial<TemplateConfig> | null) => void
-  updateTemplateConfig: (updates: Partial<TemplateConfig>) => void
+  setTemplateConfig: (config: Record<string, unknown> | null) => void
+  updateTemplateConfig: (updates: Record<string, unknown>) => void
   setPreviewMode: (mode: "desktop" | "tablet" | "mobile") => void
   setLang: (lang: "en" | "bn") => void
   setShowCustomizer: (show: boolean) => void
@@ -60,7 +59,7 @@ export const useBuilderStore = create<BuilderState>()(
         set((state) => ({
           templateConfig: state.templateConfig
             ? { ...state.templateConfig, ...updates }
-            : (updates as Partial<TemplateConfig>),
+            : updates,
         })),
       setPreviewMode: (mode) => set({ previewMode: mode }),
       setLang: (lang) => set({ lang }),

@@ -11,6 +11,12 @@ import {
   ProductGridBlock, FeaturedProductsBlock, CartSummaryBlock
 } from "@/lib/builder/blocks";
 import { ShoppingCart, Package, Menu, X, Facebook, Twitter, Instagram } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const PrebuiltWebsiteRenderer = dynamic(
+  () => import("@/lib/builder/templates/PrebuiltWebsiteRenderer").then(mod => mod.PrebuiltWebsiteRenderer),
+  { ssr: false, loading: () => <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div> }
+);
 
 interface StoreInfo {
   id: string;
@@ -19,6 +25,7 @@ interface StoreInfo {
   logo?: string;
   color?: string;
   templateId?: string;
+  prebuiltWebsiteId?: string;
 }
 
 function StoreNavbar({ store, cartCount }: { store: StoreInfo; cartCount: number }) {
@@ -143,8 +150,10 @@ export default function StorePage() {
       try {
         const res = await fetch(`/api/stores/${storeId}`);
         if (res.ok) {
-          const data = await res.json();
-          setStore({ id: storeId, name: data.name || "Store", description: data.description, logo: data.logo, color: data.color, templateId: data.templateId });
+          const response = await res.json();
+          const storeData = response.store || response;
+          const theme = typeof storeData.theme === "string" ? JSON.parse(storeData.theme) : (storeData.theme || {});
+          setStore({ id: storeId, name: storeData.name || "Store", description: storeData.description, logo: storeData.logo, color: storeData.color, templateId: theme.templateId, prebuiltWebsiteId: theme.prebuiltWebsiteId });
         }
       } catch {
         // fallback
@@ -193,6 +202,10 @@ export default function StorePage() {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
+  }
+
+  if (store.prebuiltWebsiteId) {
+    return <PrebuiltWebsiteRenderer websiteId={store.prebuiltWebsiteId} storeId={storeId} />;
   }
 
   return (
