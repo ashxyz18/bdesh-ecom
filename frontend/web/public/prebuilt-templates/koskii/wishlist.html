@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Wishlist | Koskii</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .wishlist-page {
+            padding: 100px 0 40px;
+            min-height: 100vh;
+        }
+        .wishlist-page .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px;
+        }
+        .wishlist-page h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 32px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        @media (min-width: 768px) {
+            .wishlist-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (min-width: 1024px) {
+            .wishlist-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+        .wishlist-empty {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .wishlist-empty i {
+            font-size: 64px;
+            color: var(--border);
+            margin-bottom: 16px;
+        }
+        .wishlist-empty h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+        .wishlist-empty p {
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="announcement-bar">
+        <div class="scroll-text">
+            Get extra 5% off Use: FLASH5 on Min.2490 | Save More! Use: KOSKIILUV10 for extra 10% discount | Only on App use: APPFIRST & Get extra 15% Off |
+        </div>
+    </div>
+
+    <header class="main-header scrolled">
+        <div class="header-left">
+            <a href="index.html" class="menu-btn" aria-label="Back"><i class="fas fa-arrow-left"></i></a>
+            <button class="search-btn" aria-label="Search"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="logo">
+            <a href="index.html"><img src="https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii_logo_left_right_white.0u84b2px.n_j~.png" alt="Koskii"></a>
+        </div>
+        <div class="header-right">
+            <a href="account.html" class="header-icon" aria-label="Account"><i class="far fa-user"></i></a>
+            <a href="wishlist.html" class="header-icon" aria-label="Wishlist"><i class="fas fa-heart"></i></a>
+            <a href="#cart" class="header-icon" aria-label="Bag"><i class="fas fa-shopping-bag"></i><span class="badge-count">0</span></a>
+        </div>
+    </header>
+
+    <main class="wishlist-page">
+        <div class="container">
+            <h1>My Wishlist</h1>
+            <div class="wishlist-grid" id="wishlistGrid">
+                <div class="wishlist-empty">
+                    <i class="far fa-heart"></i>
+                    <h2>Your wishlist is empty</h2>
+                    <p>Save your favourite items to your wishlist and shop them later</p>
+                    <a href="index.html" class="btn-continue">Start Shopping</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const saved = JSON.parse(localStorage.getItem('koskii_wishlist') || '[]');
+            const grid = document.getElementById('wishlistGrid');
+            const products = window.Koskii?.products || [];
+            const items = saved.map(id => products.find(p => p.id === id)).filter(Boolean);
+
+            if (!items.length) return;
+
+            grid.innerHTML = items.map(p => `<div class="product-card"><div class="product-image"><img src="${p.image}" alt="${p.name}"><button class="wishlist-btn active" data-id="${p.id}"><i class="fas fa-heart"></i></button></div><div class="product-info"><h3>${p.name}</h3><div class="price"><span class="sale-price">₹${p.price.toLocaleString()}</span>${p.originalPrice !== p.price ? `<span class="original-price">₹${p.originalPrice.toLocaleString()}</span>` : ''}</div></div></div>`).join('');
+        });
+    </script>
+</body>
+</html>

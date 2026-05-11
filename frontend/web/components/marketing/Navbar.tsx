@@ -168,7 +168,7 @@ export function Navbar() {
             <Link href="/login">
               <Button variant="ghost" className="text-white/70 hover:text-white">Log in</Button>
             </Link>
-            <Link href="/register">
+            <Link href="/signup">
               <Button variant="primary" className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white shadow-lg shadow-[#1d4ed8]/20">
                 Start for free <ArrowRight size={16} className="ml-1" />
               </Button>

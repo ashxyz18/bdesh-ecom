@@ -1,562 +1,281 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Save, Store, Loader2, Palette, Eye, Check, ExternalLink, Globe, Phone, Clock, Info, FileJson, ArrowRight, CreditCard, Shield, ToggleLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useDashboard } from "../DashboardContext";
+import { useRouter } from "next/navigation";
+import { Save, Upload, Image, Type, Palette, Globe, Eye, Check } from "lucide-react";
 
 export default function SettingsPage() {
-  const { activeStore } = useDashboard();
-  const storeId = activeStore?.id;
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState("general");
+  const [storeId, setStoreId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    description: "",
-    subdomain: "",
-    phone: "",
-    whatsapp: "",
-    address: "",
-    hours: "",
-    primaryColor: "#006A4E",
-    secondaryColor: "#F42A41",
-    templateId: "default",
-  });
-  const [gateway, setGateway] = useState({
-    stripe: { enabled: false, publicKey: "", secretKey: "", webhookSecret: "" },
-    bkash: { enabled: false, username: "", password: "", appKey: "", appSecret: "", sandbox: true },
-    nagad: { enabled: false, merchantId: "", publicKey: "", privateKey: "", sandbox: true },
-    rocket: { enabled: false, merchantId: "", username: "", password: "", sandbox: true },
-    cod: { enabled: true, instructions: "Pay when you receive your order" },
-  });
-  const [whiteLabel, setWhiteLabel] = useState({
-    enabled: false,
-    brandName: "",
-    hidePoweredBy: false,
-    customDomain: "",
-  });
-  const [gatewaySaving, setGatewaySaving] = useState(false);
-  const [gatewayMessage, setGatewayMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  const [storeName, setStoreName] = useState("My Store");
+  const [storeLogo, setStoreLogo] = useState("");
+  const [storeDescription, setStoreDescription] = useState("");
+  const [heroImage, setHeroImage] = useState("");
+  const [heroHeadline, setHeroHeadline] = useState("");
+  const [heroSubtext, setHeroSubtext] = useState("");
+  const [accentColor, setAccentColor] = useState("#1d4ed8");
+
+  const tabs = [
+    { id: "general", label: "General", icon: Globe },
+    { id: "appearance", label: "Appearance", icon: Palette },
+    { id: "hero", label: "Hero Section", icon: Image },
+    { id: "footer", label: "Footer", icon: Type },
+  ];
 
   useEffect(() => {
+    const storedStoreId = localStorage.getItem("storeId");
+    setStoreId(storedStoreId);
+  }, []);
+
+  useEffect(() => {
+    if (!storeId) return;
+
     async function fetchStore() {
-      if (!storeId) {
-        setLoading(false);
-        return;
-      }
       try {
         const res = await fetch(`/api/stores/${storeId}`);
-        if (res.ok) {
-          const data = await res.json();
-          const store = data.store;
-          const settings = store.settings || {};
-          const theme = store.theme || {};
-          setForm({
-            name: store.name || "",
-            description: store.description || "",
-            subdomain: store.subdomain || "",
-            phone: (settings as Record<string, string>).phone || "",
-            whatsapp: (settings as Record<string, string>).whatsapp || "",
-            address: (settings as Record<string, string>).address || "",
-            hours: (settings as Record<string, string>).hours || "",
-            primaryColor: (theme as Record<string, string>).primaryColor || "#006A4E",
-            secondaryColor: (theme as Record<string, string>).secondaryColor || "#F42A41",
-            templateId: (theme as Record<string, string>).templateId || "default",
-          });
+        const data = await res.json();
+        if (data.store) {
+          setStoreName(data.store.name || "My Store");
+          setStoreLogo(data.store.logo || "");
+          setStoreDescription(data.store.description || "");
+          setAccentColor(data.store.theme?.primaryColor || "#1d4ed8");
+          setHeroImage(data.store.settings?.heroImage || "");
+          setHeroHeadline(data.store.settings?.heroHeadline || "");
+          setHeroSubtext(data.store.settings?.heroSubtext || "");
         }
-      } catch {
-        // Handle error
+      } catch (error) {
+        console.error("Failed to fetch store:", error);
       } finally {
         setLoading(false);
       }
     }
+
     fetchStore();
-
-    // Fetch payment gateway config
-    if (storeId) {
-      fetch(`/api/payments/gateway?storeId=${storeId}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.gateway) {
-            setGateway(prev => ({
-              stripe: { ...prev.stripe, ...data.gateway.stripe },
-              bkash: { ...prev.bkash, ...data.gateway.bkash },
-              nagad: { ...prev.nagad, ...data.gateway.nagad },
-              rocket: { ...prev.rocket, ...data.gateway.rocket },
-              cod: { ...prev.cod, ...data.gateway.cod },
-            }));
-          }
-        })
-        .catch(() => {});
-    }
   }, [storeId]);
-
-  const handleGatewaySave = async () => {
-    if (!storeId) return;
-    setGatewaySaving(true);
-    setGatewayMessage(null);
-    try {
-      const res = await fetch("/api/payments/gateway", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId, ...gateway }),
-      });
-      if (res.ok) {
-        setGatewayMessage({ type: "success", text: "Payment settings saved!" });
-      } else {
-        const data = await res.json();
-        setGatewayMessage({ type: "error", text: data.message || "Failed to save" });
-      }
-    } catch {
-      setGatewayMessage({ type: "error", text: "Network error" });
-    } finally {
-      setGatewaySaving(false);
-    }
-  };
 
   const handleSave = async () => {
     if (!storeId) return;
+
     setSaving(true);
-    setMessage(null);
+    setSaved(false);
 
     try {
       const res = await fetch(`/api/stores/${storeId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: form.name,
-          description: form.description,
-          theme: {
-            templateId: form.templateId,
-            primaryColor: form.primaryColor,
-            secondaryColor: form.secondaryColor,
-          },
+          name: storeName,
+          description: storeDescription,
+          logo: storeLogo,
+          theme: { primaryColor: accentColor },
           settings: {
-            phone: form.phone,
-            whatsapp: form.whatsapp,
-            address: form.address,
-            hours: form.hours,
+            heroImage,
+            heroHeadline,
+            heroSubtext,
           },
         }),
       });
 
       if (res.ok) {
-        setMessage({ type: "success", text: "Settings saved successfully!" });
-      } else {
-        const data = await res.json();
-        setMessage({ type: "error", text: data.message || "Failed to save settings" });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
       }
-    } catch {
-      setMessage({ type: "error", text: "Network error. Please try again." });
+    } catch (error) {
+      console.error("Failed to save settings:", error);
     } finally {
       setSaving(false);
     }
   };
 
-  if (!storeId) {
-    return (
-      <div className="text-center py-24">
-        <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
-          <Store className="text-slate-400" size={32} />
-        </div>
-        <h2 className="text-xl font-bold text-slate-900 mb-2">No Store Selected</h2>
-        <p className="text-slate-500">Select a store from the sidebar to manage settings.</p>
-      </div>
-    );
-  }
+  const getPreviewUrl = () => {
+    if (!storeId) return "#";
+    return `/store/${storeId}`;
+  };
 
   if (loading) {
     return (
-      <div className="flex justify-center py-20">
-        <div className="w-8 h-8 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+      <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
+        <div className="w-8 h-8 border-4 border-[#1d4ed8]/30 border-t-[#1d4ed8] rounded-full animate-spin" />
       </div>
     );
   }
 
-  const inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all text-sm";
-  const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
-
-  const storePreviewUrl = `/store?subdomain=${form.subdomain}`;
-
   return (
-    <div className="max-w-3xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Store Settings</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Manage your store appearance and information</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <a href={storePreviewUrl} target="_blank" rel="noopener noreferrer">
-            <Button variant="outline" className="flex items-center gap-2 text-sm border-slate-200 hover:bg-slate-50">
-              <ExternalLink size={15} /> Preview
-            </Button>
-          </a>
-          <Button onClick={handleSave} disabled={saving} className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-600/20">
-            {saving ? <Loader2 className="animate-spin" size={16} /> : <Save size={16} />}
-            Save Changes
-          </Button>
-        </div>
+    <div className="p-6 lg:p-8">
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Store Settings</h1>
+        <p className="text-gray-500 mt-1">Customize your store appearance and settings</p>
       </div>
 
-      {message && (
-        <div className={`mb-6 p-4 rounded-xl text-sm font-medium flex items-center gap-2 ${
-          message.type === "success" ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"
-        }`}>
-          {message.type === "success" ? <Check size={16} /> : <Info size={16} />}
-          {message.text}
-        </div>
-      )}
+      <div className="grid lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-1">
+          <nav className="bg-white rounded-xl border border-gray-200 p-2 space-y-1">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? "bg-[#1d4ed8] text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                <tab.icon size={18} />
+                {tab.label}
+              </button>
+            ))}
+          </nav>
 
-      <div className="space-y-6">
-        {/* General */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-              <Globe size={16} className="text-blue-600" />
-            </div>
-            <h2 className="font-semibold text-slate-900">General</h2>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <Label className={labelClass}>Store Name</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} />
-            </div>
-            <div>
-              <Label className={labelClass}>Description</Label>
-              <textarea
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
-                className={inputClass + " resize-none"}
-                placeholder="Tell customers about your store..."
-              />
-            </div>
-            <div>
-              <Label className={labelClass}>Subdomain</Label>
-              <div className="flex items-center gap-2">
-                <Input value={form.subdomain} disabled className={inputClass + " bg-slate-50 text-slate-500"} />
-                <span className="text-sm text-slate-400 whitespace-nowrap">.bdesh.shop</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Appearance */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center">
-              <Palette size={16} className="text-emerald-600" />
-            </div>
-            <h2 className="font-semibold text-slate-900">Appearance</h2>
-          </div>
-          <div className="space-y-5">
-            <div className="grid sm:grid-cols-2 gap-5">
-              <div>
-                <Label className={labelClass}>Primary Color</Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={form.primaryColor}
-                    onChange={(e) => setForm({ ...form, primaryColor: e.target.value })}
-                    className="w-10 h-10 rounded-xl border border-slate-200 cursor-pointer"
-                  />
-                  <Input value={form.primaryColor} onChange={(e) => setForm({ ...form, primaryColor: e.target.value })} className={inputClass} />
-                </div>
-              </div>
-              <div>
-                <Label className={labelClass}>Secondary Color</Label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={form.secondaryColor}
-                    onChange={(e) => setForm({ ...form, secondaryColor: e.target.value })}
-                    className="w-10 h-10 rounded-xl border border-slate-200 cursor-pointer"
-                  />
-                  <Input value={form.secondaryColor} onChange={(e) => setForm({ ...form, secondaryColor: e.target.value })} className={inputClass} />
-                </div>
-              </div>
-            </div>
-            {/* Color preview */}
-            <div>
-              <Label className={labelClass}>Preview</Label>
-              <div className="flex rounded-xl overflow-hidden h-12 border border-slate-200 shadow-sm">
-                <div className="flex-1 flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: form.primaryColor }}>
-                  Primary
-                </div>
-                <div className="flex-1 flex items-center justify-center text-white text-sm font-semibold" style={{ backgroundColor: form.secondaryColor }}>
-                  Secondary
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
-              <Phone size={16} className="text-amber-600" />
-            </div>
-            <h2 className="font-semibold text-slate-900">Contact Information</h2>
-          </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <Label className={labelClass}>Phone</Label>
-              <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" className={inputClass} />
-            </div>
-            <div>
-              <Label className={labelClass}>WhatsApp</Label>
-              <Input value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="01XXXXXXXXX" className={inputClass} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label className={labelClass}>Address</Label>
-              <Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="House #, Road, Area, City" className={inputClass} />
-            </div>
-            <div className="sm:col-span-2">
-              <Label className={labelClass}>Business Hours</Label>
-              <Input value={form.hours} onChange={(e) => setForm({ ...form, hours: e.target.value })} placeholder="Sat-Thu: 10AM-10PM, Fri: 3PM-10PM" className={inputClass} />
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Gateways */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center justify-between mb-5">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-pink-50 flex items-center justify-center">
-                <CreditCard size={16} className="text-pink-600" />
-              </div>
-              <h2 className="font-semibold text-slate-900">Payment Gateways</h2>
-            </div>
-            <Button
-              onClick={handleGatewaySave}
-              disabled={gatewaySaving}
-              className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-sm"
+          <div className="mt-6 space-y-2">
+            <Link
+              href={getPreviewUrl()}
+              target="_blank"
+              className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900"
             >
-              {gatewaySaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-              Save Payments
-            </Button>
+              <Eye size={14} /> Preview Store
+            </Link>
           </div>
+        </div>
 
-          {gatewayMessage && (
-            <div className={`mb-4 p-3 rounded-xl text-sm font-medium flex items-center gap-2 ${
-              gatewayMessage.type === "success" ? "bg-emerald-50 border border-emerald-200 text-emerald-700" : "bg-red-50 border border-red-200 text-red-700"
-            }`}>
-              {gatewayMessage.type === "success" ? <Check size={14} /> : <Info size={14} />}
-              {gatewayMessage.text}
+        <div className="lg:col-span-3">
+          {activeTab === "general" && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">General Settings</h2>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Store Name</label>
+                  <input
+                    type="text"
+                    value={storeName}
+                    onChange={(e) => setStoreName(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Store Logo URL</label>
+                  <input
+                    type="text"
+                    value={storeLogo}
+                    onChange={(e) => setStoreLogo(e.target.value)}
+                    placeholder="https://example.com/logo.png"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  />
+                  {storeLogo && (
+                    <div className="mt-2">
+                      <img src={storeLogo} alt="Logo preview" className="h-12 object-contain" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Store Description</label>
+                  <textarea
+                    rows={3}
+                    value={storeDescription}
+                    onChange={(e) => setStoreDescription(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  />
+                </div>
+              </div>
             </div>
           )}
 
-          <div className="space-y-6">
-            {/* bKash */}
-            <div className="border border-slate-100 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center text-white text-[10px] font-bold">b</div>
-                  <span className="font-medium text-slate-900">bKash</span>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-slate-500">{gateway.bkash.enabled ? "Enabled" : "Disabled"}</span>
-                  <input
-                    type="checkbox"
-                    checked={gateway.bkash.enabled}
-                    onChange={e => setGateway({ ...gateway, bkash: { ...gateway.bkash, enabled: e.target.checked } })}
-                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                </label>
-              </div>
-              {gateway.bkash.enabled && (
-                <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                  <Input value={gateway.bkash.username} onChange={e => setGateway({ ...gateway, bkash: { ...gateway.bkash, username: e.target.value } })} placeholder="Username" className={inputClass} />
-                  <Input value={gateway.bkash.password} onChange={e => setGateway({ ...gateway, bkash: { ...gateway.bkash, password: e.target.value } })} placeholder="Password" type="password" className={inputClass} />
-                  <Input value={gateway.bkash.appKey} onChange={e => setGateway({ ...gateway, bkash: { ...gateway.bkash, appKey: e.target.value } })} placeholder="App Key" className={inputClass} />
-                  <Input value={gateway.bkash.appSecret} onChange={e => setGateway({ ...gateway, bkash: { ...gateway.bkash, appSecret: e.target.value } })} placeholder="App Secret" type="password" className={inputClass} />
-                  <label className="flex items-center gap-2 sm:col-span-2">
-                    <input type="checkbox" checked={gateway.bkash.sandbox} onChange={e => setGateway({ ...gateway, bkash: { ...gateway.bkash, sandbox: e.target.checked } })} className="w-4 h-4 rounded border-slate-300 text-emerald-600" />
-                    <span className="text-sm text-slate-600">Sandbox mode</span>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* Nagad */}
-            <div className="border border-slate-100 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-orange-500 flex items-center justify-center text-white text-[10px] font-bold">N</div>
-                  <span className="font-medium text-slate-900">Nagad</span>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-slate-500">{gateway.nagad.enabled ? "Enabled" : "Disabled"}</span>
-                  <input
-                    type="checkbox"
-                    checked={gateway.nagad.enabled}
-                    onChange={e => setGateway({ ...gateway, nagad: { ...gateway.nagad, enabled: e.target.checked } })}
-                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                </label>
-              </div>
-              {gateway.nagad.enabled && (
-                <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                  <Input value={gateway.nagad.merchantId} onChange={e => setGateway({ ...gateway, nagad: { ...gateway.nagad, merchantId: e.target.value } })} placeholder="Merchant ID" className={inputClass} />
-                  <Input value={gateway.nagad.publicKey} onChange={e => setGateway({ ...gateway, nagad: { ...gateway.nagad, publicKey: e.target.value } })} placeholder="Public Key" className={inputClass} />
-                  <Input value={gateway.nagad.privateKey} onChange={e => setGateway({ ...gateway, nagad: { ...gateway.nagad, privateKey: e.target.value } })} placeholder="Private Key" type="password" className={inputClass} />
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={gateway.nagad.sandbox} onChange={e => setGateway({ ...gateway, nagad: { ...gateway.nagad, sandbox: e.target.checked } })} className="w-4 h-4 rounded border-slate-300 text-emerald-600" />
-                    <span className="text-sm text-slate-600">Sandbox mode</span>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* Rocket */}
-            <div className="border border-slate-100 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center text-white text-[10px] font-bold">R</div>
-                  <span className="font-medium text-slate-900">Rocket</span>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-slate-500">{gateway.rocket.enabled ? "Enabled" : "Disabled"}</span>
-                  <input
-                    type="checkbox"
-                    checked={gateway.rocket.enabled}
-                    onChange={e => setGateway({ ...gateway, rocket: { ...gateway.rocket, enabled: e.target.checked } })}
-                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                </label>
-              </div>
-              {gateway.rocket.enabled && (
-                <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                  <Input value={gateway.rocket.merchantId} onChange={e => setGateway({ ...gateway, rocket: { ...gateway.rocket, merchantId: e.target.value } })} placeholder="Merchant ID" className={inputClass} />
-                  <Input value={gateway.rocket.username} onChange={e => setGateway({ ...gateway, rocket: { ...gateway.rocket, username: e.target.value } })} placeholder="Username" className={inputClass} />
-                  <Input value={gateway.rocket.password} onChange={e => setGateway({ ...gateway, rocket: { ...gateway.rocket, password: e.target.value } })} placeholder="Password" type="password" className={inputClass} />
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={gateway.rocket.sandbox} onChange={e => setGateway({ ...gateway, rocket: { ...gateway.rocket, sandbox: e.target.checked } })} className="w-4 h-4 rounded border-slate-300 text-emerald-600" />
-                    <span className="text-sm text-slate-600">Sandbox mode</span>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            {/* Stripe */}
-            <div className="border border-slate-100 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-indigo-500 flex items-center justify-center text-white text-[10px] font-bold">S</div>
-                  <span className="font-medium text-slate-900">Stripe (Card Payments)</span>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-slate-500">{gateway.stripe.enabled ? "Enabled" : "Disabled"}</span>
-                  <input
-                    type="checkbox"
-                    checked={gateway.stripe.enabled}
-                    onChange={e => setGateway({ ...gateway, stripe: { ...gateway.stripe, enabled: e.target.checked } })}
-                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                </label>
-              </div>
-              {gateway.stripe.enabled && (
-                <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                  <Input value={gateway.stripe.publicKey} onChange={e => setGateway({ ...gateway, stripe: { ...gateway.stripe, publicKey: e.target.value } })} placeholder="Publishable Key (pk_...)" className={inputClass} />
-                  <Input value={gateway.stripe.secretKey} onChange={e => setGateway({ ...gateway, stripe: { ...gateway.stripe, secretKey: e.target.value } })} placeholder="Secret Key (sk_...)" type="password" className={inputClass} />
-                  <Input value={gateway.stripe.webhookSecret} onChange={e => setGateway({ ...gateway, stripe: { ...gateway.stripe, webhookSecret: e.target.value } })} placeholder="Webhook Secret (whsec_...)" type="password" className={inputClass} />
-                </div>
-              )}
-            </div>
-
-            {/* Cash on Delivery */}
-            <div className="border border-slate-100 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white text-[10px] font-bold">$</div>
-                  <span className="font-medium text-slate-900">Cash on Delivery</span>
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <span className="text-sm text-slate-500">{gateway.cod.enabled ? "Enabled" : "Disabled"}</span>
-                  <input
-                    type="checkbox"
-                    checked={gateway.cod.enabled}
-                    onChange={e => setGateway({ ...gateway, cod: { ...gateway.cod, enabled: e.target.checked } })}
-                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                </label>
-              </div>
-              {gateway.cod.enabled && (
-                <div className="mt-3">
-                  <Label className={labelClass}>Instructions</Label>
-                  <textarea
-                    value={gateway.cod.instructions}
-                    onChange={e => setGateway({ ...gateway, cod: { ...gateway.cod, instructions: e.target.value } })}
-                    rows={2}
-                    className={inputClass + " resize-none"}
-                    placeholder="Payment instructions for customers..."
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* White-Label / Branding */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 p-6">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center">
-              <Shield size={16} className="text-violet-600" />
-            </div>
-            <h2 className="font-semibold text-slate-900">White-Label & Branding</h2>
-            <span className="text-[10px] font-bold bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full">ENTERPRISE</span>
-          </div>
-          <p className="text-sm text-slate-500 mb-4">Remove Bdesh branding and use your own brand name, logo, and domain. Available on Enterprise plan.</p>
-          <div className="space-y-4">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={whiteLabel.enabled}
-                onChange={e => setWhiteLabel({ ...whiteLabel, enabled: e.target.checked })}
-                className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-              />
-              <div>
-                <span className="text-sm font-medium text-slate-700">Enable White-Label</span>
-                <p className="text-xs text-slate-400">Remove "Powered by Bdesh" from your store</p>
-              </div>
-            </label>
-            {whiteLabel.enabled && (
-              <>
+          {activeTab === "appearance" && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Appearance</h2>
+              <div className="space-y-6">
                 <div>
-                  <Label className={labelClass}>Brand Name</Label>
-                  <Input
-                    value={whiteLabel.brandName}
-                    onChange={e => setWhiteLabel({ ...whiteLabel, brandName: e.target.value })}
-                    placeholder="Your brand name"
-                    className={inputClass}
+                  <label className="block text-sm font-medium text-gray-700 mb-3">Accent Color</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="color"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="w-12 h-12 rounded-lg cursor-pointer border-0"
+                    />
+                    <input
+                      type="text"
+                      value={accentColor}
+                      onChange={(e) => setAccentColor(e.target.value)}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "hero" && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Hero Section</h2>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hero Image URL</label>
+                  <input
+                    type="text"
+                    value={heroImage}
+                    onChange={(e) => setHeroImage(e.target.value)}
+                    placeholder="https://example.com/hero.jpg"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  />
+                  {heroImage && (
+                    <div className="mt-2 rounded-lg overflow-hidden h-48">
+                      <img src={heroImage} alt="Hero preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hero Headline</label>
+                  <input
+                    type="text"
+                    value={heroHeadline}
+                    onChange={(e) => setHeroHeadline(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
                   />
                 </div>
                 <div>
-                  <Label className={labelClass}>Custom Domain</Label>
-                  <Input
-                    value={whiteLabel.customDomain}
-                    onChange={e => setWhiteLabel({ ...whiteLabel, customDomain: e.target.value })}
-                    placeholder="shop.yourdomain.com"
-                    className={inputClass}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hero Subtext</label>
+                  <input
+                    type="text"
+                    value={heroSubtext}
+                    onChange={(e) => setHeroSubtext(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
                   />
                 </div>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={whiteLabel.hidePoweredBy}
-                    onChange={e => setWhiteLabel({ ...whiteLabel, hidePoweredBy: e.target.checked })}
-                    className="w-4 h-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span className="text-sm text-slate-700">Hide "Powered by Bdesh" footer</span>
-                </label>
-              </>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "footer" && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6">Footer Settings</h2>
+              <p className="text-gray-500">Footer customization coming soon.</p>
+            </div>
+          )}
+
+          <div className="mt-6 flex justify-end gap-4">
+            {saved && (
+              <span className="flex items-center gap-1 text-green-600 text-sm">
+                <Check size={16} /> Saved!
+              </span>
             )}
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="px-6 py-2 bg-[#1d4ed8] text-white rounded-lg hover:bg-[#1e40af] flex items-center gap-2 disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Save size={16} />
+              )}
+              Save Changes
+            </button>
           </div>
         </div>
       </div>

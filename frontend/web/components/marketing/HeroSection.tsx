@@ -37,7 +37,7 @@ export function HeroSection() {
             <div className={`flex flex-col sm:flex-row gap-4 mt-8 transition-all duration-700 delay-400 ${
               loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}>
-              <Link href="/register">
+              <Link href="/signup">
                 <Button className="bg-[#1d4ed8] hover:bg-[#1e40af] text-white text-base px-8 py-3.5 shadow-lg shadow-[#1d4ed8]/25">
                   Start for free
                   <ArrowRight size={18} className="ml-2" />

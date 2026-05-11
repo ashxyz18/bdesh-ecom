@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account | Koskii</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .account-page { min-height: 100vh; padding-bottom: 80px; }
+        .account-header { background: linear-gradient(135deg, #1a1a1a 0%, #333 100%); padding: 40px 0 30px; text-align: center; color: #fff; }
+        .account-header .page-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 600; margin-bottom: 8px; letter-spacing: 1px; color: #fff; }
+        .account-header .page-subtitle { font-size: 14px; color: rgba(255,255,255,0.7); }
+        .guest-welcome { padding: 30px 0; background: var(--bg); }
+        .welcome-card { background: var(--white); border-radius: 12px; padding: 32px 24px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); max-width: 400px; margin: 0 auto; }
+        .welcome-icon { width: 80px; height: 80px; border-radius: 50%; background: var(--bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .welcome-icon i { font-size: 36px; color: var(--text-muted); }
+        .welcome-card h2 { font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+        .welcome-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 20px; }
+        .btn-login { display: inline-block; padding: 14px 40px; background: var(--primary); color: var(--white); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; border: none; cursor: pointer; transition: all var(--transition); text-decoration: none; }
+        .btn-login:hover { background: var(--accent); }
+        .account-menu-section { padding: 20px 0; background: var(--white); }
+        .menu-grid { display: flex; flex-direction: column; gap: 1px; background: var(--border); border-radius: 8px; overflow: hidden; }
+        .menu-card { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--white); transition: background var(--transition); text-decoration: none; color: var(--text); }
+        .menu-card:hover { background: #fafafa; }
+        .menu-card > .fa-chevron-right { margin-left: auto; font-size: 14px; color: var(--text-muted); }
+        .menu-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; }
+        .menu-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .menu-icon i { font-size: 20px; color: var(--white); }
+        .icon-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .icon-phone { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .icon-ruler { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .icon-question { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .icon-store { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .icon-terms { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+        .icon-privacy { background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%); }
+        .icon-return { background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%); }
+        .menu-info { flex: 1; min-width: 0; }
+        .menu-info h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+        .menu-info p { font-size: 12px; color: var(--text-muted); }
+        .account-newsletter { padding: 30px 0 40px; background: var(--bg); }
+        .newsletter-box { background: var(--white); border-radius: 12px; padding: 28px 24px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+        .newsletter-box h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+        .newsletter-box p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+        .newsletter-form-inline { display: flex; gap: 0; max-width: 400px; margin: 0 auto; }
+        .newsletter-form-inline input { flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-right: none; border-radius: 4px 0 0 4px; font-size: 14px; outline: none; }
+        .newsletter-form-inline input:focus { border-color: var(--primary); }
+        .btn-subscribe { padding: 12px 24px; background: var(--primary); color: var(--white); border: none; border-radius: 0 4px 4px 0; font-size: 14px; font-weight: 600; cursor: pointer; transition: background var(--transition); }
+        .btn-subscribe:hover { background: var(--accent); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 3000; display: flex; align-items: flex-end; justify-content: center; opacity: 0; visibility: hidden; transition: all var(--transition); }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content { background: var(--white); width: 100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 24px; position: relative; transform: translateY(100%); transition: transform 0.3s ease; max-height: 90vh; overflow-y: auto; }
+        .modal-overlay.active .modal-content { transform: translateY(0); }
+        .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; font-size: 20px; color: var(--text-muted); cursor: pointer; padding: 4px; }
+        .modal-header { text-align: center; margin-bottom: 24px; padding-top: 8px; }
+        .modal-header h2 { font-size: 22px; font-weight: 600; margin-bottom: 6px; }
+        .modal-header p { font-size: 14px; color: var(--text-muted); }
+        .login-form .form-group { margin-bottom: 16px; }
+        .login-form label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; }
+        .login-form input { width: 100%; padding: 14px 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
+        .login-form input:focus { border-color: var(--primary); }
+        .forgot-password { display: block; text-align: right; font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+        .btn-login-submit { width: 100%; padding: 16px; background: var(--primary); color: var(--white); border: none; border-radius: 8px; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; margin-bottom: 20px; }
+        .btn-login-submit:hover { background: var(--accent); }
+        .divider { display: flex; align-items: center; margin-bottom: 20px; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+        .divider span { padding: 0 16px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; }
+        .btn-otp { width: 100%; padding: 16px; background: transparent; color: var(--text); border: 1px solid var(--text); border-radius: 8px; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: all var(--transition); margin-bottom: 20px; }
+        .btn-otp:hover { background: var(--primary); color: var(--white); }
+        .signup-link { text-align: center; font-size: 14px; color: var(--text-muted); }
+        .signup-link a { color: var(--text); font-weight: 600; }
+        @media (min-width: 768px) {
+            .account-header { padding: 60px 0 40px; }
+            .account-header .page-title { font-size: 36px; }
+            .welcome-card { padding: 48px 32px; max-width: 500px; }
+            .welcome-icon { width: 100px; height: 100px; }
+            .welcome-icon i { font-size: 44px; }
+            .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; background: transparent; }
+            .menu-card { border-radius: 12px; border: 1px solid var(--border); padding: 20px; }
+            .modal-content { border-radius: 20px; margin: auto; max-height: 80vh; }
+        }
+        @media (min-width: 1024px) {
+            .account-header .page-title { font-size: 42px; }
+            .menu-grid { grid-template-columns: repeat(3, 1fr); }
+            .modal-content { max-width: 520px; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="search-container">
+            <div class="search-input-wrapper">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search sarees, suits, lehengas..." id="searchInput">
+                <button class="close-search" id="closeSearch"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="search-results" id="searchResults">
+                <h3>Popular Searches</h3>
+                <div class="search-results-grid" id="searchResultsGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="announcement-bar">
+        <div class="scroll-text">Get extra 5% off Use: FLASH5 on Min.2490 | Save More! Use: KOSKIILUV10 for extra 10% discount | Only on App use: APPFIRST & Get extra 15% Off |</div>
+    </div>
+
+    <!-- Header with scrolled class by default on account page -->
+    <header class="main-header scrolled">
+        <div class="header-left">
+            <button class="menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
+            <button class="search-btn"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="logo">
+            <a href="index.html"><img src="https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii_logo_left_right_white.0u84b2px.n_j~.png" alt="Koskii"></a>
+        </div>
+        <div class="header-right">
+            <a href="account.html" class="header-icon active"><i class="fas fa-user"></i></a>
+            <a href="wishlist.html" class="header-icon"><i class="far fa-heart"></i></a>
+            <a href="#cart" class="header-icon"><i class="fas fa-shopping-bag"></i><span class="badge-count">0</span></a>
+        </div>
+    </header>
+
+    <div class="menu-overlay" id="menuOverlay"></div>
+    <nav class="mobile-menu" id="mobileMenu">
+        <div class="menu-header">
+            <button class="close-menu" id="closeMenu"><i class="fas fa-times"></i></button>
+            <div class="menu-logo"><img src="https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii_logo_left_right_white.0u84b2px.n_j~.png" alt="Koskii"></div>
+        </div>
+        <ul class="menu-list">
+            <li><a href="#">SALE <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">SAREES <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">SALWAR SUITS <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">DRESS MATERIALS <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">LEHENGAS <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">GOWNS <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">BLOUSES <i class="fas fa-chevron-right"></i></a></li>
+            <li><a href="#">NEW ARRIVALS <i class="fas fa-chevron-right"></i></a></li>
+        </ul>
+    </nav>
+
+    <main class="account-page">
+        <section class="account-header">
+            <div class="container">
+                <h1 class="page-title">My Account</h1>
+                <p class="page-subtitle">Manage your orders, preferences, and more</p>
+            </div>
+        </section>
+
+        <section class="guest-welcome">
+            <div class="container">
+                <div class="welcome-card">
+                    <div class="welcome-icon"><i class="far fa-user-circle"></i></div>
+                    <h2>Welcome, Guest!</h2>
+                    <p>Login to access all features and track your orders</p>
+                    <a href="#" class="btn-login" id="loginBtn">Login Now</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="account-menu-section">
+            <div class="container">
+                <div class="menu-grid">
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon"><img src="https://cdn.shopify.com/s/files/1/0049/3649/9315/files/Koskii_Klan_Logo.06o.63d_wng8v.png" alt="Koskii Klan"></div>
+                        <div class="menu-info"><h3>Koskii Klan</h3><p>Your loyalty rewards &amp; tiers</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-box"><i class="fas fa-box"></i></div>
+                        <div class="menu-info"><h3>Orders</h3><p>Track your orders here</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-phone"><i class="fas fa-phone-alt"></i></div>
+                        <div class="menu-info"><h3>Contact Us</h3><p>Get help and support</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-ruler"><i class="fas fa-ruler"></i></div>
+                        <div class="menu-info"><h3>Size Chart</h3><p>Find your perfect fit</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-question"><i class="fas fa-question-circle"></i></div>
+                        <div class="menu-info"><h3>FAQ</h3><p>Frequently asked questions</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-store"><i class="fas fa-store"></i></div>
+                        <div class="menu-info"><h3>Store Locator</h3><p>Find stores near you</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-terms"><i class="fas fa-file-alt"></i></div>
+                        <div class="menu-info"><h3>Terms &amp; Conditions</h3><p>Read our terms and conditions</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-privacy"><i class="fas fa-shield-alt"></i></div>
+                        <div class="menu-info"><h3>Privacy Policy</h3><p>Our privacy and data policy</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                    <a href="#" class="menu-card">
+                        <div class="menu-icon icon-return"><i class="fas fa-undo-alt"></i></div>
+                        <div class="menu-info"><h3>Return Policy</h3><p>Our return policy</p></div>
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <section class="account-newsletter">
+            <div class="container">
+                <div class="newsletter-box">
+                    <h3>Sign Up And Save</h3>
+                    <p>Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.</p>
+                    <form class="newsletter-form-inline">
+                        <input type="email" placeholder="Enter your email" required>
+                        <button type="submit" class="btn-subscribe">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-col">
+                        <h4>SHOP</h4>
+                        <ul><li><a href="#">Sarees</a></li><li><a href="#">Salwar Suits</a></li><li><a href="#">Lehengas</a></li><li><a href="#">Gowns</a></li><li><a href="#">Dress Materials</a></li><li><a href="#">Blouses</a></li></ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>HELP</h4>
+                        <ul><li><a href="#">Contact Us</a></li><li><a href="#">Shipping &amp; Delivery</a></li><li><a href="#">Returns &amp; Exchanges</a></li><li><a href="#">Size Guide</a></li><li><a href="#">Track Order</a></li></ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>ABOUT</h4>
+                        <ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Store Locator</a></li><li><a href="#">Blog</a></li></ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>CONNECT</h4>
+                        <div class="social-links"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-pinterest-p"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div>
+                        <div class="newsletter">
+                            <h5>Subscribe to our newsletter</h5>
+                            <form class="newsletter-form"><input type="email" placeholder="Enter your email"><button type="submit">Subscribe</button></form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="footer-logo"><img src="https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii_logo_White.0l-jq62h6nrb9.png" alt="Koskii"></div>
+                <p class="copyright">2025 Koskii. All Rights Reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <nav class="sticky-nav">
+        <a href="index.html" class="sticky-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="#" class="sticky-item"><i class="fas fa-th-large"></i><span>Categories</span></a>
+        <a href="#" class="sticky-item"><i class="fas fa-tag"></i><span>Sale</span></a>
+        <a href="#cart" class="sticky-item"><i class="fas fa-shopping-bag"></i><span>Bag</span><span class="nav-badge">0</span></a>
+        <a href="account.html" class="sticky-item active"><i class="fas fa-user"></i><span>Account</span></a>
+    </nav>
+
+    <div class="modal-overlay" id="loginModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeModal"><i class="fas fa-times"></i></button>
+            <div class="modal-header"><h2>Login to Your Account</h2><p>Access your orders, wishlist, and more</p></div>
+            <form class="login-form">
+                <div class="form-group"><label>Email / Mobile Number</label><input type="text" placeholder="Enter email or mobile" required></div>
+                <div class="form-group"><label>Password</label><input type="password" placeholder="Enter password" required></div>
+                <a href="#" class="forgot-password">Forgot Password?</a>
+                <button type="submit" class="btn-login-submit">Login</button>
+                <div class="divider"><span>OR</span></div>
+                <button type="button" class="btn-otp">Login with OTP</button>
+                <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/account.js"></script>
+</body>
+</html>

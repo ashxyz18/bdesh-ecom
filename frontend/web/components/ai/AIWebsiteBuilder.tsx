@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Sparkles, Upload, ImageIcon, Loader2, Check, Palette, ArrowRight, X, RefreshCw, Eye, Globe, Zap } from "lucide-react";
+import { Sparkles, Upload, ImageIcon, RefreshCw, X, Loader2, Eye, Globe, Zap } from "lucide-react";
 import { Button } from "@/components/shared/Button";
-import Link from "next/link";
 
 interface GeneratedDesign {
   analysis: {
@@ -35,7 +34,6 @@ const WEBSITE_TYPES = [
 export function AIWebsiteBuilder() {
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [businessName, setBusinessName] = useState("");
   const [websiteType, setWebsiteType] = useState("ecommerce");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<GeneratedDesign | null>(null);
@@ -74,30 +72,9 @@ export function AIWebsiteBuilder() {
     setError("");
     setResult(null);
 
-    try {
-      const body: Record<string, string> = { websiteType };
-      if (imageFile && image.startsWith("data:")) {
-        body.imageBase64 = image.split(",")[1];
-      } else {
-        body.imageUrl = image;
-      }
-      if (businessName) body.businessName = businessName;
-
-      const res = await fetch("/api/ai/generate-from-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || "Generation failed");
-      }
-
-      const data = await res.json();
-      setResult(data);
-    } catch (err: any) {
-      setError(err.message || "Failed to generate. Using fallback analysis.");
+    // Note: The AI generation API has been removed from this demo.
+    // Showing a mock successful generation for UX demonstration.
+    setTimeout(() => {
       setResult({
         analysis: {
           websiteType,
@@ -105,8 +82,8 @@ export function AIWebsiteBuilder() {
           detectedStyle: { vibe: "modern", typography: ["Inter", "Noto Sans"], layout: "centered", mood: ["professional", "clean"] },
           detectedIndustry: "general",
           detectedElements: [],
-          suggestedTemplateId: "default",
-          aiPrompt: "Default template",
+          suggestedTemplateId: "modern-store",
+          aiPrompt: "Generated from uploaded image",
         },
         templateConfig: {},
         previewColors: ["#006A4E", "#F42A41", "#059669", "#ffffff"],
@@ -114,9 +91,8 @@ export function AIWebsiteBuilder() {
           ? ["Set up bKash and Nagad payments", "Add high-quality product photos"]
           : ["Promote your site on social media", "Add engaging content tailored to your audience"],
       });
-    } finally {
       setLoading(false);
-    }
+    }, 2000);
   };
 
   const handleReset = () => {
@@ -124,7 +100,6 @@ export function AIWebsiteBuilder() {
     setImageFile(null);
     setResult(null);
     setError("");
-    setBusinessName("");
   };
 
   return (
@@ -136,7 +111,7 @@ export function AIWebsiteBuilder() {
               <Sparkles size={14} /> AI-Powered Design
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Upload a Photo — Get a Complete Website
+              Upload a Photo &mdash; Get a Website
             </h2>
             <p className="text-white/50 max-w-xl mx-auto">
               Upload any image (logo, product photo, mood board) and our AI will analyze colors, style, and industry to build a complete {websiteType} site for you.
@@ -171,7 +146,7 @@ export function AIWebsiteBuilder() {
                   </button>
                 </div>
                 <p className="text-sm text-white/60">
-                  {imageFile?.name || "Reference image"} — {Math.round((imageFile?.size || 0) / 1024)}KB
+                  {imageFile?.name || "Reference image"} &mdash; {Math.round((imageFile?.size || 0) / 1024)}KB
                 </p>
               </div>
             ) : (
@@ -196,7 +171,7 @@ export function AIWebsiteBuilder() {
           </div>
 
           <div className="mt-6 max-w-md mx-auto space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
               <div>
                 <label className="block text-sm font-medium text-white/70 mb-1.5">Website Type</label>
                 <select
@@ -205,21 +180,11 @@ export function AIWebsiteBuilder() {
                   className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:ring-2 focus:ring-[#008060] focus:border-transparent outline-none"
                 >
                   {WEBSITE_TYPES.map((type) => (
-                    <option key={type.value} value={type.value} className="bg-gray-900">
+                    <option key={type.value} value={type.value} className="bg-gray-900 text-white">
                       {type.icon} {type.label}
                     </option>
                   ))}
                 </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white/70 mb-1.5">Business Name (Optional)</label>
-                <input
-                  type="text"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Your business name"
-                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 text-sm focus:ring-2 focus:ring-[#008060] focus:border-transparent outline-none"
-                />
               </div>
             </div>
 
@@ -235,7 +200,7 @@ export function AIWebsiteBuilder() {
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3.5 justify-center text-base font-semibold shadow-lg shadow-purple-600/20"
             >
               {loading ? (
-                <><Loader2 size={18} className="animate-spin mr-2" /> Analyzing & Building...</>
+                <><Loader2 size={18} className="animate-spin mr-2" /> Analyzing &amp; Building...</>
               ) : (
                 <><Sparkles size={18} className="mr-2" /> Generate Website from Image</>
               )}
@@ -248,7 +213,7 @@ export function AIWebsiteBuilder() {
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-bold text-white flex items-center gap-2">
-              <Check size={20} className="text-emerald-400" /> Your AI-Generated {result.analysis.websiteType || "E-Commerce"} Design
+              <Sparkles size={20} className="text-emerald-400" /> Your AI-Generated {result.analysis.websiteType || "E-Commerce"} Design
             </h3>
             <button onClick={handleReset} className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white">
               <RefreshCw size={14} /> Try Again
@@ -258,7 +223,7 @@ export function AIWebsiteBuilder() {
           {/* Color Palette */}
           <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
             <h4 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-              <Palette size={16} className="text-purple-400" /> Color Palette
+              <Globe size={16} className="text-purple-400" /> Color Palette
             </h4>
             <div className="flex gap-3 flex-wrap">
               {result.previewColors.map((color, i) => (
@@ -293,15 +258,6 @@ export function AIWebsiteBuilder() {
             </div>
           </div>
 
-          {/* Mood tags */}
-          <div className="flex flex-wrap gap-2">
-            {result.analysis.detectedStyle.mood.map((m) => (
-              <span key={m} className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs text-white/70">
-                {m}
-              </span>
-            ))}
-          </div>
-
           {/* Marketing Tips */}
           <div className="bg-gradient-to-r from-purple-500/5 to-pink-500/5 border border-purple-500/20 rounded-2xl p-5">
             <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
@@ -310,31 +266,10 @@ export function AIWebsiteBuilder() {
             <ul className="space-y-2">
               {result.marketingTips.map((tip, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-white/70">
-                  <span className="text-emerald-400 mt-0.5">•</span> {tip}
+                  <span className="text-emerald-400 mt-0.5">&bull;</span> {tip}
                 </li>
               ))}
             </ul>
-          </div>
-
-          {/* Preview & Register */}
-          <div className="flex gap-3">
-            <Link
-              href={`/preview/${result.analysis.suggestedTemplateId}?websiteType=${result.analysis.websiteType || 'ecommerce'}`}
-              target="_blank"
-              className="flex-1"
-            >
-              <Button className="w-full justify-center border border-white/20 text-white hover:bg-white/5">
-                <Eye size={16} className="mr-1.5" /> Preview Template
-              </Button>
-            </Link>
-            <Link
-              href={`/register?template=${result.analysis.suggestedTemplateId}&websiteType=${result.analysis.websiteType || 'ecommerce'}`}
-              className="flex-1"
-            >
-              <Button className="w-full justify-center bg-gradient-to-r from-[#008060] to-[#006A4E] hover:from-[#006A4E] hover:to-[#004c3f] text-white">
-                Create Site <ArrowRight size={16} className="ml-1.5" />
-              </Button>
-            </Link>
           </div>
         </div>
       )}

@@ -1,80 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
-import { storeCreateSchema } from "@bdesh/shared";
+import { stores, createStore, getStoreByOwnerId } from "@/lib/data-store";
 
-export async function GET(req: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
-    const checkSubdomain = searchParams.get("check");
-    if (checkSubdomain) {
-      const existing = await prisma.store.findUnique({
-        where: { subdomain: checkSubdomain },
-      });
-      return NextResponse.json({ exists: !!existing });
+    const userId = request.headers.get("x-user-id");
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const session = await requireAuth();
-
-    if (session.user.role === "ADMIN") {
-      const stores = await prisma.store.findMany({
-        include: { owner: { select: { name: true, email: true } } },
-      });
-      return NextResponse.json({ stores });
-    }
-
-    const stores = await prisma.store.findMany({
-      where: { ownerId: session.user.id as unknown as string },
-    });
-    return NextResponse.json({ stores });
-  } catch (error: any) {
-    return NextResponse.json(
-      { message: error.message },
-      { status: error.message === "Unauthorized" ? 401 : 500 }
-    );
+    const userStore = getStoreByOwnerId(userId);
+    return NextResponse.json({ store: userStore });
+  } catch (error) {
+    console.error("Get store error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth();
-    const body = await req.json();
-    const { name, subdomain, description, category, theme } = body;
-
-    const existing = await prisma.store.findFirst({
-      where: { OR: [{ subdomain }, { name }] },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        { message: "Store name or subdomain already taken" },
-        { status: 409 }
-      );
+    const userId = request.headers.get("x-user-id");
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const themeData = theme ? (typeof theme === "string" ? JSON.parse(theme) : theme) : {
-      templateId: category || "default",
-      primaryColor: "#006A4E",
-      secondaryColor: "#F42A41",
-    };
+    const body = await request.json();
+    const { name, templateId } = body;
 
-    const store = await prisma.store.create({
-      data: {
-        name,
-        slug: subdomain,
-        subdomain,
-        description: description || null,
-        ownerId: session.user.id as unknown as string,
-        theme: JSON.stringify(themeData),
-        status: "APPROVED",
-      },
-    });
+    if (!name) {
+      return NextResponse.json({ error: "Store name is required" }, { status: 400 });
+    }
 
-    return NextResponse.json({ store });
-  } catch (error: any) {
-    return NextResponse.json(
-      { message: error.message || "Something went wrong" },
-      { status: 400 }
-    );
+    // Check if user already has a store
+    const existingStore = getStoreByOwnerId(userId);
+    if (existingStore) {
+      return NextResponse.json({ error: "User already has a store" }, { status: 409 });
+    }
+
+    const store = createStore(name, userId, templateId);
+    return NextResponse.json({ store }, { status: 201 });
+  } catch (error) {
+    console.error("Create store error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Brands - Gadget & Gear</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <style>
+    .brands-hero { background: #111; color: #fff; padding: 60px 0; text-align: center; }
+    .brands-hero h1 { font-size: 36px; margin-bottom: 12px; }
+    .brands-hero p { font-size: 18px; opacity: 0.8; }
+    .brands-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 40px 0; }
+    .brand-card-large { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s; }
+    .brand-card-large:hover { box-shadow: var(--shadow-lg); transform: translateY(-4px); }
+    .brand-card-large h3 { font-size: 18px; font-weight: 700; margin-top: 16px; }
+    .brand-card-large span { font-size: 13px; color: var(--text-light); }
+    @media (max-width: 1024px) { .brands-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) { .brands-grid { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-top"><div class="container"><span>Free delivery on orders over Tk. 5,000</span><span>Call: 09613-800800</span></div></div>
+    <div class="header-main">
+      <div class="container">
+        <a href="../index.html" class="logo"><span>Gadget</span><span>& Gear</span></a>
+        <div class="search-bar"><input type="text" placeholder="Search for products..." id="search-input"><button onclick="location.href='category.html?search='+encodeURIComponent(document.getElementById('search-input').value)">Search</button></div>
+        <div class="header-actions">
+          <a href="cart.html"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.5 5M17 13l2.5 5M9 18h.01M15 18h.01" stroke-linecap="round" stroke-linejoin="round"/></svg>Cart<span class="cart-count" style="display:none;">0</span></a>
+          <a href="#"><svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" stroke-linecap="round" stroke-linejoin="round"/></svg>Account</a>
+        </div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="container">
+        <a href="category.html?cat=iphone">iPhone</a>
+        <a href="category.html?cat=macbook">MacBook</a>
+        <a href="category.html?cat=ipad">iPad</a>
+        <a href="category.html?cat=apple-watch">Apple Watch</a>
+        <a href="category.html?cat=airpods">AirPods</a>
+        <a href="category.html?cat=phone">Phones</a>
+        <a href="category.html?cat=speakers">Speakers</a>
+        <a href="category.html?cat=cases-screen-protectors">Cases</a>
+        <a href="offers.html">Offers</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="brands-hero">
+    <div class="container">
+      <h1>Our Brands</h1>
+      <p>Authorized dealer of world's top tech brands</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-title"><h2>Shop By Brand</h2></div>
+      <div class="brands-grid" id="brands-grid"></div>
+    </div>
+  </section>
+
+  <footer class="footer" style="margin-top:40px;">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand"><div class="logo"><span style="color:#fff;">Gadget</span><span style="color:#e53935;">& Gear</span></div><p>Gadget & Gear is an Apple Authorized reseller in Bangladesh.</p></div>
+        <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li></ul></div>
+        <div class="footer-col"><h4>Help</h4><ul><li><a href="#">Contact Us</a></li><li><a href="#">FAQs</a></li></ul></div>
+      </div>
+      <div class="footer-bottom"><p>Copyright &copy; 2026 Gadget & Gear. All rights reserved.</p></div>
+    </div>
+  </footer>
+
+  <script src="../assets/js/products.js"></script>
+  <script src="../assets/js/main.js"></script>
+  <script>
+    const brands = [...new Set(products.map(p => p.brand))];
+    document.getElementById('brands-grid').innerHTML = brands.map(b => `
+      <div class="brand-card-large" onclick="location.href='category.html?brand=${encodeURIComponent(b)}'">
+        <h3>${b}</h3>
+        <span>${products.filter(p => p.brand === b).length} Products</span>
+      </div>
+    `).join('');
+  </script>
+</body>
+</html>

@@ -1,600 +1,229 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Save,
-  Plus,
-  Trash2,
-  Upload,
-  Image as ImageIcon,
-  Sparkles,
-  Loader2,
-  AlertCircle,
-  X,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useDashboard } from "../../DashboardContext";
-import { slugify } from "@bdesh/shared";
-import { useImageUpload } from "@/lib/hooks/useImageUpload";
-
-interface VariantRow {
-  name: string;
-  sku: string;
-  price: string;
-  quantity: string;
-}
+import { useRouter } from "next/navigation";
+import { ArrowLeft, X, Plus, GripVertical, Save } from "lucide-react";
 
 export default function NewProductPage() {
   const router = useRouter();
-  const { activeStore } = useDashboard();
-  const { uploading: imageUploading, uploadImages, error: uploadError, clearError: clearUploadError } = useImageUpload(activeStore?.id);
-
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-
-  // Basic fields
+  const [storeId, setStoreId] = useState<string | null>(null);
   const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [comparePrice, setComparePrice] = useState("");
-  const [sku, setSku] = useState("");
-  const [barcode, setBarcode] = useState("");
-  const [quantity, setQuantity] = useState("0");
-  const [trackStock, setTrackStock] = useState(true);
-  const [status, setStatus] = useState<"active" | "draft">("active");
-  const [featured, setFeatured] = useState(false);
+  const [description, setDescription] = useState("");
   const [images, setImages] = useState<string[]>([]);
-  
-  // AI Image generation
-  const [aiPrompt, setAiPrompt] = useState("");
-  const [aiStyle, setAiStyle] = useState<"photorealistic" | "artistic" | "minimal" | "luxury" | "playful">("photorealistic");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [showAiGenerator, setShowAiGenerator] = useState(false);
+  const [stock, setStock] = useState("");
+  const [variants, setVariants] = useState([{ size: "", stock: "" }]);
+  const [saving, setSaving] = useState(false);
 
-  // Variants
-  const [variants, setVariants] = useState<VariantRow[]>([]);
+  useEffect(() => {
+    const storedStoreId = localStorage.getItem("storeId");
+    setStoreId(storedStoreId);
+  }, []);
 
-  // SEO
-  const [seoTitle, setSeoTitle] = useState("");
-  const [seoDesc, setSeoDesc] = useState("");
-
-  const slug = slugify(name);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const fileArray = Array.from(files);
-    const urls = await uploadImages(fileArray);
-    if (urls.length > 0) {
-      setImages((prev) => [...prev, ...urls]);
-    }
-
-    e.target.value = "";
+  const handleAddImage = () => {
+    const url = prompt("Enter image URL:");
+    if (url) setImages([...images, url]);
   };
 
-  const removeImage = (index: number) => {
-    setImages((prev) => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = (index: number) => {
+    setImages(images.filter((_, i) => i !== index));
   };
 
-  const addVariant = () => {
-    setVariants((prev) => [
-      ...prev,
-      { name: "", sku: "", price: "", quantity: "0" },
-    ]);
+  const handleAddVariant = () => {
+    setVariants([...variants, { size: "", stock: "" }]);
   };
 
-  const removeVariant = (index: number) => {
-    setVariants((prev) => prev.filter((_, i) => i !== index));
+  const handleVariantChange = (index: number, field: string, value: string) => {
+    const newVariants = [...variants];
+    newVariants[index] = { ...newVariants[index], [field]: value };
+    setVariants(newVariants);
   };
 
-  const updateVariant = (
-    index: number,
-    field: keyof VariantRow,
-    value: string
-  ) => {
-    setVariants((prev) =>
-      prev.map((v, i) => (i === index ? { ...v, [field]: value } : v))
-    );
-  };
-
-  const handleAiImageGenerate = async () => {
-    if (!aiPrompt.trim() || aiLoading) return;
-    setAiLoading(true);
-    try {
-      const res = await fetch("/api/ai/generate-image", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: aiPrompt,
-          productName: name || undefined,
-          storeName: activeStore?.name,
-          style: aiStyle,
-          width: 1024,
-          height: 1024,
-        }),
-      });
-      const data = await res.json();
-      if (data.images && data.images.length > 0) {
-        setImages((prev) => [...prev, ...data.images.map((img: any) => img.url)]);
-        setShowAiGenerator(false);
-        setAiPrompt("");
-      }
-    } catch (error) {
-      console.error("AI image generation failed:", error);
-    } finally {
-      setAiLoading(false);
-    }
+  const handleRemoveVariant = (index: number) => {
+    setVariants(variants.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!activeStore) {
-      setError("No store selected");
-      return;
-    }
+    if (!storeId) return;
 
     setSaving(true);
-    setError("");
 
     try {
-      const res = await fetch(`/api/${activeStore.id}/products`, {
+      const res = await fetch("/api/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          storeId,
           name,
-          slug,
-          description: description || undefined,
           price: parseFloat(price),
-          comparePrice: comparePrice ? parseFloat(comparePrice) : undefined,
-          sku: sku || undefined,
-          barcode: barcode || undefined,
-          quantity: parseInt(quantity) || 0,
-          trackStock,
-          status,
-          featured,
+          description,
           images,
-          seoTitle: seoTitle || undefined,
-          seoDesc: seoDesc || undefined,
+          stock: parseInt(stock) || 0,
+          variants: variants.filter((v) => v.size && v.stock),
         }),
       });
 
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.message || "Failed to create product");
-        return;
+      if (res.ok) {
+        router.push("/dashboard/products");
       }
-
-      router.push("/dashboard/products");
-    } catch {
-      setError("Something went wrong");
+    } catch (error) {
+      console.error("Failed to create product:", error);
     } finally {
       setSaving(false);
     }
   };
 
-  if (!activeStore) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500">Please select a store first.</p>
-        <Link href="/dashboard" className="text-primary hover:underline mt-2 inline-block">
-          Go to Dashboard
-        </Link>
-      </div>
-    );
-  }
-
   return (
-    <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link
-          href="/dashboard/products"
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-        >
-          <ArrowLeft size={20} />
+    <div className="p-6 lg:p-8 max-w-4xl">
+      <div className="mb-8">
+        <Link href="/dashboard/products" className="inline-flex items-center gap-2 text-gray-500 hover:text-gray-700 mb-4">
+          <ArrowLeft size={16} /> Back to Products
         </Link>
-        <div>
-          <h1 className="text-2xl font-bold">Add New Product</h1>
-          <p className="text-sm text-gray-500">
-            Create a new product for {activeStore.name}
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold text-gray-900">Add New Product</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-            {error}
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Product Name *</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Navy Blue Silk Saree"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+              />
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price *</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">৳</span>
+                  <input
+                    type="number"
+                    required
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="0"
+                    className="w-full pl-8 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+                <input
+                  type="number"
+                  value={stock}
+                  onChange={(e) => setStock(e.target.value)}
+                  placeholder="0"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe your product..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+              />
+            </div>
           </div>
-        )}
-        {uploadError && (
-          <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <AlertCircle size={16} />
-              {uploadError}
-            </span>
-            <button type="button" onClick={clearUploadError} className="text-amber-500 hover:text-amber-700">
-              <X size={16} />
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Images</h2>
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+            {images.map((url, index) => (
+              <div key={index} className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden group">
+                <img src={url} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddImage}
+              className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <Plus size={20} />
+              <span className="text-xs mt-1">Add Image</span>
             </button>
           </div>
-        )}
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main content - 2 cols */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Basic Info */}
-            <div className="bg-white rounded-xl border p-6 space-y-4">
-              <h2 className="text-lg font-semibold">Basic Information</h2>
-
-              <div>
-                <Label htmlFor="name">Product Name *</Label>
-                <Input
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Cotton T-Shirt"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="slug">Slug</Label>
-                <Input id="slug" value={slug} readOnly className="bg-gray-50 text-gray-500" />
-              </div>
-
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                  placeholder="Describe your product..."
-                />
-              </div>
-            </div>
-
-            {/* Images */}
-            <div className="bg-white rounded-xl border p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Product Images</h2>
-                <Button
+        <div className="bg-white rounded-xl border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900">Variants</h2>
+            <button
+              type="button"
+              onClick={handleAddVariant}
+              className="text-sm text-[#1d4ed8] hover:underline flex items-center gap-1"
+            >
+              <Plus size={14} /> Add Variant
+            </button>
+          </div>
+          {variants.map((variant, index) => (
+            <div key={index} className="flex items-center gap-4 mb-4">
+              <GripVertical size={16} className="text-gray-400 cursor-grab" />
+              <input
+                type="text"
+                placeholder="Size (e.g. S, M, L)"
+                value={variant.size}
+                onChange={(e) => handleVariantChange(index, "size", e.target.value)}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+              />
+              <input
+                type="number"
+                placeholder="Stock"
+                value={variant.stock}
+                onChange={(e) => handleVariantChange(index, "stock", e.target.value)}
+                className="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+              />
+              {variants.length > 1 && (
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowAiGenerator(!showAiGenerator)}
+                  onClick={() => handleRemoveVariant(index)}
+                  className="p-2 text-gray-400 hover:text-red-500"
                 >
-                  <Sparkles size={14} className="mr-1.5" />
-                  {showAiGenerator ? "Hide AI" : "AI Generate"}
-                </Button>
-              </div>
-
-              {showAiGenerator && (
-                <div className="bg-purple-50 rounded-lg p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <Sparkles size={16} className="text-purple-600" />
-                    <h3 className="text-sm font-semibold text-purple-900">AI Image Generation</h3>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={aiPrompt}
-                      onChange={(e) => setAiPrompt(e.target.value)}
-                      placeholder="Describe the image you want..."
-                      className="flex-1 text-sm"
-                    />
-                    <select
-                      value={aiStyle}
-                      onChange={(e) => setAiStyle(e.target.value as any)}
-                      className="px-3 py-2 rounded-lg border border-purple-200 bg-white text-sm"
-                    >
-                      <option value="photorealistic">Photo-Realistic</option>
-                      <option value="artistic">Artistic</option>
-                      <option value="minimal">Minimal</option>
-                      <option value="luxury">Luxury</option>
-                      <option value="playful">Playful</option>
-                    </select>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={handleAiImageGenerate}
-                      disabled={aiLoading || !aiPrompt.trim()}
-                      className="bg-purple-600 hover:bg-purple-700 text-white"
-                    >
-                      {aiLoading ? (
-                        <Loader2 size={14} className="animate-spin" />
-                      ) : (
-                        "Generate"
-                      )}
-                    </Button>
-                  </div>
-                  {name && (
-                    <p className="text-xs text-purple-600">
-                      Tip: Include "{name}" in your prompt for better results
-                    </p>
-                  )}
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                {images.map((img, i) => (
-                  <div key={i} className="relative aspect-square rounded-lg overflow-hidden border bg-gray-50 group">
-                    <img
-                      src={img}
-                      alt={`Product ${i + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 size={12} />
-                    </button>
-                    {i === 0 && (
-                      <span className="absolute bottom-1 left-1 text-[10px] bg-primary text-white px-1.5 py-0.5 rounded">
-                        Cover
-                      </span>
-                    )}
-                  </div>
-                ))}
-
-                {imageUploading ? (
-                  <div className="aspect-square rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 flex flex-col items-center justify-center">
-                    <Loader2 size={20} className="text-emerald-600 animate-spin mb-1" />
-                    <span className="text-xs text-emerald-600">Uploading...</span>
-                  </div>
-                ) : (
-                  <label className="aspect-square rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
-                    <Upload size={20} className="text-gray-400 mb-1" />
-                    <span className="text-xs text-gray-500">Upload</span>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/avif"
-                      multiple
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                  </label>
-                )}
-              </div>
-            </div>
-
-            {/* Variants */}
-            <div className="bg-white rounded-xl border p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">Variants</h2>
-                <Button type="button" variant="outline" size="sm" onClick={addVariant}>
-                  <Plus size={14} className="mr-1" /> Add Variant
-                </Button>
-              </div>
-
-              {variants.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4 text-center">
-                  No variants. The base price and stock will be used.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {variants.map((variant, i) => (
-                    <div
-                      key={i}
-                      className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex-1 grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        <div>
-                          <Label className="text-xs">Name</Label>
-                          <Input
-                            value={variant.name}
-                            onChange={(e) =>
-                              updateVariant(i, "name", e.target.value)
-                            }
-                            placeholder="e.g. Red / Large"
-                            className="text-sm"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">SKU</Label>
-                          <Input
-                            value={variant.sku}
-                            onChange={(e) =>
-                              updateVariant(i, "sku", e.target.value)
-                            }
-                            placeholder="SKU"
-                            className="text-sm"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Price (৳)</Label>
-                          <Input
-                            type="number"
-                            value={variant.price}
-                            onChange={(e) =>
-                              updateVariant(i, "price", e.target.value)
-                            }
-                            placeholder="0.00"
-                            className="text-sm"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs">Qty</Label>
-                          <Input
-                            type="number"
-                            value={variant.quantity}
-                            onChange={(e) =>
-                              updateVariant(i, "quantity", e.target.value)
-                            }
-                            placeholder="0"
-                            className="text-sm"
-                          />
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeVariant(i)}
-                        className="p-1.5 text-gray-400 hover:text-red-500 mt-5"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                  <X size={16} />
+                </button>
               )}
             </div>
+          ))}
+        </div>
 
-            {/* SEO */}
-            <div className="bg-white rounded-xl border p-6 space-y-4">
-              <h2 className="text-lg font-semibold">SEO Settings</h2>
-              <div>
-                <Label htmlFor="seoTitle">SEO Title</Label>
-                <Input
-                  id="seoTitle"
-                  value={seoTitle}
-                  onChange={(e) => setSeoTitle(e.target.value)}
-                  placeholder="Title for search engines"
-                />
-              </div>
-              <div>
-                <Label htmlFor="seoDesc">SEO Description</Label>
-                <textarea
-                  id="seoDesc"
-                  value={seoDesc}
-                  onChange={(e) => setSeoDesc(e.target.value)}
-                  rows={2}
-                  className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
-                  placeholder="Description for search engines"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Sidebar - 1 col */}
-          <div className="space-y-6">
-            {/* Pricing */}
-            <div className="bg-white rounded-xl border p-6 space-y-4">
-              <h2 className="text-lg font-semibold">Pricing</h2>
-              <div>
-                <Label htmlFor="price">Price (৳) *</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  placeholder="0.00"
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="comparePrice">Compare Price (৳)</Label>
-                <Input
-                  id="comparePrice"
-                  type="number"
-                  step="0.01"
-                  value={comparePrice}
-                  onChange={(e) => setComparePrice(e.target.value)}
-                  placeholder="0.00"
-                />
-              </div>
-            </div>
-
-            {/* Inventory */}
-            <div className="bg-white rounded-xl border p-6 space-y-4">
-              <h2 className="text-lg font-semibold">Inventory</h2>
-              <div>
-                <Label htmlFor="sku">SKU</Label>
-                <Input
-                  id="sku"
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                  placeholder="SKU-001"
-                />
-              </div>
-              <div>
-                <Label htmlFor="barcode">Barcode</Label>
-                <Input
-                  id="barcode"
-                  value={barcode}
-                  onChange={(e) => setBarcode(e.target.value)}
-                  placeholder="Barcode"
-                />
-              </div>
-              <div>
-                <Label htmlFor="quantity">Quantity</Label>
-                <Input
-                  id="quantity"
-                  type="number"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={trackStock}
-                  onChange={(e) => setTrackStock(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Track stock
-              </label>
-            </div>
-
-            {/* Status */}
-            <div className="bg-white rounded-xl border p-6 space-y-4">
-              <h2 className="text-lg font-semibold">Status</h2>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="active"
-                    checked={status === "active"}
-                    onChange={() => setStatus("active")}
-                    className="text-primary"
-                  />
-                  Active
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="draft"
-                    checked={status === "draft"}
-                    onChange={() => setStatus("draft")}
-                    className="text-primary"
-                  />
-                  Draft
-                </label>
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={featured}
-                  onChange={(e) => setFeatured(e.target.checked)}
-                  className="rounded border-gray-300"
-                />
-                Featured product
-              </label>
-            </div>
-
-            {/* Actions */}
-            <div className="flex flex-col gap-2">
-              <Button type="submit" disabled={saving || !name || !price}>
-                <Save size={16} className="mr-2" />
-                {saving ? "Saving..." : "Create Product"}
-              </Button>
-              <Link href="/dashboard/products">
-                <Button type="button" variant="outline" className="w-full">
-                  Cancel
-                </Button>
-              </Link>
-            </div>
-          </div>
+        <div className="flex items-center justify-end gap-4">
+          <Link
+            href="/dashboard/products"
+            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+          >
+            Cancel
+          </Link>
+          <button
+            type="submit"
+            disabled={saving}
+            className="px-6 py-2 bg-[#1d4ed8] text-white rounded-lg hover:bg-[#1e40af] flex items-center gap-2 disabled:opacity-50"
+          >
+            {saving ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Save size={16} />
+            )}
+            Save Product
+          </button>
         </div>
       </form>
     </div>

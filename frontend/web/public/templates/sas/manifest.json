@@ -1,0 +1,55 @@
+{
+  "id": "sas",
+  "name": "Sas",
+  "version": "1.0.0",
+  "css": [],
+  "js": [],
+  "entryPoint": "web2/index.html",
+  "sections": {
+    "products": {
+      "selector": ".product-card",
+      "type": "products",
+      "cardTemplate": "default"
+    },
+    "footerCopyright": {
+      "selector": "footer .copyright, footer p:last-child",
+      "type": "text",
+      "template": "© {{year}} {{storeName}}. All Rights Reserved."
+    }
+  },
+  "interactivity": {
+    "cart": {
+      "trigger": ".header-icon[href=\"#cart\"]",
+      "drawer": ".cart-drawer",
+      "overlay": ".cart-overlay"
+    },
+    "search": {
+      "trigger": ".search-btn",
+      "overlay": ".search-overlay",
+      "input": "#searchInput"
+    },
+    "mobileMenu": {
+      "trigger": ".menu-btn",
+      "menu": ".mobile-menu",
+      "overlay": ".menu-overlay",
+      "closeBtn": ".close-menu"
+    },
+    "wishlist": {
+      "selector": ".wishlist-btn",
+      "activeClass": "active"
+    },
+    "productCards": {
+      "quickAdd": ".quick-add",
+      "wishlist": ".wishlist-btn",
+      "productLink": ".product-card"
+    },
+    "newsletter": {
+      "form": ".newsletter-form",
+      "input": "input[type=\"email\"]",
+      "button": "button[type=\"submit\"]"
+    }
+  },
+  "description": "Uploaded template: Sas",
+  "thumbnail": "https://assets.gadgetandgear.com/upload/media/Home+Banner/iphone-offer-web-banner-05-05-2026.png",
+  "previewUrl": "/templates/sas/web2/index.html"
+}

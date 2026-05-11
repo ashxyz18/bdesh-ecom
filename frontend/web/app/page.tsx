@@ -48,6 +48,30 @@ const steps = [
   { number: "03", title: "Go Live!", description: "Your store is instantly live with payments", icon: Zap },
 ];
 
+const templates = [
+  {
+    id: "koskii",
+    name: "Koskii Ethnic Wear",
+    category: "Fashion",
+    thumbnail: "https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii-ranipink-zariwork-puresilk-designer-saree-saus0035699_ranipink_1_1.jpg?v=1721373197",
+    pages: "4 Pages",
+  },
+  {
+    id: "fashion",
+    name: "Modern Fashion",
+    category: "Fashion",
+    thumbnail: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop",
+    pages: "5 Pages",
+  },
+  {
+    id: "grocery",
+    name: "Fresh Grocery",
+    category: "Grocery",
+    thumbnail: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop",
+    pages: "4 Pages",
+  },
+];
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black">
@@ -92,6 +116,48 @@ export default function LandingPage() {
                 <p className="text-gray-500 text-sm">{step.description}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </LazySection>
+
+      {/* Templates Section */}
+      <LazySection id="templates" className="py-20 md:py-28 bg-white" placeholderHeight={500}>
+        <div className="max-w-[1400px] mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Beautiful Templates</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg">
+              Start with a professionally designed template and customize it for your brand.
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {templates.map((template) => (
+              <Link key={template.id} href={`/templates/${template.id}`} className="group">
+                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#1d4ed8]/20">
+                  <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+                    <img
+                      src={template.thumbnail}
+                      alt={template.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <span className="absolute top-4 left-4 px-3 py-1 bg-white/90 rounded-full text-xs font-medium text-gray-700 shadow-sm">
+                      {template.category}
+                    </span>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="text-lg font-bold text-gray-900 mb-
+1">{template.name}</h3>
+                    <p className="text-sm text-gray-500">{template.pages}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link href="/templates">
+              <Button variant="outline" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-[#1d4ed8] hover:border-[#1d4ed8]/30 px-8 py-3 transition-colors">
+                View All Templates <ArrowRight size={16} className="ml-2" />
+              </Button>
+            </Link>
           </div>
         </div>
       </LazySection>
@@ -164,9 +230,9 @@ export default function LandingPage() {
                 <ul className="flex-1 space-y-3 mb-6">
                   {plan.features.map((f) => (<li key={f} className="flex items-center gap-2.5 text-sm"><Check className="w-4 h-4 text-[#1d4ed8] shrink-0" /><span className="text-gray-600">{f}</span></li>))}
                 </ul>
-                <Link href="/register">
+                <Link href="/templates">
                   <Button className={`w-full justify-center ${plan.highlighted ? "bg-[#1d4ed8] hover:bg-[#1e40af] text-white shadow-md" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}>
-                    {plan.cta} <ArrowRight size={14} className="ml-2" />
+                    Browse Templates <ArrowRight size={14} className="ml-2" />
                   </Button>
                 </Link>
               </div>
@@ -180,9 +246,9 @@ export default function LandingPage() {
         <div className="relative max-w-[1400px] mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Start Selling?</h2>
           <p className="text-white/70 max-w-xl mx-auto mb-8 text-lg">Join Bangladeshi businesses already selling online.</p>
-          <Link href="/register">
+          <Link href="/templates">
             <Button className="bg-white text-[#1d4ed8] hover:bg-gray-100 text-base font-semibold px-10 py-3.5">
-              Create Your Store — It&apos;s Free <ArrowRight size={16} className="ml-2" />
+              Browse Templates <ArrowRight size={16} className="ml-2" />
             </Button>
           </Link>
         </div>
@@ -201,7 +267,7 @@ export default function LandingPage() {
             </div>
             <div><h4 className="font-semibold text-white mb-4">Product</h4>
               <ul className="space-y-3">
-                {[{ label: "Features", href: "#features" }, { label: "Templates", href: "#templates" }, { label: "Pricing", href: "#pricing" }].map((l) => (
+                {[{ label: "Features", href: "#features" }, { label: "Templates", href: "/templates" }, { label: "Pricing", href: "#pricing" }].map((l) => (
                   <li key={l.label}><Link href={l.href} className="text-sm text-white/40 hover:text-white transition-colors">{l.label}</Link></li>
                 ))}
               </ul>

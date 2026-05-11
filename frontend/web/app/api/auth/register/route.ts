@@ -1,127 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { hashPassword, createSession } from "@/lib/auth";
-import { registerSchema } from "@bdesh/shared";
-import { checkRateLimit, RATE_LIMITS, getClientIdentifier } from "@/lib/rate-limit";
+import { users, generateId, createStore } from "@/lib/data-store";
 
-export async function POST(req: NextRequest) {
-  // Rate limit: 5 registration attempts per minute per IP
-  const rateResult = checkRateLimit(req, RATE_LIMITS.auth, getClientIdentifier(req));
-  if (!rateResult.allowed) {
-    return NextResponse.json(
-      { message: "Too many registration attempts. Please try again later." },
-      { status: 429, headers: rateResult.headers },
-    );
-  }
-
+export async function POST(request: NextRequest) {
   try {
-    const body = await req.json();
+    const body = await request.json();
+    const { email, password, name } = body;
 
-    // Validate input
-    let parsed;
-    try {
-      parsed = registerSchema.parse(body);
-    } catch {
+    if (!email || !password || !name) {
       return NextResponse.json(
-        { message: "Please fill in all required fields correctly" },
+        { error: "Email, password, and name are required" },
         { status: 400 }
       );
     }
 
-    const { name, email, phone, password } = parsed;
-
-    // Check existing user
-    let existing;
-    try {
-      existing = await prisma.user.findFirst({
-        where: { OR: [{ email }, { phone }] },
-      });
-    } catch (dbError: any) {
-      console.error("[auth/register] Database error:", dbError.message);
-      return NextResponse.json(
-        { message: "Service temporarily unavailable. Please try again in a moment." },
-        { status: 503 }
-      );
+    // Check if user already exists
+    for (const user of users.values()) {
+      if (user.email === email) {
+        return NextResponse.json(
+          { error: "User already exists" },
+          { status: 409 }
+        );
+      }
     }
 
-    if (existing) {
-      return NextResponse.json(
-        { message: "Email or phone already registered" },
-        { status: 409 }
-      );
-    }
+    // Create user
+    const id = generateId();
+    const user = {
+      id,
+      email,
+      password, // In production, hash this!
+      name,
+      role: "user" as const,
+      createdAt: new Date(),
+    };
+    users.set(id, user);
 
-    // Hash password and create user
-    let hashedPassword;
-    try {
-      hashedPassword = await hashPassword(password);
-    } catch (hashError: any) {
-      console.error("[auth/register] Password hashing error:", hashError.message);
-      return NextResponse.json(
-        { message: "Registration failed. Please try again." },
-        { status: 500 }
-      );
-    }
+    // Create a store for the user (no template yet — user will choose on onboarding)
+    const store = createStore(`${name}'s Store`, id);
 
-    let user;
-    try {
-      user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          phone: phone || undefined,
-          password: hashedPassword,
-          role: "MERCHANT",
-        },
-      }) as any;
-    } catch (dbError: any) {
-      console.error("[auth/register] User creation error:", dbError.message);
-      return NextResponse.json(
-        { message: "Could not create account. Please try again." },
-        { status: 500 }
-      );
-    }
-
-    // Create session
-    let token;
-    try {
-      token = await createSession(user.id);
-    } catch (sessionError: any) {
-      console.error("[auth/register] Session creation error:", sessionError.message);
-      // User was created but session failed - still return success, user can login
-      return NextResponse.json({
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-        },
-        message: "Account created. Please log in.",
-      });
-    }
-
-    const response = NextResponse.json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-      },
-    });
-
-    response.cookies.set("session", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
-
-    return response;
-  } catch (error: any) {
-    console.error("[auth/register] Unexpected error:", error.message);
+    // Return user data (without password) and store
+    return NextResponse.json({
+      user: { id, email, name, createdAt: user.createdAt },
+      store,
+    }, { status: 201 });
+  } catch (error) {
+    console.error("Register error:", error);
     return NextResponse.json(
-      { message: "An unexpected error occurred. Please try again." },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

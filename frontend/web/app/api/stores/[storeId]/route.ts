@@ -1,82 +1,54 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { requireAuth } from "@/lib/auth";
+import { stores, getStoreByOwnerId, getProductsByStoreId } from "@/lib/data-store";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ storeId: string }> }
-) {
+interface RouteParams {
+  params: Promise<{ storeId: string }>;
+}
+
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { storeId } = await params;
-    const store = await prisma.store.findUnique({
-      where: { id: storeId },
-      include: {
-        owner: { select: { name: true, email: true } },
-      },
-    });
+    const store = stores.get(storeId);
 
     if (!store) {
-      return NextResponse.json({ message: "Store not found" }, { status: 404 });
+      return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
-    // Parse JSON strings for SQLite compatibility
-    const parsedStore = {
-      ...store,
-      theme: JSON.parse(typeof store.theme === "string" ? store.theme : "{}"),
-      settings: JSON.parse(typeof store.settings === "string" ? store.settings : "{}"),
-    };
+    const products = getProductsByStoreId(storeId);
 
-    return NextResponse.json({ store: parsedStore });
-  } catch (error: any) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    return NextResponse.json({ store, products });
+  } catch (error) {
+    console.error("Get store error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ storeId: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { storeId } = await params;
-    const session = await requireAuth();
-    const body = await req.json();
-
-    const store = await prisma.store.findUnique({
-      where: { id: storeId },
-    });
+    const store = stores.get(storeId);
 
     if (!store) {
-      return NextResponse.json({ message: "Store not found" }, { status: 404 });
+      return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
-    if (store.ownerId !== session.user.id && session.user.role !== "ADMIN") {
-      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-    }
+    const body = await request.json();
+    const { name, description, logo, banner, theme, settings, templateId } = body;
 
-    const updated = await prisma.store.update({
-      where: { id: storeId },
-      data: {
-        name: body.name,
-        description: body.description,
-        logo: body.logo,
-        banner: body.banner,
-        theme: body.theme ? JSON.stringify(body.theme) : undefined,
-        settings: body.settings ? JSON.stringify(body.settings) : undefined,
-      },
-    });
+    // Update store fields
+    if (name !== undefined) store.name = name;
+    if (description !== undefined) store.description = description;
+    if (logo !== undefined) store.logo = logo;
+    if (banner !== undefined) store.banner = banner;
+    if (theme !== undefined) store.theme = { ...store.theme, ...theme };
+    if (settings !== undefined) store.settings = { ...store.settings, ...settings };
+    if (templateId !== undefined) store.templateId = templateId;
 
-    // Parse response
-    const parsedStore = {
-      ...updated,
-      theme: JSON.parse(typeof updated.theme === "string" ? updated.theme : "{}"),
-      settings: JSON.parse(typeof updated.settings === "string" ? updated.settings : "{}"),
-    };
+    stores.set(storeId, store);
 
-    return NextResponse.json({ store: parsedStore });
-  } catch (error: any) {
-    return NextResponse.json(
-      { message: error.message || "Something went wrong" },
-      { status: 400 }
-    );
+    return NextResponse.json({ store });
+  } catch (error) {
+    console.error("Update store error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

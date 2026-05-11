@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details | Koskii</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .product-detail-page { padding: 100px 0 40px; min-height: 100vh; background: #f8f8f8; }
+        .product-detail-page .container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
+
+        .product-detail-main {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+        @media (min-width: 768px) {
+            .product-detail-main { grid-template-columns: 1fr 1fr; gap: 40px; }
+        }
+
+        /* --- Gallery --- */
+        .product-gallery {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .product-gallery img {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 2/3;
+            object-fit: cover;
+            cursor: zoom-in;
+            transition: transform 0.3s ease;
+        }
+        .product-gallery img:hover { transform: scale(1.02); }
+
+        /* --- Info --- */
+        .product-info-detail { padding-top: 8px; }
+        .product-breadcrumb {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .product-info-detail h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            line-height: 1.3;
+            color: #1a1a1a;
+        }
+        .product-sku { font-size: 12px; color: #999; margin-bottom: 12px; }
+        .product-info-detail .rating {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+        .product-info-detail .rating .stars { color: #d4af37; }
+        .product-reviews-link { font-size: 13px; color: #666; text-decoration: underline; cursor: pointer; margin-left: 8px; }
+
+        .product-info-detail .price {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .product-info-detail .price .sale-price { font-size: 28px; font-weight: 700; }
+        .product-info-detail .price .original-price { font-size: 16px; color: #999; text-decoration: line-through; }
+        .product-info-detail .price .discount-text { font-size: 13px; color: #e74c3c; font-weight: 600; }
+        .product-info-detail .price .tax-note { font-size: 12px; color: #999; width: 100%; margin-top: 4px; }
+
+        .product-variant-section { margin-bottom: 20px; }
+        .product-variant-section label {
+            display: block;
+            font-size: 13px; font-weight: 600; margin-bottom: 8px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .variant-options { display: flex; gap: 8px; flex-wrap: wrap; }
+        .variant-option {
+            padding: 10px 18px; border: 2px solid #e0e0e0; background: #fff; cursor: pointer;
+            font-size: 14px; border-radius: 4px; min-width: 48px; text-align: center;
+            transition: all 0.25s ease; font-weight: 500;
+        }
+        .variant-option:hover { border-color: #1a1a1a; }
+        .variant-option.active { border-color: #1a1a1a; background: #1a1a1a; color: #fff; }
+        .variant-option.out-of-stock { opacity: 0.5; cursor: not-allowed; text-decoration: line-through; }
+
+        .product-actions { display: flex; gap: 12px; margin-bottom: 20px; }
+        .btn-add-cart {
+            flex: 1; padding: 16px; background: #1a1a1a; color: #fff; border: none;
+            font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px;
+            cursor: pointer; transition: background 0.3s; border-radius: 4px;
+        }
+        .btn-add-cart:hover { background: #d4af37; }
+        .btn-wishlist {
+            width: 54px; height: 54px; border: 1px solid #e0e0e0; background: #fff; border-radius: 4px;
+            cursor: pointer; font-size: 20px; color: #666; transition: all 0.3s; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .btn-wishlist:hover { border-color: #e74c3c; color: #e74c3c; }
+        .btn-wishlist.active { background: #e74c3c; color: #fff; border-color: #e74c3c; }
+
+        .delivery-info {
+            padding: 16px; border: 1px dashed #e0e0e0; border-radius: 8px; margin-bottom: 20px;
+            font-size: 13px; color: #666; line-height: 1.6;
+        }
+        .delivery-info i { color: #d4af37; margin-right: 8px; width: 20px; display: inline-block; }
+
+        .product-description { border-top: 1px solid #e0e0e0; padding-top: 24px; }
+        .product-description h3 { font-size: 16px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .product-description p { font-size: 14px; line-height: 1.7; color: #666; }
+
+        /* --- Tabs --- */
+        .product-tabs { margin-top: 40px; }
+        .tab-nav { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 20px; }
+        .tab-nav button { background: none; border: none; padding: 12px 24px; cursor: pointer; font-size: 14px; font-weight: 600; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tab-nav button.active { color: #1a1a1a; border-bottom-color: #d4af37; }
+        .tab-panel { display: none; animation: fadeIn 0.4s ease; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- Reviews --- */
+        .reviews-list { display: flex; flex-direction: column; gap: 16px; }
+        .review-item { background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #f0f0f0; }
+        .review-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .review-author { font-weight: 600; font-size: 14px; }
+        .review-date { font-size: 12px; color: #999; }
+        .review-rating { color: #d4af37; font-size: 14px; }
+        .review-text { font-size: 14px; color: #666; line-height: 1.6; }
+        .review-verified { font-size: 12px; color: #27ae60; margin-top: 4px; }
+
+        /* --- Related Products --- */
+        .related-products { margin-top: 48px; padding-bottom: 60px; }
+        .related-products h2 { font-size: 22px; margin-bottom: 24px; text-align: center; text-transform: uppercase; letter-spacing: 1.5px; }
+        .related-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        @media (min-width: 768px) { .related-grid { grid-template-columns: repeat(4, 1fr); } }
+        .related-card { background: #fff; border-radius: 8px; overflow: hidden; transition: transform 0.3s, box-shadow 0.3s; cursor: pointer; text-decoration: none; color: inherit; }
+        .related-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        .related-card img { width: 100%; aspect-ratio: 2/3; object-fit: cover; }
+        .related-name { font-size: 13px; padding: 10px 12px 4px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .related-price { font-size: 14px; font-weight: 600; padding: 0 12px 12px; }
+
+        /* --- Sticky Add to Cart --- */
+        .sticky-atc { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; padding: 12px 16px; box-shadow: 0 -2px 12px rgba(0,0,0,0.1); z-index: 100; gap: 12px; align-items: center; }
+        @media (max-width: 767px) { .sticky-atc { display: flex; } }
+        .sticky-atc .sticky-price { flex-shrink: 0; }
+        .sticky-atc .sticky-price .sale { font-size: 16px; font-weight: 700; }
+        .sticky-atc .sticky-price .orig { font-size: 12px; color: #999; text-decoration: line-through; margin-left: 4px; }
+        .sticky-atc button { flex: 1; padding: 14px; background: #1a1a1a; color: #fff; border: none; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; border-radius: 4px; cursor: pointer; }
+        .sticky-atc button:hover { background: #d4af37; }
+
+        /* --- Quantity --- */
+        .qty-selector { display: flex; align-items: center; border: 1px solid #e0e0e0; border-radius: 4px; margin-bottom: 16px; width: max-content; }
+        .qty-selector button { width: 36px; height: 36px; background: none; border: none; font-size: 18px; cursor: pointer; color: #1a1a1a; }
+        .qty-selector span { width: 36px; text-align: center; font-size: 14px; font-weight: 600; }
+
+        .product-not-found { text-align: center; padding: 120px 20px; min-height: 60vh; }
+        .product-not-found i { font-size: 72px; margin-bottom: 24px; color: #e0e0e0; display: block; }
+        .product-not-found h2 { font-size: 24px; margin-bottom: 12px; }
+        .product-not-found p { color: #999; margin-bottom: 24px; }
+        .product-not-found a { display: inline-block; padding: 12px 32px; background: #1a1a1a; color: #fff; text-transform: uppercase; letter-spacing: 1px; font-size: 13px; font-weight: 600; border-radius: 4px; transition: background 0.3s; text-decoration: none; }
+        .product-not-found a:hover { background: #d4af37; }
+
+        /* Remove the old style.css for product cards */
+        .product-card { text-decoration: none; color: inherit; }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="announcement-bar">
+        <div class="scroll-text">Get extra 5% off Use: FLASH5 on Min.₹2490 | Save More! Use: KOSKIILUV10 for extra 10% discount | Only on App use: APPFIRST & Get extra 15% Off |</div>
+    </div>
+
+    <header class="main-header scrolled">
+        <div class="header-left">
+            <a href="index.html" class="menu-btn" aria-label="Back"><i class="fas fa-arrow-left"></i></a>
+        </div>
+        <div class="logo">
+            <a href="index.html"><img src="https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii_logo_left_right_white.0u84b2px.n_j~.png" alt="Koskii" style="filter: brightness(0) invert(1);"></a>
+        </div>
+        <div class="header-right">
+            <a href="account.html" class="header-icon"><i class="far fa-user"></i></a>
+            <a href="wishlist.html" class="header-icon"><i class="far fa-heart"></i></a>
+            <a href="#cart" class="header-icon"><i class="fas fa-shopping-bag"></i><span class="badge-count">0</span></a>
+        </div>
+    </header>
+
+    <main class="product-detail-page" id="productDetail">
+        <div class="product-not-found" id="notFound" style="display:none">
+            <i class="fas fa-box-open"></i>
+            <h2>Product not found</h2>
+            <p>The product you are looking for does not exist.</p>
+            <a href="index.html">Continue Shopping</a>
+        </div>
+
+        <div class="container" id="productContainer" style="display:none">
+            <div class="product-detail-main">
+                <div class="product-gallery">
+                    <img id="mainImage" src="" alt="">
+                </div>
+                <div class="product-info-detail" id="productInfo">
+                    <div class="product-breadcrumb" id="breadcrumb">Home / Sarees</div>
+                    <h1 id="productName"></h1>
+                    <div class="product-sku" id="productSku">SKU: KOSK-001</div>
+                    <div class="rating">
+                        <span class="stars" id="productStars">★★★★★</span>
+                        <span id="productRating"></span>
+                        <span class="product-reviews-link">12 Reviews</span>
+                    </div>
+                    <div class="price" id="productPrice"></div>
+
+                    <div class="product-variant-section">
+                        <label>Select Size</label>
+                        <div class="variant-options" id="sizeOptions"></div>
+                    </div>
+
+                    <div class="qty-selector">
+                        <button id="qtyMinus">-</button>
+                        <span id="qtyValue">1</span>
+                        <button id="qtyPlus">+</button>
+                    </div>
+
+                    <div class="product-actions">
+                        <button class="btn-add-cart" id="addToCartBtn">Add to Bag</button>
+                        <button class="btn-wishlist" id="wishlistBtn"><i class="far fa-heart"></i></button>
+                    </div>
+
+                    <div class="delivery-info">
+                        <p><i class="fas fa-truck"></i> Free shipping on orders above ₹2490</p>
+                        <p><i class="fas fa-undo"></i> Easy 7-day returns</p>
+                        <p><i class="fas fa-shield-alt"></i> Cash on delivery available</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="product-tabs">
+                <div class="tab-nav">
+                    <button class="active" data-tab="description">Description</button>
+                    <button data-tab="details">Details</button>
+                    <button data-tab="reviews">Reviews</button>
+                </div>
+                <div class="tab-panels">
+                    <div class="tab-panel active" id="tab-description">
+                        <div class="product-description">
+                            <h3>Description</h3>
+                            <p id="descText"></p>
+                        </div>
+                    </div>
+                    <div class="tab-panel" id="tab-details">
+                        <div class="product-description">
+                            <h3>Product Details</h3>
+                            <p id="detailsText"></p>
+                        </div>
+                    </div>
+                    <div class="tab-panel" id="tab-reviews">
+                        <div class="reviews-list" id="reviewsList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="related-products" id="relatedSection" style="display:none">
+            <div class="container">
+                <h2>You May Also Like</h2>
+                <div class="related-grid" id="relatedGrid"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="main-footer">
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-col">
+                        <h4>SHOP</h4>
+                        <ul><li><a href="#">Sarees</a></li><li><a href="#">Salwar Suits</a></li><li><a href="#">Lehengas</a></li><li><a href="#">Gowns</a></li><li><a href="#">Dress Materials</a></li><li><a href="#">Blouses</a></li></ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>HELP</h4>
+                        <ul><li><a href="#">Contact Us</a></li><li><a href="#">Shipping &amp; Delivery</a></li><li><a href="#">Returns &amp; Exchanges</a></li><li><a href="#">Size Guide</a></li><li><a href="#">Track Order</a></li></ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>ABOUT</h4>
+                        <ul><li><a href="#">About Us</a></li><li><a href="#">Careers</a></li><li><a href="#">Store Locator</a></li><li><a href="#">Blog</a></li></ul>
+                    </div>
+                    <div class="footer-col">
+                        <h4>CONNECT</h4>
+                        <div class="social-links"><a href="#"><i class="fab fa-facebook-f"></i></a><a href="#"><i class="fab fa-instagram"></i></a><a href="#"><i class="fab fa-pinterest-p"></i></a><a href="#"><i class="fab fa-youtube"></i></a></div>
+                        <div class="newsletter"><h5>Subscribe to our newsletter</h5><form class="newsletter-form"><input type="email" placeholder="Enter your email"><button>Subscribe</button></form></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom"><div class="container"><div class="footer-logo"><img src="https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii_logo_White.0l-jq62h6nrb9.png" alt="Koskii"></div><p class="copyright">2025 Koskii. All Rights Reserved.</p></div></div>
+    </footer>
+
+    <nav class="sticky-nav">
+        <a href="index.html" class="sticky-item"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="#" class="sticky-item"><i class="fas fa-th-large"></i><span>Categories</span></a>
+        <a href="#" class="sticky-item"><i class="fas fa-tag"></i><span>Sale</span></a>
+        <a href="#cart" class="sticky-item"><i class="fas fa-shopping-bag"></i><span>Bag</span><span class="nav-badge">0</span></a>
+        <a href="account.html" class="sticky-item"><i class="far fa-user"></i><span>Account</span></a>
+    </nav>
+
+    <div class="sticky-atc" id="stickyATC"><div class="sticky-price"><span class="sale" id="stickyPrice"></span></div><button id="stickyBtn">Add to Bag</button></div>
+
+    <script src="js/main.js"></script>
+    <script>
+        (function() {
+            'use strict';
+
+            // Wait for main.js to expose product data
+            let attempts = 0;
+            const interval = setInterval(() => {
+                if (window.Koskii || attempts++ > 20) { clearInterval(interval); initPage(); }
+            }, 100);
+
+            function initPage() {
+                const products = window.Koskii?.products || [];
+                const params = new URLSearchParams(window.location.search);
+                const id = params.get('id');
+                const product = products.find(p => p.id === id);
+
+                if (!product) {
+                    document.getElementById('notFound').style.display = 'block';
+                    return;
+                }
+
+                renderProduct(product, products);
+                initTabs();
+                initQuantity();
+                initSticky(product);
+            }
+
+            function renderProduct(product, allProducts) {
+                document.getElementById('productContainer').style.display = 'block';
+                document.getElementById('relatedSection').style.display = 'block';
+
+                // Image
+                document.getElementById('mainImage').src = product.image;
+                document.getElementById('mainImage').alt = product.name;
+
+                // Info
+                document.getElementById('breadcrumb').textContent = `Home / ${product.category}`;
+                document.getElementById('productName').textContent = product.name;
+                document.getElementById('productSku').textContent = `SKU: KOSK-${product.id.toUpperCase().replace('P','')}`;
+                document.getElementById('productRating').textContent = `${product.rating} out of 5`;
+                document.getElementById('productStars').textContent = '★'.repeat(Math.round(product.rating)) + '☆'.repeat(5 - Math.round(product.rating));
+
+                // Price
+                const priceHTML = `<span class="sale-price">₹${product.price.toLocaleString()}</span>
+                    ${product.originalPrice !== product.price ? `<span class="original-price">₹${product.originalPrice.toLocaleString()}</span>` : ''}
+                    ${product.discount ? `<span class="discount-text">${product.discount}% OFF</span>` : ''}
+                    <span class="tax-note">Tax included. Shipping calculated at checkout.</span>`;
+                document.getElementById('productPrice').innerHTML = priceHTML;
+
+                // Sizes
+                const sizeOptions = document.getElementById('sizeOptions');
+                product.sizes.forEach(s => {
+                    const btn = document.createElement('button');
+                    btn.className = 'variant-option' + (s === 'Free Size' ? ' active' : '');
+                    btn.textContent = s;
+                    btn.dataset.size = s;
+                    btn.addEventListener('click', () => {
+                        sizeOptions.querySelectorAll('.variant-option').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                    });
+                    sizeOptions.appendChild(btn);
+                });
+
+                // Description
+                document.getElementById('descText').textContent = `Experience the elegance of this exquisite ${product.category} from Koskii. Crafted with premium fabrics and intricate detailing, this piece is perfect for weddings, festivals, and special occasions.`;
+                document.getElementById('detailsText').innerHTML = `<strong>Material:</strong> Premium fabric<br><strong>Work:</strong> Hand-embroidered zari/stone/sequin work<br><strong>Occasion:</strong> Wedding, Festive, Party<br><strong>Care:</strong> Dry clean only<br><strong>Package:</strong> Saree with unstitched blouse`;
+
+                // Reviews
+                const reviews = [
+                    { name: 'Priya K.', date: '2 weeks ago', rating: 5, text: 'Absolutely stunning! The fabric quality is excellent and the embroidery is so detailed. Got so many compliments at my cousin\'s wedding.', verified: true },
+                    { name: 'Ananya M.', date: '1 month ago', rating: 4, text: 'Beautiful saree, exactly as shown in the picture. The color is vibrant and the zari work is intricate. Only wish the blouse piece was stitched.', verified: true },
+                    { name: 'Neha R.', date: '2 months ago', rating: 5, text: 'This is my third purchase from Koskii and they never disappoint. The quality is premium and the designs are unique.', verified: true }
+                ];
+                document.getElementById('reviewsList').innerHTML = reviews.map(r => `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="review-author">${r.name}</span>
+                            <span class="review-date">${r.date}</span>
+                        </div>
+                        <div class="review-rating">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+                        <p class="review-text">${r.text}</p>
+                        ${r.verified ? '<p class="review-verified"><i class="fas fa-check-circle"></i> Verified Purchase</p>' : ''}
+                    </div>`).join('');
+
+                // Related products
+                const related = allProducts.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
+                document.getElementById('relatedGrid').innerHTML = related.map(p => `
+                    <a href="product.html?id=${p.id}" class="related-card">
+                        <img src="${p.image}" alt="${p.name}">
+                        <div class="related-name">${p.name}</div>
+                        <div class="related-price">₹${p.price.toLocaleString()}</div>
+                    </a>`).join('');
+
+                // Add to cart
+                document.getElementById('addToCartBtn').addEventListener('click', () => {
+                    const size = document.querySelector('.variant-option.active')?.dataset.size || 'Free Size';
+                    const qty = parseInt(document.getElementById('qtyValue').textContent) || 1;
+                    for (let i = 0; i < qty; i++) window.Koskii?.addToCart?.(product.id, size);
+                });
+
+                // Wishlist
+                document.getElementById('wishlistBtn').addEventListener('click', () => {
+                    const btn = document.getElementById('wishlistBtn');
+                    const i = btn.querySelector('i');
+                    if (i.classList.contains('far')) {
+                        i.classList.remove('far'); i.classList.add('fas');
+                        btn.classList.add('active');
+                        window.Koskii?.showToast?.('Added', 'Added to wishlist', 'success');
+                    } else {
+                        i.classList.remove('fas'); i.classList.add('far');
+                        btn.classList.remove('active');
+                        window.Koskii?.showToast?.('Removed', 'Removed from wishlist', 'default');
+                    }
+                });
+            }
+
+            function initTabs() {
+                document.querySelectorAll('.tab-nav button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+                        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                        btn.classList.add('active');
+                        document.getElementById(`tab-${btn.dataset.tab}`).classList.add('active');
+                    });
+                });
+            }
+
+            function initQuantity() {
+                const qtyValue = document.getElementById('qtyValue');
+                document.getElementById('qtyMinus').addEventListener('click', () => {
+                    let val = parseInt(qtyValue.textContent);
+                    if (val > 1) qtyValue.textContent = val - 1;
+                });
+                document.getElementById('qtyPlus').addEventListener('click', () => {
+                    let val = parseInt(qtyValue.textContent);
+                    if (val < 10) qtyValue.textContent = val + 1;
+                });
+            }
+
+            function initSticky(product) {
+                const sticky = document.getElementById('stickyATC');
+                const stickyPrice = document.getElementById('stickyPrice');
+                const stickyBtn = document.getElementById('stickyBtn');
+
+                if (sticky) {
+                    stickyPrice.innerHTML = `₹${product.price.toLocaleString()}${product.originalPrice !== product.price ? `<span class="orig">₹${product.originalPrice.toLocaleString()}</span>` : ''}`;
+                    stickyBtn.addEventListener('click', () => {
+                        const size = document.querySelector('.variant-option.active')?.dataset.size || 'Free Size';
+                        window.Koskii?.addToCart?.(product.id, size);
+                    });
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
