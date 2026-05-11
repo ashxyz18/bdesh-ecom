@@ -31,7 +31,7 @@ const features = [
 ];
 
 const testimonials = [
-  { name: "Rahim Ahmed", role: "Fashion Entrepreneur", company: "Dhaka Styles", quote: "BdeshShop made it incredibly easy to take my boutique online. Sales doubled within the first month!", rating: 5 },
+  { name: "Rahim Ahmed", role: "Fashion Entrepreneur", company: "Dhaka Styles", quote: "BixelBD made it incredibly easy to take my boutique online. Sales doubled within the first month!", rating: 5 },
   { name: "Fatima Begum", role: "Restaurant Owner", company: "Chittagong Eats", quote: "The food template was perfect. Customers can now order online and we handle delivery seamlessly.", rating: 5 },
   { name: "Kamal Hossain", role: "Electronics Seller", company: "TechBD", quote: "From setup to first sale in under 30 minutes. The AI builder understood exactly what I needed.", rating: 5 },
 ];
@@ -261,7 +261,7 @@ export default function LandingPage() {
             <div>
               <Link href="/" className="flex items-center gap-2.5 mb-4">
                 <div className="w-9 h-9 bg-[#1d4ed8] rounded-lg flex items-center justify-center"><Store className="h-5 w-5 text-white" /></div>
-                <span className="font-bold text-xl text-white">BdeshShop</span>
+                <span className="font-bold text-xl text-white">BixelBD</span>
               </Link>
               <p className="text-white/40 text-sm leading-relaxed">The easiest way to create an online store in Bangladesh.</p>
             </div>
@@ -288,7 +288,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-white/30">&copy; {new Date().getFullYear()} BdeshShop. All rights reserved.</p>
+            <p className="text-sm text-white/30">&copy; {new Date().getFullYear()} BixelBD. All rights reserved.</p>
             <p className="text-sm text-white/30">Made with ❤️ in Bangladesh</p>
           </div>
         </div>

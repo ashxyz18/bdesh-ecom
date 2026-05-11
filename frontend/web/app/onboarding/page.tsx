@@ -112,7 +112,7 @@ export default function OnboardingPage() {
             <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
               <Store className="w-5 h-5 text-white" />
             </div>
-            <span className="text-white font-bold text-lg">BdeshShop</span>
+            <span className="text-white font-bold text-lg">BixelBD</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-blue-200">
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />

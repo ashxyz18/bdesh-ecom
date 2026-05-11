@@ -69,7 +69,7 @@ export default function LoginPage() {
               <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
                 <Store className="h-7 w-7 text-white" />
               </div>
-              <span className="font-bold text-2xl">BdeshShop</span>
+              <span className="font-bold text-2xl">BixelBD</span>
             </div>
             <h2 className="text-4xl font-bold mb-4 leading-tight">
               Welcome back to<br />your store
@@ -99,7 +99,7 @@ export default function LoginPage() {
               <div className="w-10 h-10 bg-[#1d4ed8] rounded-lg flex items-center justify-center">
                 <Store className="h-6 w-6 text-white" />
               </div>
-              <span className="font-bold text-2xl text-gray-900">BdeshShop</span>
+              <span className="font-bold text-2xl text-gray-900">BixelBD</span>
             </Link>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Log in to your account</h1>
             <p className="text-gray-500">Welcome back!</p>
@@ -212,7 +212,7 @@ export default function LoginPage() {
           </p>
 
           <div className="py-6 text-center text-xs text-gray-400">
-            &copy; {new Date().getFullYear()} BdeshShop. All rights reserved.
+            &copy; {new Date().getFullYear()} BixelBD. All rights reserved.
           </div>
         </div>
       </div>

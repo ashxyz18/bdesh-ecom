@@ -113,7 +113,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <div className="w-8 h-8 bg-[#1d4ed8] rounded-lg flex items-center justify-center">
                   <Store className="h-5 w-5 text-white" />
                 </div>
-                <span className="font-bold text-xl text-gray-900">BdeshShop Admin</span>
+                <span className="font-bold text-xl text-gray-900">BixelBD Admin</span>
               </Link>
             </div>
 

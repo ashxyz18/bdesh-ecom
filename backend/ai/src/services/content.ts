@@ -15,7 +15,7 @@ export async function generateContent(
   request: ContentGenerationRequest
 ): Promise<string> {
   const langInstruction = request.lang === "bn" ? " Respond in Bangla (Bengali) language." : "";
-  const systemPrompt = `You are a professional e-commerce content writer for BdeshShop, Bangladesh's #1 website builder. Write in ${request.tone || "professional"} tone.${langInstruction}`;
+  const systemPrompt = `You are a professional e-commerce content writer for BixelBD, Bangladesh's #1 website builder. Write in ${request.tone || "professional"} tone.${langInstruction}`;
   
   const prompts: Record<string, string> = {
     product_description: `Write a compelling product description for "${request.productName}" in the ${request.businessType || "general"} category. Include key features and benefits.${langInstruction} Keep under 200 words.`,
@@ -47,7 +47,7 @@ export async function generateContent(
 export async function recommendTemplate(
   request: TemplateRecommendationRequest
 ): Promise<TemplateRecommendationResponse> {
-  const systemPrompt = `You are a web design expert at BdeshShop, Bangladesh's e-commerce platform. Recommend the best templates for the user's business. Respond ONLY with valid JSON.`;
+  const systemPrompt = `You are a web design expert at BixelBD, Bangladesh's e-commerce platform. Recommend the best templates for the user's business. Respond ONLY with valid JSON.`;
 
   try {
     const result = await aiComplete({
@@ -129,7 +129,7 @@ export async function analyzeSEO(
 export async function generateMarketingInsights(
   request: MarketingInsightRequest
 ): Promise<MarketingInsightResponse> {
-  const systemPrompt = `You are a marketing analytics expert for BdeshShop, Bangladesh's e-commerce platform. Analyze the store metrics and provide actionable insights. Respond ONLY with valid JSON.`;
+  const systemPrompt = `You are a marketing analytics expert for BixelBD, Bangladesh's e-commerce platform. Analyze the store metrics and provide actionable insights. Respond ONLY with valid JSON.`;
 
   const metricsStr = request.metrics
     ? `Visitors: ${request.metrics.visitors || "N/A"}, Orders: ${request.metrics.orders || "N/A"}, Revenue: ৳${request.metrics.revenue || "N/A"}, Conversion Rate: ${request.metrics.conversionRate || "N/A"}%, Avg Order Value: ৳${request.metrics.avgOrderValue || "N/A"}`
@@ -190,7 +190,7 @@ export async function generateSocialPost(
   request: SocialPostRequest
 ): Promise<SocialPostResponse> {
   const langInstruction = request.lang === "bn" ? " Write in Bangla (Bengali)." : "";
-  const systemPrompt = `You are a social media marketing expert for BdeshShop, Bangladesh's e-commerce platform. Create engaging posts optimized for ${request.platform}.${langInstruction}`;
+  const systemPrompt = `You are a social media marketing expert for BixelBD, Bangladesh's e-commerce platform. Create engaging posts optimized for ${request.platform}.${langInstruction}`;
 
   const platformLimits: Record<string, number> = {
     twitter: 280,
@@ -216,7 +216,7 @@ export async function generateSocialPost(
     const jsonStr = result.content.replace(/```json\n?|\n?```/g, "").trim();
     return JSON.parse(jsonStr);
   } catch {
-    const defaultHashtags = ["#Bangladesh", "#OnlineShopping", "#BdeshShop"];
+    const defaultHashtags = ["#Bangladesh", "#OnlineShopping", "#BixelBD"];
     const defaultContent = request.productName
       ? `🎉 Check out ${request.productName}! Shop now at ${request.storeName || "our store"} with fast delivery across Bangladesh. bKash & Nagad accepted! 🛒`
       : `🎉 Special offer at ${request.storeName || "our store"}! Shop the best products in Bangladesh with fast delivery. bKash & Nagad accepted! 🛒`;

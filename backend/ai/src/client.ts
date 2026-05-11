@@ -87,7 +87,7 @@ const FALLBACK_RESPONSES: Record<string, string> = {
   marketing_copy:
     "Don't miss out! Shop now and enjoy exclusive deals with fast delivery across Bangladesh. bKash & Nagad accepted! 🛒",
   social_post:
-    "🎉 Special offer at our store! Shop the best products in Bangladesh with fast delivery. bKash & Nagad accepted! #Bangladesh #OnlineShopping #BdeshShop",
+    "🎉 Special offer at our store! Shop the best products in Bangladesh with fast delivery. bKash & Nagad accepted! #Bangladesh #OnlineShopping #BixelBD",
   email_subject:
     "Exclusive deals just for you — shop now and save!",
   sms_campaign:
@@ -203,7 +203,7 @@ function buildOpenAICompatibleRequest(cfg: AIConfig, request: AICompletionReques
 
   if (cfg.provider === "openrouter") {
     headers["HTTP-Referer"] = "https://bdesh.shop";
-    headers["X-Title"] = "BdeshShop";
+    headers["X-Title"] = "BixelBD";
   }
 
   return { url, body, headers };
@@ -391,7 +391,7 @@ function generateLocalFallback(
 
   if (lowerMsg.includes("marketing") || lowerMsg.includes("promot")) {
     return {
-      content: "Marketing tips for your BdeshShop store: 1) Set up bKash/Nagad payments to reach 90% of Bangladeshi customers, 2) Create Facebook page and run targeted ads, 3) Offer free delivery on orders over ৳1,000, 4) Use WhatsApp Business for customer support, 5) Create seasonal campaigns for Eid, Puja, and Pohela Boishakh.",
+      content: "Marketing tips for your BixelBD store: 1) Set up bKash/Nagad payments to reach 90% of Bangladeshi customers, 2) Create Facebook page and run targeted ads, 3) Offer free delivery on orders over ৳1,000, 4) Use WhatsApp Business for customer support, 5) Create seasonal campaigns for Eid, Puja, and Pohela Boishakh.",
       finishReason: "stop",
       provider: "local",
       model: "local-fallback",
@@ -409,7 +409,7 @@ function generateLocalFallback(
 
   if (lowerMsg.includes("social") || lowerMsg.includes("facebook") || lowerMsg.includes("instagram")) {
     return {
-      content: "🎉 Special offer at our store! Shop the best products in Bangladesh with fast delivery. bKash & Nagad accepted! #Bangladesh #OnlineShopping #BdeshShop",
+      content: "🎉 Special offer at our store! Shop the best products in Bangladesh with fast delivery. bKash & Nagad accepted! #Bangladesh #OnlineShopping #BixelBD",
       finishReason: "stop",
       provider: "local",
       model: "local-fallback",
@@ -428,8 +428,8 @@ function generateLocalFallback(
   // Default fallback
   return {
     content: isBangla
-      ? "আমি আপনার অনলাইন স্টোর তৈরি করতে সাহায্য করতে এখানে আছি! টেমপ্লেট, পণ্য সেটআপ, মার্কেটিং টিপস বা আপনার BdeshShop স্টোর সম্পর্কে অন্য কিছু জিজ্ঞাসা করুন।"
-      : "I'm here to help you build your online store! Ask me about templates, product setup, marketing tips, SEO optimization, or anything else about your BdeshShop store.",
+      ? "আমি আপনার অনলাইন স্টোর তৈরি করতে সাহায্য করতে এখানে আছি! টেমপ্লেট, পণ্য সেটআপ, মার্কেটিং টিপস বা আপনার BixelBD স্টোর সম্পর্কে অন্য কিছু জিজ্ঞাসা করুন।"
+      : "I'm here to help you build your online store! Ask me about templates, product setup, marketing tips, SEO optimization, or anything else about your BixelBD store.",
     finishReason: "stop",
     provider: "local",
     model: "local-fallback",

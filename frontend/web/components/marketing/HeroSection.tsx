@@ -31,7 +31,7 @@ export function HeroSection() {
             <p className={`text-base sm:text-lg md:text-xl text-white/70 max-w-[520px] mt-6 transition-all duration-700 delay-200 ${
               loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"
             }`}>
-              Dream big and build fast with BdeshShop. The world's leading commerce platform, powered by you.
+              Dream big and build fast with BixelBD. The world's leading commerce platform, powered by you.
             </p>
 
             <div className={`flex flex-col sm:flex-row gap-4 mt-8 transition-all duration-700 delay-400 ${

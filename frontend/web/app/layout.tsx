@@ -18,7 +18,7 @@ const notoSansBengali = Noto_Sans_Bengali({
 });
 
 export const metadata: Metadata = {
-  title: "BdeshShop - Build Your Online Store in Bangladesh",
+  title: "BixelBD - Build Your Online Store in Bangladesh",
   description:
     "The easiest way to create your own e-commerce website and mobile app in Bangladesh. Accept bKash, Nagad, and Rocket payments.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://bdesh.shop"),
@@ -26,16 +26,16 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "BdeshShop - Build Your Online Store in Bangladesh",
+    title: "BixelBD - Build Your Online Store in Bangladesh",
     description:
       "The easiest way to create your own e-commerce website and mobile app in Bangladesh.",
     type: "website",
     locale: "en_BD",
-    siteName: "BdeshShop",
+    siteName: "BixelBD",
   },
   twitter: {
     card: "summary_large_image",
-    title: "BdeshShop",
+    title: "BixelBD",
     description: "Build your online store in Bangladesh",
   },
   robots: {

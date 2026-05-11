@@ -69,8 +69,8 @@ const productsMenu: { columns: MenuColumn[]; promo: { title: string; card: { tit
   promo: {
     title: "NON-STOP INNOVATION",
     card: {
-      title: "BdeshShop Editions",
-      description: "150+ updates to BdeshShop, twice a year.",
+      title: "BixelBD Editions",
+      description: "150+ updates to BixelBD, twice a year.",
       href: "/register",
     },
   },
@@ -82,7 +82,7 @@ const productsMenu: { columns: MenuColumn[]; promo: { title: string; card: { tit
 };
 
 const navItems = [
-  { label: "Why BdeshShop", href: "/#features", hasDropdown: false },
+  { label: "Why BixelBD", href: "/#features", hasDropdown: false },
   { label: "Products", href: "#", hasDropdown: true },
   { label: "Pricing", href: "/#pricing", hasDropdown: false },
   { label: "Enterprise", href: "/register", hasDropdown: false },
@@ -136,7 +136,7 @@ export function Navbar() {
                 <path d="M14 8l-6 3.5v7L14 22l6-3.5v-7L14 8z" fill="#1d4ed8" fillOpacity="0.3"/>
                 <path d="M14 10l-3.5 2v4L14 18l3.5-2v-4L14 10z" fill="#1d4ed8" fillOpacity="0.6"/>
               </svg>
-              <span className="font-bold text-white text-lg">BdeshShop</span>
+              <span className="font-bold text-white text-lg">BixelBD</span>
             </Link>
 
             <nav className="hidden lg:flex items-center gap-1">
