@@ -62,7 +62,7 @@ export default function LoginPage() {
             backgroundImage: `url('/images/auth-background.png')` 
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-[#1d4ed8]/90 to-[#0f172a]/95" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1d4ed8]/40 to-[#0f172a]/60" />
         <div className="relative z-10 flex flex-col justify-center p-12 text-white">
           <div className="mb-8">
             <div className="inline-flex items-center gap-2 mb-6">
