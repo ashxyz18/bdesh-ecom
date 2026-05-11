@@ -41,6 +41,7 @@ export async function GET(
     );
 
     const entryPoint = template.manifest.entryPoint;
+    const entryPointDir = entryPoint.substring(0, entryPoint.lastIndexOf("/") + 1);
     const htmlPath = path.join(templatesDir, entryPoint);
     let htmlContent = "";
 
@@ -48,7 +49,6 @@ export async function GET(
       htmlContent = fs.readFileSync(htmlPath, "utf-8");
     }
 
-    // Collect CSS file URLs
     const cssFiles: string[] = [];
     const cssList = Array.isArray(template.manifest.css)
       ? template.manifest.css
@@ -57,7 +57,10 @@ export async function GET(
         : [];
 
     for (const cssFile of cssList) {
-      cssFiles.push(`/templates/${templateId}/${cssFile}`);
+      const cssPath = cssFile.startsWith("/")
+        ? cssFile
+        : `/templates/${templateId}/${entryPointDir}${cssFile}`;
+      cssFiles.push(cssPath);
     }
 
     return NextResponse.json({

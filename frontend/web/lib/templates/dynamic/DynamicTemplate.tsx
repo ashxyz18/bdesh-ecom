@@ -551,12 +551,22 @@ export default function DynamicTemplate({ templateId, store, products }: Dynamic
   );
 }
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, `\u0026`)
+    .replace(/</g, `\u003C`)
+    .replace(/>/g, `\u003E`)
+    .replace(/"/g, `\u0022`)
+    .replace(/'/g, `\u0027`);
+}
+
 function renderProductCard(
   product: Product,
   storeId: string
 ): string {
   const image =
     product.images[0] || "https://via.placeholder.com/400";
+  const safeName = escapeHtml(product.name);
   const comparePriceHtml = product.comparePrice
     ? `<span class="original-price">৳${product.comparePrice.toLocaleString()}</span>`
     : "";
@@ -575,7 +585,7 @@ function renderProductCard(
   return `
     <a href="/store/${storeId}/products/${product.id}" class="product-card" data-product-id="${product.id}">
       <div class="product-image">
-        <img src="${image}" alt="${product.name}" loading="lazy">
+        <img src="${image}" alt="${safeName}" loading="lazy">
         <span class="badge">New</span>
         <div class="rating">4.5&#9733;</div>
         <button class="wishlist-btn" data-product-id="${product.id}">
@@ -586,7 +596,7 @@ function renderProductCard(
         </button>
       </div>
       <div class="product-info">
-        <h3>${product.name}</h3>
+        <h3>${safeName}</h3>
         <div class="price">
           <span class="sale-price">৳${product.price.toLocaleString()}</span>
           ${comparePriceHtml}

@@ -7,7 +7,6 @@ import DynamicTemplate from "@/lib/templates/dynamic/DynamicTemplate";
 import { Store, Product } from "@/lib/templates/types";
 import { CartProvider } from "@/lib/context/CartContext";
 import { ToastProvider } from "@/lib/context/ToastContext";
-import { Loader2, AlertCircle } from "lucide-react";
 
 function StoreLoadingSkeleton() {
   return (
