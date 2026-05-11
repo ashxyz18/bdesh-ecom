@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Store, LayoutDashboard, ShoppingBag, Settings,
   BarChart3, Bell, LogOut, ChevronRight, Menu, X,
-  Package, Heart, FileText, HelpCircle, ShieldAlert
+  Package, Heart, FileText, HelpCircle, ShieldAlert, Truck, Users
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -13,7 +13,10 @@ const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/products", label: "Products", icon: ShoppingBag },
   { href: "/dashboard/orders", label: "Orders", icon: Package },
-  { href: "/dashboard/wishlist", label: "Wishlist", icon: Heart },
+  { href: "/dashboard/customers", label: "Customers", icon: Users },
+  { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/couriers", label: "Couriers", icon: Truck },
+  { href: "/dashboard/coupons", label: "Coupons", icon: Heart },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];
 
