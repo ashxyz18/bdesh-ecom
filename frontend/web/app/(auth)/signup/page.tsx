@@ -52,7 +52,7 @@ export default function SignupPage() {
         <div 
           className="absolute inset-0 bg-cover bg-center"
           style={{ 
-            backgroundImage: `url('https://images.unsplash.com/photo-1556742049-0cf6b9ec6349?w=1200&h=800&fit=crop')` 
+            backgroundImage: `url('/images/auth-background.png')` 
           }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-[#1d4ed8]/90 to-[#0f172a]/95" />
