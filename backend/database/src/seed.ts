@@ -4,12 +4,12 @@ async function main() {
   const admin = await prisma.user.upsert({
     where: { email: "admin@bdesh.shop" },
     update: {
-      password: "$2b$12$FSu0ZmEJoKlGPeceRZ1g8O9HkSGB71I8WR29lgDOBW6Cu6B7GU/lK",
+      password: "$2b$12$kVlknKCNEr/gjGiqQwsHKu3e5EdeW/GtytwjDoWzkrzbMePos.h/W",
     },
     create: {
       email: "admin@bdesh.shop",
       name: "System Admin",
-      password: "$2b$12$FSu0ZmEJoKlGPeceRZ1g8O9HkSGB71I8WR29lgDOBW6Cu6B7GU/lK",
+      password: "$2b$12$kVlknKCNEr/gjGiqQwsHKu3e5EdeW/GtytwjDoWzkrzbMePos.h/W",
       role: "ADMIN",
     },
   });
