@@ -1,0 +1,30 @@
+# EBIgnore file for AWS Elastic Beanstalk
+# Ignore directories
+node_modules/
+.next/
+.turbo/
+.git/
+__tests__/
+
+# Ignore log files
+*.log
+*.log.*
+
+# Ignore lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Ignore test files
+test.*
+*.test.*
+*.spec.*
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore upload/test files
+*.zip
+*.tar.gz
+ghorerbazar.html
