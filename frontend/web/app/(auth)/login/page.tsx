@@ -37,10 +37,10 @@ export default function LoginPage() {
       localStorage.setItem("user", JSON.stringify(data.user));
       localStorage.setItem("storeId", data.store?.id || "");
 
-      // Redirect admin users to /admin
+      // Redirect admin users to /site-admin
       // If store has no template, go to onboarding; otherwise dashboard
       if (data.user.role === "admin") {
-        router.push("/admin");
+        router.push("/site-admin");
       } else if (!data.store?.templateId) {
         router.push("/onboarding");
       } else {

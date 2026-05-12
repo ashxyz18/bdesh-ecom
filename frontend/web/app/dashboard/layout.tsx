@@ -189,10 +189,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="mt-8 pt-6 border-t border-gray-200">
               {user && (user as any).role === "admin" && (
                 <Link
-                  href="/admin"
+                  href="/site-admin"
                   className="flex items-center gap-2 text-sm text-[#1d4ed8] hover:text-[#1e40af] font-medium mb-2"
                 >
-                  <ShieldAlert size={14} /> Admin Dashboard
+                  <ShieldAlert size={14} /> Site Admin
                 </Link>
               )}
               <Link

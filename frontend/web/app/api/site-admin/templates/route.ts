@@ -9,21 +9,18 @@ import {
   generateManifestFromFiles,
   generateProductCardTemplate,
 } from "@/lib/templates/manifest-generator";
+import { isAdmin } from "@/lib/db";
 
-const SITE_ADMIN_KEY = process.env.SITE_ADMIN_KEY || "bdesh-site-admin-2024";
-
-function checkAuth(request: NextRequest, adminKey?: string | null): boolean {
-  const key =
-    adminKey ||
-    request.headers.get("x-admin-key") ||
-    new URL(request.url).searchParams.get("adminKey");
-  return key === SITE_ADMIN_KEY;
+async function checkAuth(request: NextRequest): Promise<boolean> {
+  const userId = request.headers.get("x-user-id");
+  if (!userId) return false;
+  return isAdmin(userId);
 }
 
 export async function GET(request: NextRequest) {
-  if (!checkAuth(request)) {
+  if (!(await checkAuth(request))) {
     return NextResponse.json(
-      { success: false, error: "Forbidden: Invalid admin key" },
+      { success: false, error: "Forbidden" },
       { status: 403 }
     );
   }
@@ -41,17 +38,15 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  if (!(await checkAuth(request))) {
+    return NextResponse.json(
+      { success: false, error: "Forbidden" },
+      { status: 403 }
+    );
+  }
+
   try {
     const formData = await request.formData();
-
-    const adminKey = formData.get("adminKey") as string;
-    if (!checkAuth(request, adminKey)) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden: Invalid admin key" },
-        { status: 403 }
-      );
-    }
-
     const file = formData.get("zip") as File;
     const name = formData.get("name") as string;
     const description = (formData.get("description") as string) || "";
@@ -70,7 +65,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file type
     if (!file.name.endsWith(".zip")) {
       return NextResponse.json(
         { success: false, error: "Only ZIP files are accepted" },
@@ -78,7 +72,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate file size (50MB max)
     if (file.size > 50 * 1024 * 1024) {
       return NextResponse.json(
         { success: false, error: "File size exceeds 50MB limit" },
@@ -117,7 +110,6 @@ export async function POST(request: NextRequest) {
 
       const entryPath = entry.entryName.replace(/\\/g, "/");
 
-      // Skip hidden files and macOS metadata
       if (
         entryPath.startsWith("__MACOSX") ||
         entryPath.split("/").some((part) => part.startsWith("."))
@@ -199,18 +191,14 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  if (!(await checkAuth(request))) {
+    return NextResponse.json(
+      { success: false, error: "Forbidden" },
+      { status: 403 }
+    );
+  }
+
   try {
-    const adminKey =
-      request.headers.get("x-admin-key") ||
-      new URL(request.url).searchParams.get("adminKey");
-
-    if (!checkAuth(request, adminKey)) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden: Invalid admin key" },
-        { status: 403 }
-      );
-    }
-
     const templateId =
       new URL(request.url).searchParams.get("templateId");
 
