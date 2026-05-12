@@ -2,8 +2,8 @@
   "id": "sas",
   "name": "Sas",
   "version": "1.0.0",
-  "css": [],
-  "js": [],
+  "css": ["assets/css/style.css", "assets/css/listing.css"],
+  "js": ["assets/js/products.js", "assets/js/main.js"],
   "entryPoint": "web2/index.html",
   "sections": {
     "products": {

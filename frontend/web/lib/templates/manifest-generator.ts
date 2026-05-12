@@ -175,18 +175,22 @@ export async function generateManifestFromFiles(
     f.path.endsWith('.html') || f.path.endsWith('.htm')
   );
 
-  const cssFiles = files
-    .filter(f => f.path.startsWith('css/') && f.path.endsWith('.css'))
-    .map(f => f.path);
-
-  const jsFiles = files
-    .filter(f => f.path.startsWith('js/') && (f.path.endsWith('.js') || f.path.endsWith('.javascript')))
-    .map(f => f.path);
-
   const mainHtml = htmlFiles.find(f =>
     f.path.toLowerCase() === 'index.html' ||
     f.path.toLowerCase() === templateId + '.html'
   ) || htmlFiles[0];
+
+  const entryPointDir = mainHtml
+    ? mainHtml.path.substring(0, Math.max(0, mainHtml.path.lastIndexOf('/') + 1))
+    : '';
+
+  const cssFiles = files
+    .filter(f => f.path.endsWith('.css'))
+    .map(f => entryPointDir ? f.path.replace(entryPointDir, '') : f.path);
+
+  const jsFiles = files
+    .filter(f => f.path.endsWith('.js'))
+    .map(f => entryPointDir ? f.path.replace(entryPointDir, '') : f.path);
 
   const htmlContent = mainHtml?.content.toString('utf-8') || '';
 
