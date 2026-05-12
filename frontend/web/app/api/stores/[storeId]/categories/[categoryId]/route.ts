@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { categories } from "@/lib/data-store";
+import { prisma } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ storeId: string; categoryId: string }>;
@@ -8,25 +8,27 @@ interface RouteParams {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { categoryId } = await params;
-    const category = categories.get(categoryId);
+    const category = await prisma.collection.findUnique({ where: { id: categoryId } });
 
     if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
     const body = await request.json();
-    const { name, description, image, icon, sortOrder, active, parentId } = body;
+    const { name, description, image, isVisible } = body;
 
-    if (name !== undefined) category.name = name;
-    if (description !== undefined) category.description = description;
-    if (image !== undefined) category.image = image;
-    if (icon !== undefined) category.icon = icon;
-    if (sortOrder !== undefined) category.sortOrder = sortOrder;
-    if (active !== undefined) category.active = active;
-    if (parentId !== undefined) category.parentId = parentId || undefined;
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (image !== undefined) updateData.image = image;
+    if (isVisible !== undefined) updateData.isVisible = isVisible;
 
-    categories.set(categoryId, category);
-    return NextResponse.json({ success: true, category });
+    const updated = await prisma.collection.update({
+      where: { id: categoryId },
+      data: updateData,
+    });
+
+    return NextResponse.json({ success: true, category: updated });
   } catch (error) {
     console.error("Update category error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -36,10 +38,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { categoryId } = await params;
-    if (!categories.has(categoryId)) {
+    const category = await prisma.collection.findUnique({ where: { id: categoryId } });
+
+    if (!category) {
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
-    categories.delete(categoryId);
+
+    await prisma.collection.delete({ where: { id: categoryId } });
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Delete category error:", error);

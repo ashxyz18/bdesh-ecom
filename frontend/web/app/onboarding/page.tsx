@@ -33,7 +33,6 @@ export default function OnboardingPage() {
   const [storeId, setStoreId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check if user is logged in and has a store
     const userData = localStorage.getItem("user");
     const storedStoreId = localStorage.getItem("storeId");
 
@@ -44,8 +43,6 @@ export default function OnboardingPage() {
 
     setStoreId(storedStoreId);
 
-    // Check if store already has a template selected (not the default koskii auto-assign)
-    // We allow re-selection on onboarding
     fetchTemplates();
   }, [router]);
 
@@ -94,28 +91,27 @@ export default function OnboardingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 text-blue-400 animate-spin" />
-          <p className="text-blue-200 text-sm">Loading templates...</p>
+          <Loader2 className="w-10 h-10 text-[#1d4ed8] animate-spin" />
+          <p className="text-gray-500 text-sm">Loading templates...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="border-b border-white/10">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-9 h-9 bg-[#1d4ed8] rounded-lg flex items-center justify-center">
               <Store className="w-5 h-5 text-white" />
             </div>
-            <span className="text-white font-bold text-lg">BixelBD</span>
+            <span className="text-gray-900 font-bold text-lg">BixelBD</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-blue-200">
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+          <div className="flex items-center gap-2 text-sm text-gray-400">
             Step 1 of 1
           </div>
         </div>
@@ -124,10 +120,10 @@ export default function OnboardingPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10">
         {/* Title */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">
             Choose Your Store Template
           </h1>
-          <p className="text-blue-200/70 max-w-xl mx-auto">
+          <p className="text-gray-500 max-w-xl mx-auto">
             Select a template for your online store. You can always change it
             later from your dashboard.
           </p>
@@ -135,7 +131,7 @@ export default function OnboardingPage() {
 
         {/* Error */}
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm flex items-center gap-2 max-w-2xl mx-auto">
+          <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm flex items-center gap-2 max-w-2xl mx-auto">
             <Package size={16} className="shrink-0" />
             {error}
           </div>
@@ -150,15 +146,15 @@ export default function OnboardingPage() {
             return (
               <div
                 key={template.id}
-                className={`relative rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer group ${
+                className={`relative rounded-xl overflow-hidden transition-all duration-200 cursor-pointer bg-white border ${
                   isSelected
-                    ? "ring-2 ring-blue-400 ring-offset-2 ring-offset-slate-900 shadow-xl shadow-blue-500/20"
-                    : "ring-1 ring-white/10 hover:ring-white/30 hover:shadow-lg"
+                    ? "ring-2 ring-[#1d4ed8] border-[#1d4ed8] shadow-lg shadow-blue-500/10"
+                    : "border-gray-200 hover:border-gray-300 hover:shadow-md"
                 }`}
                 onClick={() => setSelectedId(template.id)}
               >
                 {/* Preview Image */}
-                <div className="aspect-video bg-gray-800 relative overflow-hidden">
+                <div className="aspect-video bg-gray-100 relative overflow-hidden">
                   {template.thumbnail ? (
                     <img
                       src={template.thumbnail}
@@ -166,19 +162,19 @@ export default function OnboardingPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-700 to-gray-800">
-                      <FileText className="w-12 h-12 text-gray-500" />
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                      <FileText className="w-12 h-12 text-gray-300" />
                     </div>
                   )}
 
                   {/* Hover overlay with preview button */}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setPreviewing(isPreviewing ? null : template.id);
                       }}
-                      className="px-4 py-2 bg-white/20 backdrop-blur-sm text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors flex items-center gap-2"
+                      className="px-4 py-2 bg-white/90 text-gray-700 rounded-lg text-sm font-medium hover:bg-white transition-colors flex items-center gap-2"
                     >
                       <Eye size={16} />
                       {isPreviewing ? "Close Preview" : "Preview"}
@@ -187,18 +183,18 @@ export default function OnboardingPage() {
 
                   {/* Selected badge */}
                   {isSelected && (
-                    <div className="absolute top-3 right-3 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-[#1d4ed8] rounded-full flex items-center justify-center shadow-lg">
                       <CheckCircle size={18} className="text-white" />
                     </div>
                   )}
                 </div>
 
                 {/* Info */}
-                <div className="bg-slate-800/80 backdrop-blur-sm p-4">
-                  <h3 className="font-semibold text-white mb-1">
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 mb-1">
                     {template.name}
                   </h3>
-                  <p className="text-sm text-blue-200/60 line-clamp-2">
+                  <p className="text-sm text-gray-500 line-clamp-2">
                     {template.description || "No description"}
                   </p>
                   {template.sections && template.sections.length > 0 && (
@@ -206,13 +202,13 @@ export default function OnboardingPage() {
                       {template.sections.slice(0, 4).map((section) => (
                         <span
                           key={section}
-                          className="px-2 py-0.5 bg-white/5 rounded text-xs text-blue-200/50"
+                          className="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-500"
                         >
                           {section}
                         </span>
                       ))}
                       {template.sections.length > 4 && (
-                        <span className="px-2 py-0.5 bg-white/5 rounded text-xs text-blue-200/50">
+                        <span className="px-2 py-0.5 bg-gray-100 rounded text-xs text-gray-500">
                           +{template.sections.length - 4}
                         </span>
                       )}
@@ -222,7 +218,7 @@ export default function OnboardingPage() {
 
                 {/* Preview iframe (expandable) */}
                 {isPreviewing && (
-                  <div className="bg-white">
+                  <div className="border-t border-gray-200">
                     <iframe
                       src={template.previewUrl}
                       className="w-full border-0"
@@ -237,13 +233,13 @@ export default function OnboardingPage() {
         </div>
 
         {/* Action Bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-white/10 py-4 px-4 sm:px-6 z-50">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-4 px-4 sm:px-6 z-50">
           <div className="max-w-6xl mx-auto flex items-center justify-between">
-            <div className="text-sm text-blue-200/60">
+            <div className="text-sm text-gray-500">
               {selectedId ? (
                 <span className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-blue-400" />
-                  <span className="text-white font-medium">
+                  <CheckCircle size={16} className="text-green-500" />
+                  <span className="text-gray-900 font-medium">
                     {
                       templates.find((t) => t.id === selectedId)?.name
                     }
@@ -257,7 +253,7 @@ export default function OnboardingPage() {
             <button
               onClick={handleSelectTemplate}
               disabled={!selectedId || applying}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-blue-600/20"
+              className="px-6 py-3 bg-[#1d4ed8] hover:bg-[#1e40af] text-white rounded-xl font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-blue-600/20"
             >
               {applying ? (
                 <>

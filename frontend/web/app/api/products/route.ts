@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getProductsByStoreId, createProduct, stores, products } from "@/lib/data-store";
+import { prisma, getProductsByStoreId, createProduct, serializeProductList } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "storeId is required" }, { status: 400 });
     }
 
-    const store = stores.get(storeId);
+    const store = await prisma.store.findUnique({ where: { id: storeId } });
     if (!store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
@@ -17,7 +17,8 @@ export async function GET(request: NextRequest) {
     const category = request.nextUrl.searchParams.get("category");
     const status = request.nextUrl.searchParams.get("status");
 
-    let productList = getProductsByStoreId(storeId);
+    let products = await getProductsByStoreId(storeId);
+    let productList = serializeProductList(products);
 
     if (search) {
       const q = search.toLowerCase();
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest) {
         (p) =>
           p.name.toLowerCase().includes(q) ||
           (p.description || "").toLowerCase().includes(q) ||
-          p.tags.some((t) => t.toLowerCase().includes(q))
+          p.tags.some((t: string) => t.toLowerCase().includes(q))
       );
     }
     if (category) {
@@ -54,12 +55,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const store = stores.get(storeId);
+    const store = await prisma.store.findUnique({ where: { id: storeId } });
     if (!store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
-    const product = createProduct(storeId, {
+    const product = await createProduct(storeId, {
       name,
       price,
       description,
@@ -67,18 +68,15 @@ export async function POST(request: NextRequest) {
       stock: stock || 0,
       categoryId,
       tags: tags || [],
-      variants: variants || [],
       status: status || "active",
       comparePrice,
       costPrice,
       lowStockThreshold,
       seo,
-      weight,
-      dimensions,
       slug,
     });
 
-    return NextResponse.json({ success: true, product }, { status: 201 });
+    return NextResponse.json({ success: true, product: serializeProductList([product])[0] }, { status: 201 });
   } catch (error) {
     console.error("Create product error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stores, createStore, getStoreByOwnerId } from "@/lib/data-store";
+import { prisma, createStore, getStoreByOwnerId, parseStoreJson } from "@/lib/db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,8 +8,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userStore = getStoreByOwnerId(userId);
-    return NextResponse.json({ store: userStore });
+    const userStore = await getStoreByOwnerId(userId);
+    return NextResponse.json({ store: userStore ? parseStoreJson(userStore) : null });
   } catch (error) {
     console.error("Get store error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -30,14 +30,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Store name is required" }, { status: 400 });
     }
 
-    // Check if user already has a store
-    const existingStore = getStoreByOwnerId(userId);
+    const existingStore = await getStoreByOwnerId(userId);
     if (existingStore) {
       return NextResponse.json({ error: "User already has a store" }, { status: 409 });
     }
 
-    const store = createStore(name, userId, templateId);
-    return NextResponse.json({ store }, { status: 201 });
+    const store = await createStore(name, userId, templateId);
+    return NextResponse.json({ store: parseStoreJson(store) }, { status: 201 });
   } catch (error) {
     console.error("Create store error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

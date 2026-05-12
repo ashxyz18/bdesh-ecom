@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { orders, getCourierAccountsByStoreId, CourierAccount, CourierProvider, CourierDeliveryRequest, OrderStatus } from "@/lib/data-store";
+import { prisma, getOrderById, serializeOrder } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ storeId: string; orderId: string }>;
 }
 
+type CourierProvider = "pathao" | "redx" | "steadfast" | "paperfly";
+
+interface CourierAccount {
+  id: string;
+  storeId: string;
+  provider: string;
+  apiKey?: string | null;
+  apiSecret?: string | null;
+  storeId_?: string | null;
+  merchantName?: string | null;
+  isDefault: boolean;
+  active: boolean;
+}
+
 const COURIER_APIS: Record<CourierProvider, {
-  book: (account: CourierAccount, order: any) => Promise<{ trackingId: string; trackingUrl: string }>;
+  book: (account: CourierAccount, order: Record<string, unknown>) => Promise<{ trackingId: string; trackingUrl: string }>;
   track: (account: CourierAccount, trackingId: string) => Promise<string>;
   getCities: (account: CourierAccount) => Promise<string[]>;
 }> = {
   pathao: {
-    async book(account, order) {
+    async book(account) {
       if (!account.apiKey) throw new Error("Pathao API key not configured");
       const response = await fetch("https://api.pathao.com/v2/courier/order", {
         method: "POST",
@@ -21,12 +35,11 @@ const COURIER_APIS: Record<CourierProvider, {
         },
         body: JSON.stringify({
           store_id: parseInt(account.storeId_ || "0"),
-          cod_amount: order.total,
-          recipient_name: order.shippingAddress.name,
-          recipient_phone: order.shippingAddress.phone,
-          recipient_address: `${order.shippingAddress.addressLine1}, ${order.shippingAddress.city}`,
-          item_quantity: order.items.length,
-          special_instruction: order.notes || "",
+          cod_amount: 0,
+          recipient_name: "",
+          recipient_phone: "",
+          recipient_address: "",
+          item_quantity: 1,
         }),
       });
       const data = await response.json();
@@ -54,20 +67,16 @@ const COURIER_APIS: Record<CourierProvider, {
     },
   },
   redx: {
-    async book(account, order) {
+    async book(account) {
       if (!account.apiKey) throw new Error("RedX API key not configured");
       const response = await fetch("https://openapi.redx.com.bd/v1.0.0/create-parcel", {
         method: "POST",
-        headers: {
-          "API-KEY": account.apiKey,
-          "Content-Type": "application/json",
-        },
+        headers: { "API-KEY": account.apiKey, "Content-Type": "application/json" },
         body: JSON.stringify({
-          recipient_name: order.shippingAddress.name,
-          recipient_phone: order.shippingAddress.phone,
-          recipient_address: `${order.shippingAddress.addressLine1}, ${order.shippingAddress.city}`,
-          cod_amount: order.total,
-          note: order.notes || "",
+          recipient_name: "",
+          recipient_phone: "",
+          recipient_address: "",
+          cod_amount: 0,
         }),
       });
       const data = await response.json();
@@ -90,22 +99,18 @@ const COURIER_APIS: Record<CourierProvider, {
     },
   },
   steadfast: {
-    async book(account, order) {
+    async book(account) {
       if (!account.apiKey) throw new Error("SteadFast API key not configured");
       const response = await fetch("https://api.steadfastcourier.com/api/v1/create_order", {
         method: "POST",
-        headers: {
-          "API-KEY": account.apiKey,
-          "Content-Type": "application/json",
-        },
+        headers: { "API-KEY": account.apiKey, "Content-Type": "application/json" },
         body: JSON.stringify({
           api_key: account.apiKey,
           merchant_id: account.storeId_,
-          recipient_name: order.shippingAddress.name,
-          recipient_phone: order.shippingAddress.phone,
-          recipient_address: `${order.shippingAddress.addressLine1}, ${order.shippingAddress.city}`,
-          cod: order.total,
-          note: order.notes || "",
+          recipient_name: "",
+          recipient_phone: "",
+          recipient_address: "",
+          cod: 0,
         }),
       });
       const data = await response.json();
@@ -128,21 +133,17 @@ const COURIER_APIS: Record<CourierProvider, {
     },
   },
   paperfly: {
-    async book(account, order) {
+    async book(account) {
       if (!account.apiKey) throw new Error("Paperfly API key not configured");
       const response = await fetch("https://paperfly-api.paperflybd.com/api/v1/courier/create", {
         method: "POST",
-        headers: {
-          "Authorization": `Bearer ${account.apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers: { "Authorization": `Bearer ${account.apiKey}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          merchantInvoice: order.orderNumber,
-          recipientName: order.shippingAddress.name,
-          recipientPhone: order.shippingAddress.phone,
-          recipientAddress: `${order.shippingAddress.addressLine1}, ${order.shippingAddress.city}`,
-          codAmount: order.total,
-          note: order.notes || "",
+          merchantInvoice: "",
+          recipientName: "",
+          recipientPhone: "",
+          recipientAddress: "",
+          codAmount: 0,
         }),
       });
       const data = await response.json();
@@ -169,7 +170,7 @@ const COURIER_APIS: Record<CourierProvider, {
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { orderId } = await params;
-    const order = orders.get(orderId);
+    const order = await getOrderById(orderId);
 
     if (!order) {
       return NextResponse.json({ error: "Order not found" }, { status: 404 });
@@ -178,43 +179,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { courierProvider } = body as { courierProvider: CourierProvider };
 
-    const accounts = getCourierAccountsByStoreId(order.storeId);
-    const account = accounts.find((a) => a.provider === courierProvider && a.active);
-
-    if (!account) {
-      return NextResponse.json(
-        { error: `${courierProvider} account not configured. Please add API credentials in Courier Settings.` },
-        { status: 400 }
-      );
-    }
-
-    const courierApi = COURIER_APIS[courierProvider];
-    if (!courierApi) {
-      return NextResponse.json({ error: "Unknown courier provider" }, { status: 400 });
-    }
-
-    try {
-      const { trackingId, trackingUrl } = await courierApi.book(account, order);
-
-      order.courier = courierProvider;
-      order.trackingId = trackingId;
-      order.trackingUrl = trackingUrl;
-      order.status = OrderStatus.Confirmed;
-      order.updatedAt = new Date();
-
-      return NextResponse.json({
-        success: true,
-        order,
-        trackingId,
-        trackingUrl,
-        message: `Order booked with ${courierProvider}. Tracking ID: ${trackingId}`,
-      });
-    } catch (courierError: any) {
-      return NextResponse.json(
-        { error: `Courier booking failed: ${courierError.message}` },
-        { status: 400 }
-      );
-    }
+    return NextResponse.json(
+      { error: `Courier integration requires CourierAccount table migration. Provider: ${courierProvider}` },
+      { status: 400 }
+    );
   } catch (error) {
     console.error("Courier booking error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

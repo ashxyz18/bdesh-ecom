@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOrdersByStoreId, getProductsByStoreId, getCustomersByStoreId, OrderStatus } from "@/lib/data-store";
+import { prisma } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ storeId: string }>;
@@ -11,9 +11,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const url = request.nextUrl;
     const period = url.searchParams.get("period") || "30days";
 
-    const orders = getOrdersByStoreId(storeId);
-    const products = getProductsByStoreId(storeId);
-    const customers = getCustomersByStoreId(storeId);
+    const orders = await prisma.order.findMany({
+      where: { storeId },
+      include: { items: true, shipping: true },
+    });
+    const products = await prisma.product.findMany({
+      where: { storeId, deletedAt: null },
+    });
 
     const now = new Date();
     let startDate: Date;
@@ -28,29 +32,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const filteredOrders = orders.filter((o) => new Date(o.createdAt) >= startDate);
 
     const totalRevenue = filteredOrders
-      .filter((o) => o.status !== OrderStatus.Cancelled && o.status !== OrderStatus.Returned)
+      .filter((o) => o.status !== "CANCELLED")
       .reduce((sum, o) => sum + o.total, 0);
 
     const totalOrders = filteredOrders.length;
     const totalProducts = products.length;
-    const totalCustomers = customers.length;
+    const totalCustomers = new Set(filteredOrders.map((o) => o.shipping?.phone || o.id)).size;
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-    const cancelledReturned = filteredOrders.filter(
-      (o) => o.status === OrderStatus.Cancelled || o.status === OrderStatus.Returned
-    ).length;
-    const conversionRate = totalOrders > 0 ? ((totalOrders - cancelledReturned) / totalOrders) * 100 : 0;
+    const cancelled = filteredOrders.filter((o) => o.status === "CANCELLED").length;
+    const conversionRate = totalOrders > 0 ? ((totalOrders - cancelled) / totalOrders) * 100 : 0;
 
-    const pendingOrders = filteredOrders.filter((o) => o.status === OrderStatus.Pending).length;
-    const processingOrders = filteredOrders.filter(
-      (o) => o.status === OrderStatus.Confirmed || o.status === OrderStatus.Processing
-    ).length;
-    const shippedOrders = filteredOrders.filter((o) => o.status === OrderStatus.Shipped).length;
-    const deliveredOrders = filteredOrders.filter((o) => o.status === OrderStatus.Delivered).length;
+    const pendingOrders = filteredOrders.filter((o) => o.status === "PENDING").length;
+    const processingOrders = filteredOrders.filter((o) => o.status === "CONFIRMED" || o.status === "PROCESSING").length;
+    const shippedOrders = filteredOrders.filter((o) => o.status === "SHIPPED").length;
+    const deliveredOrders = filteredOrders.filter((o) => o.status === "DELIVERED").length;
 
     const revenueByDay: Record<string, { revenue: number; orders: number }> = {};
     filteredOrders.forEach((o) => {
-      if (o.status === OrderStatus.Cancelled || o.status === OrderStatus.Returned) return;
+      if (o.status === "CANCELLED") return;
       const date = new Date(o.createdAt).toISOString().split("T")[0];
       if (!revenueByDay[date]) revenueByDay[date] = { revenue: 0, orders: 0 };
       revenueByDay[date].revenue += o.total;
@@ -77,40 +77,6 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
 
-    const courierPerformance = [
-      {
-        provider: "pathao",
-        total: orders.filter((o) => o.courier === "pathao").length,
-        delivered: orders.filter((o) => o.courier === "pathao" && o.status === OrderStatus.Delivered).length,
-        cancelled: orders.filter((o) => o.courier === "pathao" && (o.status === OrderStatus.Cancelled || o.status === OrderStatus.Returned)).length,
-        rate: 0,
-      },
-      {
-        provider: "redx",
-        total: orders.filter((o) => o.courier === "redx").length,
-        delivered: orders.filter((o) => o.courier === "redx" && o.status === OrderStatus.Delivered).length,
-        cancelled: orders.filter((o) => o.courier === "redx" && (o.status === OrderStatus.Cancelled || o.status === OrderStatus.Returned)).length,
-        rate: 0,
-      },
-      {
-        provider: "steadfast",
-        total: orders.filter((o) => o.courier === "steadfast").length,
-        delivered: orders.filter((o) => o.courier === "steadfast" && o.status === OrderStatus.Delivered).length,
-        cancelled: orders.filter((o) => o.courier === "steadfast" && (o.status === OrderStatus.Cancelled || o.status === OrderStatus.Returned)).length,
-        rate: 0,
-      },
-      {
-        provider: "paperfly",
-        total: orders.filter((o) => o.courier === "paperfly").length,
-        delivered: orders.filter((o) => o.courier === "paperfly" && o.status === OrderStatus.Delivered).length,
-        cancelled: orders.filter((o) => o.courier === "paperfly" && (o.status === OrderStatus.Cancelled || o.status === OrderStatus.Returned)).length,
-        rate: 0,
-      },
-    ].filter((c) => c.total > 0).map((c) => ({
-      ...c,
-      rate: c.total > 0 ? Math.round((c.delivered / c.total) * 100) : 0,
-    }));
-
     const paymentMethods: Record<string, number> = {};
     filteredOrders.forEach((o) => {
       paymentMethods[o.paymentMethod] = (paymentMethods[o.paymentMethod] || 0) + 1;
@@ -134,7 +100,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         },
         revenueByDay: revenueByDayArray,
         topProducts,
-        courierPerformance,
+        courierPerformance: [],
         paymentMethods,
       },
     });

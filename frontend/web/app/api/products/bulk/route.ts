@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getProductsByStoreId, createProduct, products as productStore, Product } from "@/lib/data-store";
+import { prisma, createProduct, serializeProductList } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,27 +31,11 @@ export async function POST(request: NextRequest) {
           ? row.tags.split(",").map((t: string) => t.trim()).filter(Boolean)
           : [];
 
-        const variants: { id: string; name: string; price?: number; stock?: number; attributes: Record<string, string> }[] = [];
-        if (row.sizes) {
-          const sizes = row.sizes.split(",").map((s: string) => s.trim()).filter(Boolean);
-          const price = parseFloat(row.price) || 0;
-          const stock = parseInt(row.stock) || 0;
-          sizes.forEach((size: string) => {
-            variants.push({
-              id: `v-${Math.random().toString(36).substring(2, 8)}`,
-              name: size,
-              price,
-              stock,
-              attributes: { size },
-            });
-          });
-        }
-
         const images = row.image || row.images
           ? [row.image || row.images].filter(Boolean)
           : [];
 
-        const productData: Partial<Product> = {
+        await createProduct(storeIdParam, {
           name: row.name,
           price: parseFloat(row.price) || 0,
           description: row.description || "",
@@ -59,18 +43,15 @@ export async function POST(request: NextRequest) {
           stock: parseInt(row.stock) || 0,
           categoryId: row.category || undefined,
           tags,
-          variants: row.sizes ? variants : [],
           status: (row.status as "active" | "draft" | "archived") || "active",
-          comparePrice: row.comparePrice ? parseFloat(row.comparePrice) : undefined,
-          costPrice: row.costPrice ? parseFloat(row.costPrice) : undefined,
+          comparePrice: row.comparePrice ? parseFloat(row.comparePrice) : null,
+          costPrice: row.costPrice ? parseFloat(row.costPrice) : null,
           lowStockThreshold: row.lowStockThreshold ? parseInt(row.lowStockThreshold) : 5,
-        };
-
-        createProduct(storeIdParam, productData);
+        });
         results.success++;
-      } catch (err: any) {
+      } catch (err: unknown) {
         results.failed++;
-        results.errors.push(`Row ${i + 1}: ${err.message}`);
+        results.errors.push(`Row ${i + 1}: ${err instanceof Error ? err.message : "Unknown error"}`);
       }
     }
 

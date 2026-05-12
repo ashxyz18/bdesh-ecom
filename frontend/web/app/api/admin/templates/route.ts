@@ -1,20 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTemplates, addTemplate, removeTemplate, templateExists } from '@/lib/templates/registry';
 import { generateManifestFromFiles, generateProductCardTemplate } from '@/lib/templates/manifest-generator';
-import { users } from '@/lib/data-store';
+import { prisma } from '@/lib/db';
 
-function isAdmin(request: NextRequest, userId?: string | null): boolean {
-  // Check for admin role in x-user-id header (set by client after login)
+async function isAdmin(request: NextRequest, userId?: string | null): Promise<boolean> {
   const idToCheck = userId || request.headers.get('x-user-id');
   if (!idToCheck) return false;
-  const user = users.get(idToCheck);
-  if (user?.role === 'admin') return true;
-  
-  // Fallback: if no user found, check if x-user-id starts with "admin-" 
-  // (since fallback admin users get IDs like "admin-abc123")
-  if (idToCheck.startsWith('admin-')) return true;
-  
-  return false;
+  const user = await prisma.user.findUnique({ where: { id: idToCheck } });
+  return user?.role === 'ADMIN';
 }
 
 async function getUserIdFromRequest(request: NextRequest): Promise<string | null> {
@@ -36,7 +29,7 @@ async function getUserIdFromRequest(request: NextRequest): Promise<string | null
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAdmin(request)) {
+  if (!(await isAdmin(request))) {
     return NextResponse.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
   }
 
@@ -68,7 +61,7 @@ export async function POST(request: NextRequest) {
     
     // Get user ID from form data or header (fallback for both old and new clients)
     const userId = (formData.get('userId') as string) || request.headers.get('x-user-id');
-    if (!userId || !isAdmin(request, userId)) {
+    if (!userId || !(await isAdmin(request, userId))) {
       return NextResponse.json({ success: false, error: 'Forbidden: Admin access required' }, { status: 403 });
     }
     const file = formData.get('zip') as File;

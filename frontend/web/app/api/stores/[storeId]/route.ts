@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stores, getStoreByOwnerId, getProductsByStoreId } from "@/lib/data-store";
+import { prisma, getProductsByStoreId, parseStoreJson } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ storeId: string }>;
@@ -8,15 +8,40 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { storeId } = await params;
-    const store = stores.get(storeId);
+    const store = await prisma.store.findUnique({ where: { id: storeId } });
 
     if (!store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
-    const products = getProductsByStoreId(storeId);
+    const products = await getProductsByStoreId(storeId);
 
-    return NextResponse.json({ store, products });
+    return NextResponse.json({
+      store: parseStoreJson(store),
+      products: products.map((p) => ({
+        id: p.id,
+        storeId: p.storeId,
+        name: p.name,
+        slug: p.slug,
+        description: p.description,
+        price: p.price,
+        comparePrice: p.comparePrice,
+        costPrice: null,
+        images: typeof p.images === "string" ? JSON.parse(p.images) : p.images,
+        categoryId: null,
+        tags: [],
+        stock: p.quantity,
+        lowStockThreshold: 5,
+        status: p.status,
+        variants: [],
+        seo: { title: p.seoTitle, description: p.seoDesc },
+        weight: null,
+        dimensions: null,
+        metadata: {},
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+      })),
+    });
   } catch (error) {
     console.error("Get store error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -26,7 +51,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const { storeId } = await params;
-    const store = stores.get(storeId);
+    const store = await prisma.store.findUnique({ where: { id: storeId } });
 
     if (!store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
@@ -35,18 +60,30 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { name, description, logo, banner, theme, settings, templateId } = body;
 
-    // Update store fields
-    if (name !== undefined) store.name = name;
-    if (description !== undefined) store.description = description;
-    if (logo !== undefined) store.logo = logo;
-    if (banner !== undefined) store.banner = banner;
-    if (theme !== undefined) store.theme = { ...store.theme, ...theme };
-    if (settings !== undefined) store.settings = { ...store.settings, ...settings };
-    if (templateId !== undefined) store.templateId = templateId;
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (logo !== undefined) updateData.logo = logo;
+    if (banner !== undefined) updateData.banner = banner;
+    if (theme !== undefined) {
+      const currentTheme = JSON.parse(store.theme || "{}");
+      updateData.theme = JSON.stringify({ ...currentTheme, ...theme });
+    }
+    if (settings !== undefined) {
+      const currentSettings = JSON.parse(store.settings || "{}");
+      updateData.settings = JSON.stringify({ ...currentSettings, ...settings });
+    }
+    if (templateId !== undefined) {
+      const currentTheme = JSON.parse(store.theme || "{}");
+      updateData.theme = JSON.stringify({ ...currentTheme, templateId });
+    }
 
-    stores.set(storeId, store);
+    const updated = await prisma.store.update({
+      where: { id: storeId },
+      data: updateData,
+    });
 
-    return NextResponse.json({ store });
+    return NextResponse.json({ store: parseStoreJson(updated) });
   } catch (error) {
     console.error("Update store error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

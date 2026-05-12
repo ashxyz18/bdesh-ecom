@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { stores, getProductsByStoreId } from "@/lib/data-store";
+import { prisma, getProductsByStoreId, parseStoreJson } from "@/lib/db";
 
 interface RouteParams {
   params: Promise<{ storeId: string }>;
@@ -8,25 +8,30 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { storeId } = await params;
-    const store = stores.get(storeId);
+    const store = await prisma.store.findUnique({ where: { id: storeId } });
 
     if (!store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });
     }
 
-    const products = getProductsByStoreId(storeId);
+    const parsed = parseStoreJson(store);
+    if (!parsed) {
+      return NextResponse.json({ error: "Store not found" }, { status: 404 });
+    }
+
+    const products = await getProductsByStoreId(storeId);
 
     return NextResponse.json({
-      name: store.name,
-      logo: store.logo,
-      theme: store.theme,
-      settings: store.settings,
+      name: parsed.name,
+      logo: parsed.logo,
+      theme: parsed.theme,
+      settings: parsed.settings,
       products: products.map((p) => ({
         id: p.id,
         name: p.name,
         price: p.price,
-        images: p.images,
-        stock: p.stock,
+        images: typeof p.images === "string" ? JSON.parse(p.images) : p.images,
+        stock: p.quantity,
         status: p.status,
       })),
     });

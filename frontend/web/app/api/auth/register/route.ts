@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { users, generateId, createStore } from "@/lib/data-store";
+import { prisma, createStore } from "@/lib/db";
+import { hashPassword } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,35 +14,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user already exists
-    for (const user of users.values()) {
-      if (user.email === email) {
-        return NextResponse.json(
-          { error: "User already exists" },
-          { status: 409 }
-        );
-      }
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return NextResponse.json(
+        { error: "User already exists" },
+        { status: 409 }
+      );
     }
 
-    // Create user
-    const id = generateId();
-    const user = {
-      id,
-      email,
-      password, // In production, hash this!
-      name,
-      role: "user" as const,
-      createdAt: new Date(),
-    };
-    users.set(id, user);
+    const hashedPassword = await hashPassword(password);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        role: "CUSTOMER",
+      },
+    });
 
-    // Create a store for the user (no template yet — user will choose on onboarding)
-    const store = createStore(`${name}'s Store`, id);
+    const store = await createStore(`${name}'s Store`, user.id);
 
-    // Return user data (without password) and store
     return NextResponse.json({
-      user: { id, email, name, createdAt: user.createdAt },
-      store,
+      user: { id: user.id, email: user.email, name: user.name, role: user.role.toLowerCase(), createdAt: user.createdAt },
+      store: {
+        ...store,
+        theme: JSON.parse(store.theme),
+        settings: JSON.parse(store.settings),
+      },
     }, { status: 201 });
   } catch (error) {
     console.error("Register error:", error);
