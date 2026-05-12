@@ -60,12 +60,15 @@ export default function DynamicTemplate({ templateId, store, products }: Dynamic
 
   // Extract body content from HTML string
   const extractBodyContent = useCallback((html: string): string => {
+    const headContent = (html.match(/<head[^>]*>([\s\S]*?)<\/head>/i) || [])[1] || "";
+    const styles = (headContent.match(/<style\b[^>]*>[\s\S]*?<\/style>/gi) || []).join("\n");
+    const links = (headContent.match(/<link[^>]*rel=["']stylesheet["'][^>]*\/?>/gi) || []).join("\n");
+
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     if (bodyMatch) {
-      return bodyMatch[1];
+      return styles + links + bodyMatch[1];
     }
-    // If no body tag, strip html/head tags and return the rest
-    return html
+    return styles + links + html
       .replace(/<html[^>]*>/i, "")
       .replace(/<\/html>/i, "")
       .replace(/<head[^>]*>[\s\S]*?<\/head>/i, "")
