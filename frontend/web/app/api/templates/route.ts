@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserId } from "@/lib/auth";
-import { apiResponse, apiError, cacheConfig } from "@/lib/api-utils";
+import { apiResponse, apiError } from "@/lib/api-utils";
 
 export async function GET() {
   try {
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
 
     return apiResponse(
       { success: true, template },
-      { status: 201, cache: cacheConfig.noCache }
+      { status: 201, cache: { noCache: true } }
     );
   } catch (error) {
     console.error("Failed to create template:", error);
