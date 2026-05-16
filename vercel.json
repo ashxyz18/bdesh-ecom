@@ -3,6 +3,7 @@
   "name": "bdesh-ecom",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": "frontend/web/.next",
-  "framework": "nextjs"
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "rootDirectory": "frontend/web"
 }
