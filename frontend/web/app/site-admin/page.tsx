@@ -239,7 +239,7 @@ export default function SiteAdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setTemplates(templates.filter((t) => t.id !== tid));
+        setTemplates(prev => prev.filter((t) => t.id !== tid));
         setMessage({ type: "success", text: `"${tname}" deleted` });
       } else setMessage({ type: "error", text: data.error || "Delete failed" });
     } catch { setMessage({ type: "error", text: "Delete failed" }); }

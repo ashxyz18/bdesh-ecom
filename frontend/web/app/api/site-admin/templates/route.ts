@@ -6,6 +6,7 @@ import type { TemplateManifest } from "@/lib/templates/manifest";
 import fs from "fs";
 import path from "path";
 import AdmZip from "adm-zip";
+import { revalidatePath } from "next/cache";
 
 async function checkAuth(request: NextRequest): Promise<string | null> {
   const userId = request.headers.get("x-user-id");
@@ -556,11 +557,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const storeCount = await prisma.store.count({
+      where: { templateId: templateId },
+    });
+
+    if (storeCount > 0) {
+      return NextResponse.json(
+        { success: false, error: `Cannot delete template - used by ${storeCount} store(s)` },
+        { status: 403 }
+      );
+    }
+
     await deleteTemplate(templateId);
 
     await prisma.template.delete({
       where: { id: templateId },
     });
+
+    revalidatePath("/api/templates");
+    revalidatePath("/templates");
 
     return NextResponse.json({
       success: true,

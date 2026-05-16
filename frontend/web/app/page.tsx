@@ -53,18 +53,21 @@ const fallbackTemplates = [
     name: "Koskii Ethnic Wear",
     description: "A beautiful e-commerce template designed for ethnic wear.",
     thumbnail: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=600&fit=crop",
+    previewUrl: "/templates/koskii/index.html",
   },
   {
     id: "modern-store",
     name: "Modern Store",
     description: "Clean, minimal design perfect for any product category.",
     thumbnail: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop",
+    previewUrl: "/templates/modern-store/index.html",
   },
   {
     id: "food-express",
     name: "Food Express",
     description: "Built for restaurants and food delivery businesses.",
     thumbnail: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=600&fit=crop",
+    previewUrl: "/templates/food-express/index.html",
   },
 ];
 
@@ -123,8 +126,21 @@ function TemplatePreviewSection() {
                   containerClassName="w-full h-full"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
-                  <Palette className="w-12 h-12 opacity-20" />
+                <div className="absolute inset-0 bg-white overflow-hidden pointer-events-none">
+                  <iframe
+                    src={template.previewUrl}
+                    className="border-0 bg-white"
+                    style={{
+                      width: '400%',
+                      height: '400%',
+                      transform: 'scale(0.25)',
+                      transformOrigin: '0 0',
+                      pointerEvents: 'none',
+                    }}
+                    scrolling="no"
+                    tabIndex={-1}
+                    title={`Live Preview of ${template.name}`}
+                  />
                 </div>
               )}
             </div>

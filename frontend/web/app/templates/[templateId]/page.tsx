@@ -4,7 +4,7 @@ import { useState, useEffect, use } from "react";
 import { Navbar } from "@/components/marketing/Navbar";
 import { Button } from "@/components/shared/Button";
 import Link from "next/link";
-import { ArrowLeft, Eye, Monitor, Loader2, AlertCircle, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, Eye, Monitor, Loader2, AlertCircle, CheckCircle, XCircle, Maximize, Minimize } from "lucide-react";
 
 interface Template {
   id: string;
@@ -25,6 +25,7 @@ export default function TemplateDetailPage({ params }: PageProps) {
   const [template, setTemplate] = useState<Template | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [fullScreen, setFullScreen] = useState(false);
 
   useEffect(() => {
     fetchTemplate();
@@ -183,7 +184,29 @@ export default function TemplateDetailPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
+      {fullScreen && template?.previewUrl && (
+        <div className="fixed inset-0 z-50 bg-white">
+          <div className="absolute top-4 right-4 z-10 flex gap-2">
+            <span className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-sm font-medium text-gray-700 shadow-lg border border-gray-200">
+              {template.name}
+            </span>
+            <button
+              onClick={() => setFullScreen(false)}
+              className="p-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200 text-gray-700 hover:bg-gray-100"
+              title="Exit full screen"
+            >
+              <Minimize size={18} />
+            </button>
+          </div>
+          <iframe
+            src={template.previewUrl}
+            className="w-full h-full border-0"
+            title={`Full Screen Preview of ${template.name}`}
+          />
+        </div>
+      )}
+      <div className="min-h-screen bg-gray-50">
       <Navbar />
 
       <div className="max-w-[1400px] mx-auto px-6 py-8">
@@ -208,7 +231,16 @@ export default function TemplateDetailPage({ params }: PageProps) {
                     <Monitor size={18} />
                   </button>
                 </div>
-                <span className="text-sm text-gray-500">Preview</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">Preview</span>
+                  <button
+                    onClick={() => setFullScreen(true)}
+                    className="p-2 rounded-md hover:bg-gray-200 text-gray-500 hover:text-gray-700"
+                    title="Full screen preview"
+                  >
+                    <Maximize size={16} />
+                  </button>
+                </div>
               </div>
               <iframe
                 src={template.previewUrl}
@@ -250,5 +282,6 @@ export default function TemplateDetailPage({ params }: PageProps) {
         </div>
       </div>
     </div>
+    </>
   );
 }

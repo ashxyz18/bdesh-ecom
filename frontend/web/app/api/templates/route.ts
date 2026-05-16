@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserId } from "@/lib/auth";
-import { apiResponse, apiError, cacheConfig } from "@/lib/api-utils";
+import { apiResponse, apiError } from "@/lib/api-utils";
 
 export async function GET() {
   try {
     const customTemplates = await prisma.template.findMany({
-      where: { isPublic: true, buildStatus: "ready" },
+      where: { isPublic: true, buildStatus: "ready", isBuiltIn: false },
       select: {
         id: true,
         name: true,
@@ -30,10 +30,7 @@ export async function GET() {
       configSchema: parseTemplateConfig(t.config).configSchema,
     }));
 
-    return apiResponse(
-      { success: true, templates },
-      { cache: cacheConfig.publicLong }
-    );
+    return apiResponse({ success: true, templates });
   } catch (error) {
     console.error("Failed to get templates:", error);
     return apiError("Failed to get templates", 500);

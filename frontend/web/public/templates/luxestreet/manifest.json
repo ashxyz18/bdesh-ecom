@@ -1,0 +1,450 @@
+{
+  "id": "luxestreet",
+  "name": "Luxestreet",
+  "version": "1.0.0",
+  "css": [
+    "/templates/luxestreet/assets/index-SAOHYOIr.css"
+  ],
+  "js": [
+    "/templates/luxestreet/assets/index-BNP2sewB.js"
+  ],
+  "entryPoint": "index.html",
+  "sections": {},
+  "interactivity": {
+    "cart": {
+      "trigger": ".header-icon[href=\"#cart\"]",
+      "drawer": ".cart-drawer",
+      "overlay": ".cart-overlay"
+    },
+    "search": {
+      "trigger": ".search-btn",
+      "overlay": ".search-overlay",
+      "input": "#searchInput"
+    },
+    "mobileMenu": {
+      "trigger": ".menu-btn",
+      "menu": ".mobile-menu",
+      "overlay": ".menu-overlay",
+      "closeBtn": ".close-menu"
+    },
+    "wishlist": {
+      "selector": ".wishlist-btn",
+      "activeClass": "active"
+    },
+    "productCards": {
+      "quickAdd": ".quick-add",
+      "wishlist": ".wishlist-btn",
+      "productLink": ".product-card"
+    },
+    "newsletter": {
+      "form": ".newsletter-form",
+      "input": "input[type=\"email\"]",
+      "button": "button[type=\"submit\"]"
+    }
+  },
+  "configSchema": {
+    "brand": {
+      "label": "Restaurant Brand",
+      "fields": {
+        "storeName": {
+          "type": "text",
+          "label": "Restaurant name"
+        },
+        "logo": {
+          "type": "image",
+          "label": "Logo"
+        }
+      }
+    },
+    "hero": {
+      "label": "Hero Section",
+      "fields": {
+        "seasonTag": {
+          "type": "text",
+          "label": "Season Tag",
+          "default": "Autumn / Winter 2026"
+        },
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "Redefine Your Style"
+        },
+        "subtext": {
+          "type": "textarea",
+          "label": "Subtext",
+          "default": "Discover curated collections that blend luxury craftsmanship with urban edge. Made for those who set trends, not follow them."
+        },
+        "primaryCta": {
+          "type": "text",
+          "label": "Primary CTA",
+          "default": "Shop Now"
+        },
+        "secondaryCta": {
+          "type": "text",
+          "label": "Secondary CTA",
+          "default": "Watch Film"
+        },
+        "image": {
+          "type": "image",
+          "label": "Hero Model Image"
+        },
+        "floatingProduct1": {
+          "type": "product",
+          "label": "Floating Product Card 1"
+        },
+        "floatingProduct2": {
+          "type": "product",
+          "label": "Floating Product Card 2"
+        }
+      }
+    },
+    "theme": {
+      "label": "Theme",
+      "fields": {
+        "backgroundColor": {
+          "type": "color",
+          "label": "Background Color",
+          "default": "#0b0f12"
+        },
+        "surfaceColor": {
+          "type": "color",
+          "label": "Surface Color",
+          "default": "#111827"
+        },
+        "primaryColor": {
+          "type": "color",
+          "label": "Primary Text Color",
+          "default": "#ffffff"
+        },
+        "accentTeal": {
+          "type": "color",
+          "label": "Accent Teal",
+          "default": "#00d5c0"
+        },
+        "accentBlue": {
+          "type": "color",
+          "label": "Accent Blue",
+          "default": "#3b82f6"
+        },
+        "fontHeading": {
+          "type": "select",
+          "label": "Heading Font",
+          "options": [
+            "serif",
+            "sans-serif"
+          ],
+          "default": "serif"
+        },
+        "fontBody": {
+          "type": "select",
+          "label": "Body Font",
+          "options": [
+            "Inter",
+            "system-ui"
+          ],
+          "default": "Inter"
+        }
+      }
+    },
+    "saleBanner": {
+      "label": "Sale Banner",
+      "fields": {
+        "badgeText": {
+          "type": "text",
+          "label": "Badge Text",
+          "default": "Limited Time Offer"
+        },
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "SHOP FOR $99+"
+        },
+        "offerText": {
+          "type": "text",
+          "label": "Offer Text",
+          "default": "GET 50% OFF"
+        },
+        "description": {
+          "type": "textarea",
+          "label": "Description",
+          "default": "Use code LUXE50 at checkout. Valid on selected items only."
+        },
+        "ctaText": {
+          "type": "text",
+          "label": "CTA Text",
+          "default": "Shop the Sale"
+        },
+        "backgroundImage": {
+          "type": "image",
+          "label": "Background Image"
+        }
+      }
+    },
+    "brandCollaboration": {
+      "label": "Brand Collaboration",
+      "fields": {
+        "badgeText": {
+          "type": "text",
+          "label": "Badge Text",
+          "default": "Exclusive Drop"
+        },
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "Collaboration with Future Street"
+        },
+        "description": {
+          "type": "textarea",
+          "label": "Description",
+          "default": "Two worlds collide in our most ambitious collaboration yet. Limited edition pieces that push the boundaries of contemporary fashion."
+        },
+        "ctaText": {
+          "type": "text",
+          "label": "CTA Text",
+          "default": "Explore Collection"
+        },
+        "backgroundImage": {
+          "type": "image",
+          "label": "Background Image"
+        }
+      }
+    },
+    "newsletter": {
+      "label": "Newsletter Section",
+      "fields": {
+        "subtitle": {
+          "type": "text",
+          "label": "Subtitle",
+          "default": "Stay in the Loop"
+        },
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "Join the Inner Circle"
+        },
+        "description": {
+          "type": "textarea",
+          "label": "Description",
+          "default": "Subscribe for exclusive access to new drops, limited editions, and members-only events."
+        },
+        "buttonText": {
+          "type": "text",
+          "label": "Button Text",
+          "default": "Subscribe"
+        },
+        "placeholder": {
+          "type": "text",
+          "label": "Input Placeholder",
+          "default": "Enter your email"
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "navigation": [
+      "overview",
+      "products",
+      "orders",
+      "analytics",
+      "customize",
+      "settings"
+    ],
+    "setupChecklist": [
+      {
+        "id": "catalog-sections",
+        "label": "Create template catalog sections",
+        "description": "Add products for every section used by this storefront.",
+        "href": "/dashboard/products/new",
+        "type": "products",
+        "required": true
+      },
+      {
+        "id": "brand-content",
+        "label": "Set hero, brand, and theme content",
+        "description": "Fill the customization fields required by this template.",
+        "href": "/dashboard/customize",
+        "type": "branding",
+        "required": true
+      }
+    ],
+    "catalog": {
+      "label": "Template Catalog",
+      "itemLabel": "Products",
+      "collections": [
+        {
+          "id": "hoodies",
+          "label": "Hoodies",
+          "description": "Products shown in the Hoodies category section.",
+          "required": true
+        },
+        {
+          "id": "jackets",
+          "label": "Jackets",
+          "description": "Products shown in the Jackets category section.",
+          "required": true
+        },
+        {
+          "id": "sneakers",
+          "label": "Sneakers",
+          "description": "Products shown in the Sneakers category section.",
+          "required": true
+        },
+        {
+          "id": "accessories",
+          "label": "Accessories",
+          "description": "Products shown in the Accessories category section.",
+          "required": true
+        },
+        {
+          "id": "streetwear",
+          "label": "Streetwear",
+          "description": "Products shown in the Streetwear category section.",
+          "required": true
+        },
+        {
+          "id": "men",
+          "label": "Men",
+          "description": "Products shown in the Men's Collection showcase.",
+          "required": true
+        },
+        {
+          "id": "women",
+          "label": "Women",
+          "description": "Products shown in the Women's Collection showcase.",
+          "required": true
+        },
+        {
+          "id": "new-arrivals",
+          "label": "New Arrivals",
+          "description": "Products shown in the New Arrivals and Trending sections.",
+          "required": true
+        },
+        {
+          "id": "sale",
+          "label": "Sale",
+          "description": "Products shown in the Sale banner and promotional blocks."
+        }
+      ],
+      "filters": [
+        {
+          "id": "category",
+          "label": "Category",
+          "options": [
+            "Hoodies",
+            "Jackets",
+            "Sneakers",
+            "Accessories",
+            "Streetwear"
+          ],
+          "required": true
+        },
+        {
+          "id": "audience",
+          "label": "Audience",
+          "options": [
+            "Men",
+            "Women",
+            "Unisex"
+          ],
+          "required": true
+        },
+        {
+          "id": "size",
+          "label": "Size",
+          "options": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL"
+          ]
+        },
+        {
+          "id": "color",
+          "label": "Color",
+          "options": [
+            "Black",
+            "White",
+            "Gray",
+            "Navy",
+            "Teal",
+            "Red"
+          ]
+        },
+        {
+          "id": "brand",
+          "label": "Brand",
+          "options": [
+            "LUXE Originals",
+            "Future Street",
+            "Noir Atelier",
+            "Urban Vanguard",
+            "Velvet Crowd"
+          ]
+        }
+      ],
+      "productFields": [
+        {
+          "key": "badge",
+          "label": "Product badge",
+          "type": "text"
+        },
+        {
+          "key": "isNew",
+          "label": "New Arrival",
+          "type": "boolean"
+        },
+        {
+          "key": "isSale",
+          "label": "On Sale",
+          "type": "boolean"
+        },
+        {
+          "key": "isFeatured",
+          "label": "Featured product",
+          "type": "boolean"
+        },
+        {
+          "key": "rating",
+          "label": "Product Rating",
+          "type": "number"
+        },
+        {
+          "key": "originalPrice",
+          "label": "Original Price",
+          "type": "number"
+        }
+      ]
+    },
+    "pages": [
+      {
+        "id": "home",
+        "label": "Home Page",
+        "description": "Hero section, featured categories, sale banner, trending products, brand collaboration, collection showcase, and newsletter.",
+        "href": "/dashboard/customize",
+        "required": true
+      },
+      {
+        "id": "shop",
+        "label": "Shop Page",
+        "description": "Product grid with sidebar filters, sorting, and view toggle.",
+        "href": "/dashboard/products"
+      },
+      {
+        "id": "product",
+        "label": "Product Detail Page",
+        "description": "Product gallery, variants, sizes, colors, quantity selector, and related products.",
+        "href": "/dashboard/products"
+      },
+      {
+        "id": "auth",
+        "label": "Auth Page",
+        "description": "Login and registration with social auth options.",
+        "href": "/dashboard/settings"
+      }
+    ]
+  },
+  "description": "Premium luxury streetwear template with brand collaborations, trending products, and newsletter integration.",
+  "previewUrl": "/templates/luxestreet/index.html"
+}

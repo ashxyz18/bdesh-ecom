@@ -1,13 +1,12 @@
 {
-  "id": "nike-final",
-  "name": "nike final",
+  "id": "furniture-living",
+  "name": "Furniture Living",
   "version": "1.0.0",
   "css": [
-    "static/css/main.ebbee498.css"
+    "/templates/furniture-living/assets/index-CbKXmuYd.css"
   ],
   "js": [
-    "static/js/main.aa10818b.js",
-    "static/js/main.aa10818b.js.LICENSE.txt"
+    "/templates/furniture-living/assets/index-BWeffVyu.js"
   ],
   "entryPoint": "index.html",
   "sections": {},
@@ -133,8 +132,112 @@
         "href": "/dashboard/couriers",
         "type": "couriers"
       }
-    ]
+    ],
+    "catalog": {
+      "label": "Template Catalog Sections",
+      "itemLabel": "Menu Items",
+      "collections": [
+        {
+          "id": "kids",
+          "label": "Kids",
+          "required": true
+        },
+        {
+          "id": "sale",
+          "label": "Sale",
+          "required": false
+        },
+        {
+          "id": "phones",
+          "label": "Phones",
+          "required": false
+        },
+        {
+          "id": "drinks",
+          "label": "Drinks",
+          "required": false
+        },
+        {
+          "id": "furniture",
+          "label": "Furniture",
+          "required": false
+        },
+        {
+          "id": "decor",
+          "label": "Decor",
+          "required": false
+        },
+        {
+          "id": "featured",
+          "label": "Featured",
+          "required": false
+        }
+      ],
+      "filters": [
+        {
+          "id": "audience",
+          "label": "Audience",
+          "options": [
+            "Kids"
+          ],
+          "required": true
+        },
+        {
+          "id": "size",
+          "label": "Size",
+          "options": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "XXL"
+          ]
+        },
+        {
+          "id": "color",
+          "label": "Color",
+          "options": [
+            "Black",
+            "White",
+            "Red",
+            "Blue",
+            "Green",
+            "Navy",
+            "Gray",
+            "Pink"
+          ]
+        },
+        {
+          "id": "price-range",
+          "label": "Price Range",
+          "options": [
+            "Under ৳500",
+            "৳500-৳1500",
+            "৳1500-৳5000",
+            "Above ৳5000"
+          ]
+        },
+        {
+          "id": "brand",
+          "label": "Brand",
+          "options": []
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "options": [
+            "Cotton",
+            "Silk",
+            "Polyester",
+            "Leather",
+            "Denim"
+          ]
+        }
+      ],
+      "productFields": []
+    }
   },
-  "description": "asa",
-  "previewUrl": "/templates/nike-final/index.html"
+  "description": "Furniture and home decor template with collections, gallery, testimonials, and promo banners.",
+  "previewUrl": "/templates/furniture-living/index.html"
 }
