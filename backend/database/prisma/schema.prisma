@@ -67,6 +67,7 @@ model Store {
   description String?
   logo        String?
   banner      String?
+  templateId  String?  // Reference to Template id
   theme       String   @default("{}") // JSON: { primary, secondary, font, layout }
   settings    String   @default("{}") // JSON: { currency, locale, features }
   status      String   @default("PENDING") // PENDING, APPROVED, SUSPENDED, DELETED
@@ -91,6 +92,7 @@ model Store {
   blogPosts      BlogPost[]
   subscriptions  Subscription[]
   paymentGateway PaymentGateway?
+  storeCustomers StoreCustomer[]
 
   @@index([subdomain])
   @@index([ownerId])
@@ -179,10 +181,31 @@ model ProductOnCollection {
   @@map("product_collections")
 }
 
+model StoreCustomer {
+  id        String   @id @default(cuid())
+  storeId   String
+  email     String
+  name      String
+  phone     String?
+  password  String
+  addresses String   @default("[]") // JSON array
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store     Store     @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  orders    Order[]
+  reviews   Review[]
+  cartItems CartItem[]
+
+  @@unique([storeId, email])
+  @@map("store_customers")
+}
+
 model Order {
   id             String   @id @default(cuid())
   storeId        String
   customerId     String?
+  storeCustomerId String?
   orderNumber    String   @unique
   status         String   @default("PENDING") // PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED
   paymentStatus  String   @default("PENDING") // PENDING, PAID, FAILED, REFUNDED
@@ -198,12 +221,14 @@ model Order {
 
   store       Store      @relation(fields: [storeId], references: [id], onDelete: Cascade)
   customer    User?      @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  storeCustomer StoreCustomer? @relation(fields: [storeCustomerId], references: [id], onDelete: SetNull)
   items       OrderItem[]
   shipping    Shipping?
   payment     Payment?
 
   @@index([storeId, status])
   @@index([customerId, status])
+  @@index([storeCustomerId])
   @@map("orders")
 }
 
@@ -255,32 +280,38 @@ model Payment {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  productId String
-  userId    String
-  rating    Int      // 1-5
-  title     String?
-  comment   String?
-  createdAt DateTime @default(now())
+  id              String   @id @default(cuid())
+  productId       String
+  userId          String?
+  storeCustomerId String?
+  rating          Int      // 1-5
+  title           String?
+  comment         String?
+  createdAt       DateTime @default(now())
 
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeCustomer StoreCustomer? @relation(fields: [storeCustomerId], references: [id], onDelete: Cascade)
 
+  @@index([storeCustomerId])
   @@map("reviews")
 }
 
 model CartItem {
-  id        String  @id @default(cuid())
-  userId    String?
-  sessionId String? // For guest carts
-  productId String
-  quantity  Int
-  createdAt DateTime @default(now())
+  id              String  @id @default(cuid())
+  userId          String?
+  storeCustomerId String?
+  sessionId       String? // For guest carts
+  productId       String
+  quantity        Int
+  createdAt       DateTime @default(now())
 
-  user    User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user          User?          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeCustomer StoreCustomer? @relation(fields: [storeCustomerId], references: [id], onDelete: Cascade)
+  product       Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([storeCustomerId])
   @@index([sessionId])
   @@map("cart_items")
 }
@@ -336,6 +367,8 @@ model Template {
   uploadedBy  String?
   downloads   Int      @default(0)
   version     String   @default("1.0.0")
+  buildStatus String   @default("pending") // "pending" | "installing" | "building" | "ready" | "failed"
+  buildLog    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -343,6 +376,7 @@ model Template {
 
   @@index([websiteType])
   @@index([category])
+  @@index([buildStatus])
   @@map("templates")
 }
 

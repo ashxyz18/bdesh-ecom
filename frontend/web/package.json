@@ -5,12 +5,13 @@
   "scripts": {
     "analyze": "ANALYZE=true next build",
     "dev": "next dev -p 3000",
-    "prebuild": "npm run build -w @bdesh/shared -w @bdesh/database -w @bdesh/ai --if-present || true",
+    "prebuild": "npm run build -w @bdesh/shared -w @bdesh/database -w @bdesh/ai --if-present",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "upload-templates": "node scripts/bulk-upload.js"
   },
   "dependencies": {
     "@bdesh/ai": "*",

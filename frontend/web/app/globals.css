@@ -168,6 +168,10 @@
   100% { opacity: 1; transform: scale(1); }
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @layer base {
   * { @apply border-border; }
   body {
@@ -1227,12 +1231,6 @@
     filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.5));
   }
 
-  /* Floating Effects */
-  @keyframes float {
-    0%, 100% { transform: translate(0, 0); }
-    50% { transform: translate(20px, -20px); }
-  }
-
   /* Loading Spinner */
   .dark-spinner {
     width: 32px;
@@ -1241,16 +1239,6 @@
     border-top-color: transparent;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-  }
-
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  /* Fade In Animation */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
   }
 
   .fade-in {

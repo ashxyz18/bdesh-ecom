@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma, getStoreByOwnerId, parseStoreJson } from "@/lib/db";
-import { verifyPassword, hashPassword } from "@/lib/auth";
+import { verifyPassword } from "@/lib/auth";
+import { apiResponse, apiError, cacheConfig } from "@/lib/api-utils";
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,40 +9,37 @@ export async function POST(request: NextRequest) {
     const { email, password } = body;
 
     if (!email || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+      return apiError("Email and password are required", 400);
     }
 
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      return apiError("Invalid credentials", 401);
     }
 
     const isValid = await verifyPassword(password, user.password);
     if (!isValid) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 }
-      );
+      return apiError("Invalid credentials", 401);
     }
 
     const store = await getStoreByOwnerId(user.id);
 
-    return NextResponse.json({
-      user: { id: user.id, email: user.email, name: user.name, role: user.role.toLowerCase(), createdAt: user.createdAt },
-      store: parseStoreJson(store),
-    });
+    return apiResponse(
+      {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role.toLowerCase(),
+          createdAt: user.createdAt,
+        },
+        store: parseStoreJson(store),
+      },
+      { cache: cacheConfig.noCache }
+    );
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return apiError("Internal server error", 500);
   }
 }

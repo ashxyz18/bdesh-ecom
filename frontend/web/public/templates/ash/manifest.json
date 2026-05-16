@@ -1,0 +1,60 @@
+{
+  "id": "ash",
+  "name": "ash",
+  "version": "1.0.0",
+  "css": [
+    "css/account.css",
+    "css/style.css"
+  ],
+  "js": [
+    "js/account.js",
+    "js/main.js"
+  ],
+  "entryPoint": "website 1/account.html",
+  "sections": {
+    "footerCopyright": {
+      "selector": "footer .copyright, footer p:last-child",
+      "type": "text",
+      "template": "© {{year}} {{storeName}}. All Rights Reserved."
+    },
+    "cartBadge": {
+      "selector": ".badge-count, .cart-count, .nav-badge",
+      "type": "cart-count"
+    }
+  },
+  "interactivity": {
+    "cart": {
+      "trigger": ".header-icon[href=\"#cart\"]",
+      "drawer": ".cart-drawer",
+      "overlay": ".cart-overlay"
+    },
+    "search": {
+      "trigger": ".search-btn",
+      "overlay": ".search-overlay",
+      "input": "#searchInput"
+    },
+    "mobileMenu": {
+      "trigger": ".menu-btn",
+      "menu": ".mobile-menu",
+      "overlay": ".menu-overlay",
+      "closeBtn": ".close-menu"
+    },
+    "wishlist": {
+      "selector": ".wishlist-btn",
+      "activeClass": "active"
+    },
+    "productCards": {
+      "quickAdd": ".quick-add",
+      "wishlist": ".wishlist-btn",
+      "productLink": ".product-card"
+    },
+    "newsletter": {
+      "form": ".newsletter-form",
+      "input": "input[type=\"email\"]",
+      "button": "button[type=\"submit\"]"
+    }
+  },
+  "description": "Uploaded template: ash",
+  "thumbnail": "https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii_logo_left_right_white.0u84b2px.n_j~.png",
+  "previewUrl": "/templates/ash/website 1/account.html"
+}

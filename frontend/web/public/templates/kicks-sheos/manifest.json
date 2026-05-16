@@ -1,0 +1,374 @@
+{
+  "id": "kicks-sheos",
+  "name": "KICKS SHEOS",
+  "version": "1.0.0",
+  "css": [
+    "/templates/kicks-sheos/assets/index-4qdm0eBM.css"
+  ],
+  "js": [
+    "/templates/kicks-sheos/assets/index-QqV_VNLc.js"
+  ],
+  "entryPoint": "index.html",
+  "sections": {},
+  "interactivity": {
+    "cart": {
+      "trigger": ".header-icon[href=\"#cart\"]",
+      "drawer": ".cart-drawer",
+      "overlay": ".cart-overlay"
+    },
+    "search": {
+      "trigger": ".search-btn",
+      "overlay": ".search-overlay",
+      "input": "#searchInput"
+    },
+    "mobileMenu": {
+      "trigger": ".menu-btn",
+      "menu": ".mobile-menu",
+      "overlay": ".menu-overlay",
+      "closeBtn": ".close-menu"
+    },
+    "wishlist": {
+      "selector": ".wishlist-btn",
+      "activeClass": "active"
+    },
+    "productCards": {
+      "quickAdd": ".quick-add",
+      "wishlist": ".wishlist-btn",
+      "productLink": ".product-card"
+    },
+    "newsletter": {
+      "form": ".newsletter-form",
+      "input": "input[type=\"email\"]",
+      "button": "button[type=\"submit\"]"
+    }
+  },
+  "configSchema": {
+    "brand": {
+      "label": "Restaurant Brand",
+      "fields": {
+        "storeName": {
+          "type": "text",
+          "label": "Restaurant name"
+        },
+        "logo": {
+          "type": "image",
+          "label": "Logo"
+        }
+      }
+    },
+    "hero": {
+      "label": "Hero Section",
+      "fields": {
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "LEVEL UP YOUR KICKS"
+        },
+        "subtext": {
+          "type": "textarea",
+          "label": "Subtext",
+          "default": "Premium sneaker laces designed for athletes, sneakerheads, and everyone who refuses to blend in."
+        },
+        "image": {
+          "type": "image",
+          "label": "Hero Image"
+        },
+        "primaryCta": {
+          "type": "text",
+          "label": "Primary CTA Label",
+          "default": "Shop Now"
+        },
+        "secondaryCta": {
+          "type": "text",
+          "label": "Secondary CTA Label",
+          "default": "View Lookbook"
+        }
+      }
+    },
+    "theme": {
+      "label": "Theme",
+      "fields": {
+        "primaryColor": {
+          "type": "color",
+          "label": "Primary Color",
+          "default": "#a3e635"
+        },
+        "accentColor": {
+          "type": "color",
+          "label": "Accent Color",
+          "default": "#0a0a0a"
+        },
+        "fontFamily": {
+          "type": "select",
+          "label": "Font Family",
+          "options": [
+            "Inter",
+            "Roboto",
+            "Poppins",
+            "Montserrat"
+          ],
+          "default": "Inter"
+        }
+      }
+    },
+    "announcement": {
+      "label": "Announcement Bar",
+      "fields": {
+        "messages": {
+          "type": "array",
+          "label": "Announcement Messages",
+          "default": [
+            "Easy Returns",
+            "24/7 Support",
+            "Worldwide Shipping",
+            "Free Shipping over $50"
+          ]
+        }
+      }
+    },
+    "brands": {
+      "label": "Brand Slider",
+      "fields": {
+        "enabled": {
+          "type": "boolean",
+          "label": "Show Brand Slider",
+          "default": true
+        },
+        "brands": {
+          "type": "array",
+          "label": "Brand Names",
+          "default": [
+            "Nike",
+            "Adidas",
+            "Jordan",
+            "Converse",
+            "Puma",
+            "New Balance",
+            "Vans",
+            "Reebok"
+          ]
+        }
+      }
+    },
+    "categories": {
+      "label": "Category Grid",
+      "fields": {
+        "cards": {
+          "type": "array",
+          "label": "Category Cards",
+          "default": [
+            {
+              "title": "Laces by Brand",
+              "description": "Find the perfect match for your sneakers"
+            },
+            {
+              "title": "Laces by Sport",
+              "description": "Performance laces for every activity"
+            },
+            {
+              "title": "Accessories",
+              "description": "Complete your sneaker setup"
+            }
+          ]
+        }
+      }
+    },
+    "promoBanner": {
+      "label": "Promo Banner",
+      "fields": {
+        "enabled": {
+          "type": "boolean",
+          "label": "Show Promo Banner",
+          "default": true
+        },
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "Custom Sneaker Laces"
+        },
+        "description": {
+          "type": "textarea",
+          "label": "Description",
+          "default": "Design your own unique laces with our custom color lab. Express yourself with personalized patterns and premium materials."
+        },
+        "image": {
+          "type": "image",
+          "label": "Banner Image"
+        }
+      }
+    },
+    "footer": {
+      "label": "Footer",
+      "fields": {
+        "newsletterHeadline": {
+          "type": "text",
+          "label": "Newsletter Headline",
+          "default": "Join the Kicks Family"
+        },
+        "newsletterText": {
+          "type": "textarea",
+          "label": "Newsletter Description",
+          "default": "Get exclusive offers, early access to drops, and lace care tips."
+        },
+        "showSocialLinks": {
+          "type": "boolean",
+          "label": "Show Social Links",
+          "default": true
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "navigation": [
+      "overview",
+      "products",
+      "orders",
+      "analytics",
+      "customize",
+      "settings"
+    ],
+    "setupChecklist": [
+      {
+        "id": "catalog-sections",
+        "label": "Create template catalog sections",
+        "description": "Add products for every section used by this storefront.",
+        "href": "/dashboard/products/new",
+        "type": "products",
+        "required": true
+      },
+      {
+        "id": "brand-content",
+        "label": "Set hero, brand, and theme content",
+        "description": "Fill the customization fields required by this template.",
+        "href": "/dashboard/customize",
+        "type": "branding",
+        "required": true
+      }
+    ],
+    "catalog": {
+      "label": "Template Catalog",
+      "itemLabel": "Products",
+      "collections": [
+        {
+          "id": "best-sellers",
+          "label": "Best Sellers",
+          "description": "Products shown in the Best Sellers section.",
+          "required": true
+        },
+        {
+          "id": "new-arrivals",
+          "label": "New Arrivals",
+          "description": "Products shown in the New Arrivals section.",
+          "required": true
+        },
+        {
+          "id": "laces-by-brand",
+          "label": "Laces by Brand",
+          "description": "Products shown in the Laces by Brand category section.",
+          "required": true
+        },
+        {
+          "id": "laces-by-sport",
+          "label": "Laces by Sport",
+          "description": "Products shown in the Laces by Sport category section.",
+          "required": true
+        },
+        {
+          "id": "accessories",
+          "label": "Accessories",
+          "description": "Products shown in the Accessories category section.",
+          "required": true
+        },
+        {
+          "id": "sale",
+          "label": "Sale",
+          "description": "Products shown in sale or offer blocks."
+        }
+      ],
+      "filters": [
+        {
+          "id": "type",
+          "label": "Lace Type",
+          "options": [
+            "Flat",
+            "Round",
+            "Rope",
+            "Fat",
+            "No-Tie"
+          ],
+          "required": true
+        },
+        {
+          "id": "length",
+          "label": "Length",
+          "options": [
+            "90cm",
+            "120cm",
+            "150cm",
+            "180cm"
+          ],
+          "required": true
+        },
+        {
+          "id": "color",
+          "label": "Color",
+          "options": [
+            "Black",
+            "White",
+            "Lime",
+            "Red",
+            "Blue",
+            "Purple",
+            "Pink",
+            "Orange"
+          ]
+        },
+        {
+          "id": "material",
+          "label": "Material",
+          "options": [
+            "Polyester",
+            "Cotton",
+            "Waxed",
+            "Reflective",
+            "Elastic"
+          ]
+        }
+      ],
+      "productFields": [
+        {
+          "key": "badge",
+          "label": "Product badge",
+          "type": "text"
+        },
+        {
+          "key": "isFeatured",
+          "label": "Featured product",
+          "type": "boolean"
+        },
+        {
+          "key": "compatibility",
+          "label": "Sneaker Compatibility",
+          "type": "text"
+        }
+      ]
+    },
+    "pages": [
+      {
+        "id": "home",
+        "label": "Home Page",
+        "description": "Hero, brand slider, category grid, product shelves, promo banner, visual categories, and footer.",
+        "href": "/dashboard/customize",
+        "required": true
+      },
+      {
+        "id": "product",
+        "label": "Product Detail Page",
+        "description": "Product media, color swatches, size/length selector, reviews, related products, and trust badges.",
+        "href": "/dashboard/products"
+      }
+    ]
+  },
+  "description": "Template: KICKS SHEOS",
+  "previewUrl": "/templates/kicks-sheos/index.html"
+}

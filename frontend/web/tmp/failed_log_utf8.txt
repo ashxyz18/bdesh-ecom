@@ -1,0 +1,193 @@
+﻿[2026-05-13T18:40:19.078Z] Starting template processing
+[2026-05-13T18:40:19.081Z] Extracting source files to temp directory
+[2026-05-13T18:40:19.115Z] Extracted 24 files
+[2026-05-13T18:40:19.116Z] Detected React app with build script
+[2026-05-13T18:40:19.123Z] Converted BrowserRouter to HashRouter in 1 source file(s) for nested template hosting
+[2026-05-13T18:40:19.124Z] Created .env with REACT_APP_API_URL=/api/adapters/trendy
+[2026-05-13T18:40:19.125Z] Running npm install...
+[2026-05-13T18:45:11.559Z] npm install stdout: 
+added 1302 packages, and audited 1303 packages in 5m
+
+267 packages are looking for funding
+  run `npm fund` for details
+
+26 vulnerabilities (9 low, 3 moderate, 14 high)
+
+To address issues that do not require attention, run:
+  npm audit fix
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+[2026-05-13T18:45:11.639Z] npm install stderr: npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+npm warn deprecated @babe
+[2026-05-13T18:45:11.641Z] npm install completed successfully
+[2026-05-13T18:45:11.642Z] Running npm run build...
+[2026-05-13T18:45:19.887Z] npm run build failed:
+Command failed: npm run build
+node:internal/modules/cjs/loader:1451
+  throw err;
+  ^
+
+Error: Cannot find module 'ajv/dist/compile/codegen'
+Require stack:
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\definitions\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\validate.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\terser-webpack-plugin\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\config\webpack.config.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\scripts\build.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1059:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1064:22)
+    at Module._load (node:internal/modules/cjs/loader:1234:25)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.require (node:internal/modules/cjs/loader:1548:12)
+    at require (node:internal/modules/helpers:152:16)
+    at Object.<anonymous> (C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\src\definitions\typeof.ts:2:1)
+    at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\definitions\\typeof.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\keywords\\typeof.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\keywords\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\schema-utils\\dist\\validate.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\schema-utils\\dist\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\terser-webpack-plugin\\dist\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\react-scripts\\config\\webpack.config.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\react-scripts\\scripts\\build.js'
+  ]
+}
+
+Node.js v24.13.1
+
+---
+node:internal/modules/cjs/loader:1451
+  throw err;
+  ^
+
+Error: Cannot find module 'ajv/dist/compile/codegen'
+Require stack:
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\definitions\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\validate.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\terser-webpack-plugin\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\config\webpack.config.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\scripts\build.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1059:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1064:22)
+    at Module._load (node:internal/modules/cjs/loader:1234:25)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.require (node:internal/modules/cjs/loader:1548:12)
+    at require (node:internal/modules/helpers:152:16)
+    at Object.<anonymous> (C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\src\definitions\typeof.ts:2:1)
+    at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\dell\\bdesh-ecom\\f
+---
+
+> bdesh-premium-streetwear@1.0.0 build
+> react-scripts build
+
+
+> bdesh-premium-streetwear@1.0.0 build
+> react-scripts build
+
+
+[2026-05-13T18:45:19.899Z] Temp directory contents: [".env","bdesh.dashboard.json","node_modules","package-lock.json","package.json","public","README.md","src"]
+
+Build error: Command failed: npm run build
+node:internal/modules/cjs/loader:1451
+  throw err;
+  ^
+
+Error: Cannot find module 'ajv/dist/compile/codegen'
+Require stack:
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\definitions\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\validate.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\terser-webpack-plugin\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\config\webpack.config.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\scripts\build.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1059:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1064:22)
+    at Module._load (node:internal/modules/cjs/loader:1234:25)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.require (node:internal/modules/cjs/loader:1548:12)
+    at require (node:internal/modules/helpers:152:16)
+    at Object.<anonymous> (C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\src\definitions\typeof.ts:2:1)
+    at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\definitions\\typeof.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\keywords\\typeof.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\keywords\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\ajv-keywords\\dist\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\schema-utils\\dist\\validate.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\schema-utils\\dist\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\terser-webpack-plugin\\dist\\index.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\react-scripts\\config\\webpack.config.js',
+    'C:\\Users\\dell\\bdesh-ecom\\frontend\\web\\tmp\\template-builds\\trendy\\node_modules\\react-scripts\\scripts\\build.js'
+  ]
+}
+
+Node.js v24.13.1
+
+---
+node:internal/modules/cjs/loader:1451
+  throw err;
+  ^
+
+Error: Cannot find module 'ajv/dist/compile/codegen'
+Require stack:
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\definitions\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\typeof.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\keywords\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\validate.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\schema-utils\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\terser-webpack-plugin\dist\index.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\config\webpack.config.js
+- C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\react-scripts\scripts\build.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1448:15)
+    at defaultResolveImpl (node:internal/modules/cjs/loader:1059:19)
+    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1064:22)
+    at Module._load (node:internal/modules/cjs/loader:1234:25)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.require (node:internal/modules/cjs/loader:1548:12)
+    at require (node:internal/modules/helpers:152:16)
+    at Object.<anonymous> (C:\Users\dell\bdesh-ecom\frontend\web\tmp\template-builds\trendy\node_modules\ajv-keywords\src\definitions\typeof.ts:2:1)
+    at Module._compile (node:internal/modules/cjs/loader:1804:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\dell\\bdesh-ecom\\f
+---
+
+> bdesh-premium-streetwear@1.0.0 build
+> react-scripts build
+
+
+> bdesh-premium-streetwear@1.0.0 build
+> react-scripts build
+
+

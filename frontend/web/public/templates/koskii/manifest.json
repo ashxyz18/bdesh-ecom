@@ -1,0 +1,259 @@
+{
+  "id": "koskii",
+  "name": "koskii",
+  "version": "1.0.0",
+  "css": [
+    "/assets/index-6uyHdoU5.css"
+  ],
+  "js": [
+    "/assets/index-B_GcNJBC.js"
+  ],
+  "entryPoint": "index.html",
+  "sections": {},
+  "interactivity": {
+    "cart": {
+      "trigger": ".header-icon[href=\"#cart\"]",
+      "drawer": ".cart-drawer",
+      "overlay": ".cart-overlay"
+    },
+    "search": {
+      "trigger": ".search-btn",
+      "overlay": ".search-overlay",
+      "input": "#searchInput"
+    },
+    "mobileMenu": {
+      "trigger": ".menu-btn",
+      "menu": ".mobile-menu",
+      "overlay": ".menu-overlay",
+      "closeBtn": ".close-menu"
+    },
+    "wishlist": {
+      "selector": ".wishlist-btn",
+      "activeClass": "active"
+    },
+    "productCards": {
+      "quickAdd": ".quick-add",
+      "wishlist": ".wishlist-btn",
+      "productLink": ".product-card"
+    },
+    "newsletter": {
+      "form": ".newsletter-form",
+      "input": "input[type=\"email\"]",
+      "button": "button[type=\"submit\"]"
+    }
+  },
+  "configSchema": {
+    "brand": {
+      "label": "Restaurant Brand",
+      "fields": {
+        "storeName": {
+          "type": "text",
+          "label": "Restaurant name"
+        },
+        "logo": {
+          "type": "image",
+          "label": "Logo"
+        }
+      }
+    },
+    "hero": {
+      "label": "Hero Section",
+      "fields": {
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "Elegance in Every Thread"
+        },
+        "image": {
+          "type": "image",
+          "label": "Hero Image"
+        }
+      }
+    },
+    "theme": {
+      "label": "Theme",
+      "fields": {
+        "primaryColor": {
+          "type": "color",
+          "label": "Primary Color",
+          "default": "#000000"
+        },
+        "secondaryColor": {
+          "type": "color",
+          "label": "Secondary Color",
+          "default": "#f5f5f5"
+        },
+        "accentColor": {
+          "type": "color",
+          "label": "Accent Color",
+          "default": "#e74c3c"
+        }
+      }
+    },
+    "announcement": {
+      "label": "Announcement Bar",
+      "fields": {
+        "text": {
+          "type": "text",
+          "label": "Announcement Text",
+          "default": "Get extra 5% off Use: FLASH5 on Min.2490 | Save More! Use: KOSKIILUV10 for extra 10% discount |"
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "navigation": [
+      "overview",
+      "products",
+      "orders",
+      "analytics",
+      "customize",
+      "settings"
+    ],
+    "setupChecklist": [
+      {
+        "id": "koskii-catalog",
+        "label": "Create Koskii catalog sections",
+        "description": "Add products for Sarees, Salwar Suits, Lehengas, Gowns, and New Arrivals sections.",
+        "href": "/dashboard/products/new",
+        "type": "products",
+        "required": true
+      },
+      {
+        "id": "koskii-branding",
+        "label": "Set store branding and hero",
+        "href": "/dashboard/customize",
+        "type": "branding",
+        "required": true
+      }
+    ],
+    "catalog": {
+      "label": "Koskii Store Catalog",
+      "itemLabel": "Products",
+      "collections": [
+        {
+          "id": "sarees",
+          "label": "Sarees",
+          "required": true
+        },
+        {
+          "id": "salwar-suits",
+          "label": "Salwar Suits",
+          "required": true
+        },
+        {
+          "id": "lehengas",
+          "label": "Lehengas",
+          "required": true
+        },
+        {
+          "id": "gowns",
+          "label": "Gowns"
+        },
+        {
+          "id": "new-arrivals",
+          "label": "New Arrivals",
+          "required": true
+        },
+        {
+          "id": "sale",
+          "label": "Sale"
+        }
+      ],
+      "filters": [
+        {
+          "id": "category",
+          "label": "Category",
+          "options": [
+            "Sarees",
+            "Salwar Suits",
+            "Lehengas",
+            "Gowns"
+          ],
+          "required": true
+        },
+        {
+          "id": "size",
+          "label": "Size",
+          "options": [
+            "XS",
+            "S",
+            "M",
+            "L",
+            "XL",
+            "Free Size"
+          ]
+        },
+        {
+          "id": "color",
+          "label": "Color",
+          "options": [
+            "Black",
+            "White",
+            "Red",
+            "Blue",
+            "Navy",
+            "Beige",
+            "Wine",
+            "Green"
+          ]
+        }
+      ],
+      "productFields": [
+        {
+          "key": "badge",
+          "label": "Product badge",
+          "type": "text"
+        },
+        {
+          "key": "isFeatured",
+          "label": "Featured product",
+          "type": "boolean"
+        },
+        {
+          "key": "originalPrice",
+          "label": "Original price",
+          "type": "number"
+        },
+        {
+          "key": "discount",
+          "label": "Discount %",
+          "type": "number"
+        }
+      ]
+    },
+    "pages": [
+      {
+        "id": "home",
+        "label": "Home Page",
+        "href": "/dashboard/customize",
+        "required": true
+      },
+      {
+        "id": "product",
+        "label": "Product Detail Page",
+        "href": "/dashboard/products"
+      }
+    ]
+  },
+  "description": "A premium e-commerce template for ethnic wear stores featuring sarees, salwar suits, lehengas, and gowns.",
+  "previewUrl": "/templates/koskii-template/index.html",
+  "type": "react",
+  "api": {
+    "mappings": {
+      "products": {
+        "id": "id",
+        "name": "name",
+        "price": "price",
+        "originalPrice": "originalPrice",
+        "image": "images[0]",
+        "category": "category",
+        "badge": "badge",
+        "discount": "discount",
+        "rating": "rating",
+        "colors": "colors",
+        "sizes": "sizes"
+      }
+    }
+  }
+}

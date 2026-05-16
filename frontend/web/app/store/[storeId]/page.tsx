@@ -2,11 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import KoskiiTemplate from "@/lib/templates/koskii/KoskiiTemplate";
-import DynamicTemplate from "@/lib/templates/dynamic/DynamicTemplate";
-import { Store, Product } from "@/lib/templates/types";
-import { CartProvider } from "@/lib/context/CartContext";
-import { ToastProvider } from "@/lib/context/ToastContext";
+
+interface StoreData {
+  id: string;
+  name: string;
+  slug: string;
+  subdomain: string;
+  description?: string;
+  logo?: string;
+  banner?: string;
+  templateId?: string;
+  theme: Record<string, any>;
+  settings: Record<string, any>;
+  websiteType: string;
+}
 
 function StoreLoadingSkeleton() {
   return (
@@ -16,10 +25,7 @@ function StoreLoadingSkeleton() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div
-              key={i}
-              className="bg-gray-100 rounded-lg h-[300px] animate-pulse"
-            />
+            <div key={i} className="bg-gray-100 rounded-lg h-[300px] animate-pulse" />
           ))}
         </div>
       </div>
@@ -30,10 +36,13 @@ function StoreLoadingSkeleton() {
 export default function StorePage() {
   const params = useParams();
   const storeId = params.storeId as string;
-  const [store, setStore] = useState<Store | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [store, setStore] = useState<StoreData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [templateSlug, setTemplateSlug] = useState<string | null>(null);
+  // Captured once when store loads — prevents iframe re-loading on every re-render
+  const [iframeTs, setIframeTs] = useState<number | null>(null);
+
 
   useEffect(() => {
     if (!storeId) return;
@@ -43,10 +52,27 @@ export default function StorePage() {
         if (!res.ok) throw new Error("Store not found");
         return res.json();
       })
-      .then((data) => {
+      .then(async (data) => {
         setStore(data.store);
-        setProducts(data.products || []);
+
+        const tid = data.store?.templateId;
+        if (!tid) {
+          setLoading(false);
+          return;
+        }
+
+        // Look up the slug from the DB template record
+        try {
+          const tRes = await fetch(`/api/templates/${tid}`);
+          const tData = await tRes.json();
+          setTemplateSlug(tData.template?.slug || tid);
+        } catch {
+          setTemplateSlug(tid);
+        }
+
+        setIframeTs(Date.now());
         setLoading(false);
+
       })
       .catch((err) => {
         setError(err.message);
@@ -62,32 +88,38 @@ export default function StorePage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Store not found
-          </h1>
-          <p className="text-gray-500">
-            This store does not exist or has been removed.
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Store not found</h1>
+          <p className="text-gray-500">This store does not exist or has been removed.</p>
         </div>
       </div>
     );
   }
 
-  const templateId = (store as { templateId?: string }).templateId || "koskii";
+  if (!store.templateId) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{store.name}</h1>
+          <p className="text-gray-500">This store hasn&apos;t selected a template yet.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // All templates are rendered via the serve route which injects platform config + API interceptors
+  const slug = templateSlug || store.templateId;
+  const ts = iframeTs ?? Date.now();
+  const iframeSrc = `/api/templates/serve?id=${slug}&storeId=${store.id}&t=${ts}`;
+
 
   return (
-    <ToastProvider>
-      <CartProvider>
-        {templateId === "koskii" ? (
-          <KoskiiTemplate store={store} products={products} />
-        ) : (
-          <DynamicTemplate
-            templateId={templateId}
-            store={store}
-            products={products}
-          />
-        )}
-      </CartProvider>
-    </ToastProvider>
+    <div className="w-full h-screen overflow-hidden">
+      <iframe
+        src={iframeSrc}
+        className="w-full h-full border-none"
+        title={`Store: ${store.name}`}
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+      />
+    </div>
   );
 }

@@ -8,12 +8,19 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    let customTemplatesCount = 0;
+    try {
+      const { getTemplates } = await import("@/lib/templates/registry");
+      customTemplatesCount = (await getTemplates()).length;
+    } catch (e) {
+      console.error("Failed to get custom templates for stats:", e);
+    }
+
     const [
       totalStores,
       totalUsers,
       totalProducts,
       totalOrders,
-      totalTemplates,
       revenueAgg,
       ordersByStatus,
       recentOrders,
@@ -22,7 +29,6 @@ export async function GET(request: NextRequest) {
       prisma.user.count(),
       prisma.product.count({ where: { deletedAt: null } }),
       prisma.order.count(),
-      (await import("@/lib/templates/registry")).getTemplates().then((t) => t.length),
       prisma.order.aggregate({ _sum: { total: true } }),
       prisma.order.groupBy({ by: ["status"], _count: true }),
       prisma.order.findMany({
@@ -39,7 +45,7 @@ export async function GET(request: NextRequest) {
         totalUsers,
         totalProducts,
         totalOrders,
-        totalTemplates,
+        totalTemplates: customTemplatesCount,
         totalRevenue: revenueAgg._sum.total || 0,
       },
       ordersByStatus: Object.fromEntries(

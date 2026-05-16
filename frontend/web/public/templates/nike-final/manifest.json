@@ -1,0 +1,140 @@
+{
+  "id": "nike-final",
+  "name": "nike final",
+  "version": "1.0.0",
+  "css": [
+    "static/css/main.ebbee498.css"
+  ],
+  "js": [
+    "static/js/main.aa10818b.js",
+    "static/js/main.aa10818b.js.LICENSE.txt"
+  ],
+  "entryPoint": "index.html",
+  "sections": {},
+  "interactivity": {
+    "cart": {
+      "trigger": ".header-icon[href=\"#cart\"]",
+      "drawer": ".cart-drawer",
+      "overlay": ".cart-overlay"
+    },
+    "search": {
+      "trigger": ".search-btn",
+      "overlay": ".search-overlay",
+      "input": "#searchInput"
+    },
+    "mobileMenu": {
+      "trigger": ".menu-btn",
+      "menu": ".mobile-menu",
+      "overlay": ".menu-overlay",
+      "closeBtn": ".close-menu"
+    },
+    "wishlist": {
+      "selector": ".wishlist-btn",
+      "activeClass": "active"
+    },
+    "productCards": {
+      "quickAdd": ".quick-add",
+      "wishlist": ".wishlist-btn",
+      "productLink": ".product-card"
+    },
+    "newsletter": {
+      "form": ".newsletter-form",
+      "input": "input[type=\"email\"]",
+      "button": "button[type=\"submit\"]"
+    }
+  },
+  "configSchema": {
+    "brand": {
+      "label": "Restaurant Brand",
+      "fields": {
+        "storeName": {
+          "type": "text",
+          "label": "Restaurant name"
+        },
+        "logo": {
+          "type": "image",
+          "label": "Logo"
+        }
+      }
+    },
+    "hero": {
+      "label": "Main Banner",
+      "fields": {
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "Fresh flavors, made for you"
+        },
+        "subtext": {
+          "type": "textarea",
+          "label": "Subtext",
+          "default": "Order your favorites online."
+        },
+        "image": {
+          "type": "image",
+          "label": "Hero image"
+        }
+      }
+    },
+    "theme": {
+      "label": "Theme",
+      "fields": {
+        "primaryColor": {
+          "type": "color",
+          "label": "Primary color",
+          "default": "#1d4ed8"
+        },
+        "accentColor": {
+          "type": "color",
+          "label": "Accent color",
+          "default": "#dc2626"
+        }
+      }
+    }
+  },
+  "dashboard": {
+    "navigation": [
+      "overview",
+      "products",
+      "orders",
+      "analytics",
+      "couriers",
+      "customize",
+      "settings"
+    ],
+    "setupChecklist": [
+      {
+        "id": "branding",
+        "label": "Review template branding",
+        "description": "Set the logo, colors, and hero content inferred from this template.",
+        "href": "/dashboard/customize",
+        "type": "branding",
+        "required": true
+      },
+      {
+        "id": "menu-items",
+        "label": "Add menu items",
+        "description": "Create the menu items this React template will display.",
+        "href": "/dashboard/products/new",
+        "type": "products",
+        "required": true
+      },
+      {
+        "id": "settings",
+        "label": "Review checkout settings",
+        "description": "Confirm currency, payment, and checkout details before publishing.",
+        "href": "/dashboard/settings",
+        "type": "settings"
+      },
+      {
+        "id": "delivery",
+        "label": "Connect delivery options",
+        "description": "This template appears to use delivery or shipping information.",
+        "href": "/dashboard/couriers",
+        "type": "couriers"
+      }
+    ]
+  },
+  "description": "asa",
+  "previewUrl": "/templates/nike-final/index.html"
+}

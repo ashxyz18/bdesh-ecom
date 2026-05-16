@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.css": "/templates/nike/static/css/main.ebbee498.css",
+    "main.js": "/templates/nike/static/js/main.cc7304e7.js",
+    "index.html": "/templates/nike/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.ebbee498.css",
+    "static/js/main.cc7304e7.js"
+  ]
+}

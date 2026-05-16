@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.css": "/templates/pandx/static/css/main.f964732c.css",
+    "main.js": "/templates/pandx/static/js/main.18db74cb.js",
+    "index.html": "/templates/pandx/index.html"
+  },
+  "entrypoints": [
+    "static/css/main.f964732c.css",
+    "static/js/main.18db74cb.js"
+  ]
+}

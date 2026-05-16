@@ -8,7 +8,7 @@ interface RouteParams {
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { storeId } = await params;
-    const store = await prisma.store.findUnique({ where: { id: storeId } });
+    const store = await prisma.store.findFirst({ where: { id: storeId, deletedAt: null } });
 
     if (!store) {
       return NextResponse.json({ error: "Store not found" }, { status: 404 });

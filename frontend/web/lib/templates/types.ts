@@ -14,6 +14,8 @@ export interface Store {
 export interface StoreTheme {
   primaryColor?: string;
   secondaryColor?: string;
+  darkColor?: string;
+  accentColor?: string;
   fontFamily?: string;
 }
 

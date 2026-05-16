@@ -4,13 +4,14 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Settings, Palette, Image, Type, Globe, Truck,
-  Save, Loader2, Check, Plus, Eye, Trash2
+  Save, Loader2, Check, Plus, Eye, Trash2, Link2, Copy, ExternalLink
 } from "lucide-react";
 
 interface Store {
   id: string;
   name: string;
   slug: string;
+  subdomain?: string;
   description?: string;
   logo?: string;
   banner?: string;
@@ -21,6 +22,7 @@ interface Store {
     heroSubtext?: string;
     footerText?: string;
     currency?: string;
+    customDomain?: string;
     promotionalBanners?: { id: string; image: string; link?: string; active: boolean }[];
   };
   socialLinks?: { facebook?: string; instagram?: string };
@@ -64,10 +66,19 @@ export default function SettingsPage() {
     }
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const tabs = [
     { id: "general", label: "General", icon: Settings },
     { id: "appearance", label: "Appearance", icon: Palette },
     { id: "hero", label: "Hero & Banners", icon: Image },
+    { id: "domain", label: "Domain", icon: Link2 },
     { id: "social", label: "Social Links", icon: Globe },
     { id: "delivery", label: "Delivery", icon: Truck },
   ];
@@ -323,6 +334,107 @@ export default function SettingsPage() {
               >
                 <Truck size={14} /> Manage Courier Integrations
               </Link>
+            </div>
+          )}
+
+          {activeTab === "domain" && (
+            <div className="space-y-6">
+              <h2 className="text-lg font-semibold text-gray-900">Domain Settings</h2>
+
+              {/* Free Subdomain */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Globe size={16} className="text-blue-600" />
+                  <h3 className="text-sm font-semibold text-blue-900">Your Free Subdomain</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 bg-white border border-blue-200 rounded-lg px-4 py-2.5 text-sm font-mono text-gray-800">
+                    {store.subdomain || store.slug}.bdesh.com
+                  </div>
+                  <button
+                    onClick={() => copyToClipboard(`https://${store.subdomain || store.slug}.bdesh.com`)}
+                    className="px-3 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1.5 text-sm"
+                  >
+                    {copied ? <Check size={14} /> : <Copy size={14} />}
+                    {copied ? "Copied" : "Copy"}
+                  </button>
+                  <a
+                    href={`/store/${store.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-2.5 border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-1.5 text-sm"
+                  >
+                    <ExternalLink size={14} />
+                    Visit
+                  </a>
+                </div>
+                <p className="text-xs text-blue-600 mt-2">
+                  This subdomain is always available for free with your store.
+                </p>
+              </div>
+
+              {/* Custom Domain */}
+              <div className="bg-white border border-gray-200 rounded-xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Link2 size={16} className="text-gray-600" />
+                  <h3 className="text-sm font-semibold text-gray-900">Custom Domain</h3>
+                  <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">Pro Plan</span>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Your Custom Domain</label>
+                  <input
+                    type="text"
+                    value={store.settings?.customDomain || ""}
+                    onChange={(e) => setStore({ ...store, settings: { ...store.settings, customDomain: e.target.value } })}
+                    placeholder="www.mystore.com"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  />
+                </div>
+                <button
+                  onClick={() => handleSave({ settings: { ...store.settings, customDomain: store.settings?.customDomain } })}
+                  disabled={saving}
+                  className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-[#1d4ed8] text-white rounded-lg hover:bg-[#1e40af] transition-colors disabled:opacity-50 text-sm"
+                >
+                  {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                  Save Domain
+                </button>
+
+                {/* DNS Instructions */}
+                {store.settings?.customDomain && (
+                  <div className="mt-5 bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2">DNS Configuration</h4>
+                    <p className="text-xs text-gray-500 mb-3">
+                      Add the following DNS records at your domain registrar:
+                    </p>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="text-left text-gray-500 border-b border-gray-200">
+                            <th className="pb-2 pr-4">Type</th>
+                            <th className="pb-2 pr-4">Name</th>
+                            <th className="pb-2">Value</th>
+                          </tr>
+                        </thead>
+                        <tbody className="font-mono text-gray-800">
+                          <tr className="border-b border-gray-100">
+                            <td className="py-2 pr-4">CNAME</td>
+                            <td className="py-2 pr-4">www</td>
+                            <td className="py-2">{store.subdomain || store.slug}.bdesh.com</td>
+                          </tr>
+                          <tr>
+                            <td className="py-2 pr-4">CNAME</td>
+                            <td className="py-2 pr-4">@</td>
+                            <td className="py-2">{store.subdomain || store.slug}.bdesh.com</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-3">
+                      DNS changes can take up to 48 hours to propagate.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

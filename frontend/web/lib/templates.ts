@@ -11,7 +11,7 @@ export interface Template {
 }
 
 const TEMPLATE_MANIFESTS: Record<string, () => Promise<Template>> = {
-  koskii: () => import("@/public/prebuilt-templates/koskii/manifest.json") as unknown as Promise<Template>,
+  // Templates are now loaded dynamically from the database and /public/templates/
 };
 
 export async function getTemplates(): Promise<Template[]> {

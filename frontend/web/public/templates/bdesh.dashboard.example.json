@@ -1,0 +1,133 @@
+{
+  "dashboard": {
+    "navigation": ["overview", "products", "orders", "analytics", "customize", "settings"],
+    "setupChecklist": [
+      {
+        "id": "catalog-sections",
+        "label": "Create template catalog sections",
+        "description": "Add products for every section used by this storefront.",
+        "href": "/dashboard/products/new",
+        "type": "products",
+        "required": true
+      },
+      {
+        "id": "brand-content",
+        "label": "Set hero, brand, and theme content",
+        "description": "Fill the customization fields required by this template.",
+        "href": "/dashboard/customize",
+        "type": "branding",
+        "required": true
+      }
+    ],
+    "catalog": {
+      "label": "Template Catalog",
+      "itemLabel": "Products",
+      "collections": [
+        {
+          "id": "men",
+          "label": "Men",
+          "description": "Products shown in the Men section.",
+          "required": true
+        },
+        {
+          "id": "women",
+          "label": "Women",
+          "description": "Products shown in the Women section.",
+          "required": true
+        },
+        {
+          "id": "new-arrivals",
+          "label": "New Arrivals",
+          "description": "Products shown in the New Arrivals section.",
+          "required": true
+        },
+        {
+          "id": "sale",
+          "label": "Sale",
+          "description": "Products shown in sale or offer blocks."
+        }
+      ],
+      "filters": [
+        {
+          "id": "audience",
+          "label": "Audience",
+          "options": ["Men", "Women"],
+          "required": true
+        },
+        {
+          "id": "size",
+          "label": "Size",
+          "options": ["XS", "S", "M", "L", "XL"]
+        },
+        {
+          "id": "color",
+          "label": "Color",
+          "options": ["Black", "White", "Red", "Blue"]
+        }
+      ],
+      "productFields": [
+        {
+          "key": "badge",
+          "label": "Product badge",
+          "type": "text"
+        },
+        {
+          "key": "isFeatured",
+          "label": "Featured product",
+          "type": "boolean"
+        }
+      ]
+    },
+    "pages": [
+      {
+        "id": "home",
+        "label": "Home Page",
+        "description": "Hero, sections, banners, and featured product groups.",
+        "href": "/dashboard/customize",
+        "required": true
+      },
+      {
+        "id": "product",
+        "label": "Product Detail Page",
+        "description": "Product media, variants, sizes, colors, and related items.",
+        "href": "/dashboard/products"
+      }
+    ]
+  },
+  "configSchema": {
+    "hero": {
+      "label": "Hero Section",
+      "fields": {
+        "headline": {
+          "type": "text",
+          "label": "Headline",
+          "default": "Just Do It"
+        },
+        "subtext": {
+          "type": "textarea",
+          "label": "Subtext",
+          "default": "New drops, classic icons, and gear for every move."
+        },
+        "image": {
+          "type": "image",
+          "label": "Hero Image"
+        }
+      }
+    },
+    "theme": {
+      "label": "Theme",
+      "fields": {
+        "primaryColor": {
+          "type": "color",
+          "label": "Primary Color",
+          "default": "#111111"
+        },
+        "accentColor": {
+          "type": "color",
+          "label": "Accent Color",
+          "default": "#f97316"
+        }
+      }
+    }
+  }
+}

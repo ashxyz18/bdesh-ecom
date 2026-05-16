@@ -12,6 +12,7 @@ export interface TemplateInfo {
   thumbnail?: string;
   previewUrl: string;
   manifest: TemplateManifest;
+  buildStatus?: 'pending' | 'installing' | 'building' | 'ready' | 'failed';
 }
 
 let templateCache: Map<string, TemplateInfo> = new Map();
@@ -43,6 +44,7 @@ export async function initializeTemplateCache(): Promise<void> {
               thumbnail: manifest.thumbnail,
               previewUrl: manifest.previewUrl || `/templates/${entry.name}/${manifest.entryPoint}`,
               manifest,
+              buildStatus: 'ready',
             });
           } catch (e) {
             console.error(`Failed to load template ${entry.name}:`, e);
@@ -58,6 +60,7 @@ export async function initializeTemplateCache(): Promise<void> {
               name: entry.name,
               previewUrl: manifest.previewUrl!,
               manifest,
+              buildStatus: 'ready',
             });
           }
         }
@@ -120,6 +123,7 @@ export async function addTemplate(
       thumbnail: manifest.thumbnail,
       previewUrl: manifest.previewUrl || `/templates/${id}/${manifest.entryPoint}`,
       manifest,
+      buildStatus: 'ready',
     });
 
     return { success: true };
@@ -154,4 +158,10 @@ export async function templateExists(id: string): Promise<boolean> {
 
 export function getTemplatesDir(): string {
   return TEMPLATES_DIR;
+}
+
+export function refreshCache(): void {
+  cacheInitialized = false;
+  templateCache.clear();
+  initializeTemplateCache();
 }

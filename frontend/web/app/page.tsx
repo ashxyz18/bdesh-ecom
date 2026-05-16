@@ -1,18 +1,17 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Navbar } from "@/components/marketing/Navbar";
 import { HeroSection } from "@/components/marketing/HeroSection";
-import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Button } from "@/components/shared/Button";
 import { LazySection } from "@/components/shared/LazySection";
+import { OptimizedImage } from "@/components/shared/OptimizedImage";
 import {
   Store, ShoppingBag,
   ArrowRight, Check, Star,
-  Zap, Palette,
+  Zap, Palette, Shield, Truck,
 } from "lucide-react";
-
-const AIWebsiteBuilder = dynamic(() => import("@/components/ai/AIWebsiteBuilder").then(mod => ({ default: mod.AIWebsiteBuilder })), { ssr: false });
 
 const stats = [
   { value: "10,000+", label: "Active Stores" },
@@ -23,23 +22,23 @@ const stats = [
 
 const features = [
   { title: "Easy Setup", description: "Create your store in minutes with our intuitive dashboard. No coding required.", icon: Zap },
-  { title: "Secure Payments", description: "Accept payments via bKash, Nagad, SSLCommerz, and cash on delivery.", icon: Store },
+  { title: "Secure Payments", description: "Accept payments via bKash, Nagad, SSLCommerz, and cash on delivery.", icon: Shield },
   { title: "Mobile First", description: "Your store looks great on any device. Optimized for mobile shopping.", icon: Palette },
-  { title: "AI Powered", description: "Let AI help you design your store, write product descriptions, and optimize for sales.", icon: Star },
-  { title: "Analytics", description: "Track your sales, visitors, and growth with built-in analytics dashboard.", icon: Zap },
+  { title: "Analytics", description: "Track your sales, visitors, and growth with built-in analytics dashboard.", icon: Star },
   { title: "Bangladesh Focus", description: "Built for Bangladeshi businesses with local payment methods and shipping.", icon: Store },
+  { title: "Fast Delivery", description: "Integrated courier management for seamless order fulfillment.", icon: Truck },
 ];
 
 const testimonials = [
   { name: "Rahim Ahmed", role: "Fashion Entrepreneur", company: "Dhaka Styles", quote: "BixelBD made it incredibly easy to take my boutique online. Sales doubled within the first month!", rating: 5 },
   { name: "Fatima Begum", role: "Restaurant Owner", company: "Chittagong Eats", quote: "The food template was perfect. Customers can now order online and we handle delivery seamlessly.", rating: 5 },
-  { name: "Kamal Hossain", role: "Electronics Seller", company: "TechBD", quote: "From setup to first sale in under 30 minutes. The AI builder understood exactly what I needed.", rating: 5 },
+  { name: "Kamal Hossain", role: "Electronics Seller", company: "TechBD", quote: "From setup to first sale in under 30 minutes. The platform understood exactly what I needed.", rating: 5 },
 ];
 
 const pricingPlans = [
   { name: "Starter", price: "0", period: "month", description: "Perfect for trying out", highlighted: false, cta: "Start Free", features: ["1 Store", "Up to 50 Products", "Basic Analytics", "bKash Payments", "Community Support"] },
-  { name: "Pro", price: "499", period: "month", description: "For growing businesses", highlighted: true, cta: "Start Pro Trial", features: ["5 Stores", "Unlimited Products", "Advanced Analytics", "All Payment Methods", "Priority Support", "Custom Domain", "AI Assistant"] },
-  { name: "Enterprise", price: "1999", period: "month", description: "For large operations", highlighted: false, cta: "Contact Sales", features: ["Unlimited Stores", "Unlimited Products", "Custom Analytics", "All Payment Methods", "Dedicated Support", "Custom Domain", "AI Assistant", "API Access", "White Label"] },
+  { name: "Pro", price: "499", period: "month", description: "For growing businesses", highlighted: true, cta: "Start Pro Trial", features: ["5 Stores", "Unlimited Products", "Advanced Analytics", "All Payment Methods", "Priority Support", "Custom Domain"] },
+  { name: "Enterprise", price: "1999", period: "month", description: "For large operations", highlighted: false, cta: "Contact Sales", features: ["Unlimited Stores", "Unlimited Products", "Custom Analytics", "All Payment Methods", "Dedicated Support", "Custom Domain", "API Access", "White Label"] },
 ];
 
 const steps = [
@@ -48,70 +47,132 @@ const steps = [
   { number: "03", title: "Go Live!", description: "Your store is instantly live with payments", icon: Zap },
 ];
 
-const templates = [
+const fallbackTemplates = [
   {
     id: "koskii",
     name: "Koskii Ethnic Wear",
-    category: "Fashion",
-    thumbnail: "https://cdn.shopify.com/s/files/1/0049/3649/9315/files/koskii-ranipink-zariwork-puresilk-designer-saree-saus0035699_ranipink_1_1.jpg?v=1721373197",
-    pages: "4 Pages",
+    description: "A beautiful e-commerce template designed for ethnic wear.",
+    thumbnail: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=600&fit=crop",
   },
   {
-    id: "fashion",
-    name: "Modern Fashion",
-    category: "Fashion",
-    thumbnail: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=600&h=400&fit=crop",
-    pages: "5 Pages",
+    id: "modern-store",
+    name: "Modern Store",
+    description: "Clean, minimal design perfect for any product category.",
+    thumbnail: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop",
   },
   {
-    id: "grocery",
-    name: "Fresh Grocery",
-    category: "Grocery",
-    thumbnail: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=400&fit=crop",
-    pages: "4 Pages",
+    id: "food-express",
+    name: "Food Express",
+    description: "Built for restaurants and food delivery businesses.",
+    thumbnail: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=600&fit=crop",
   },
 ];
 
+function TemplatePreviewSection() {
+  const [templates, setTemplates] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/templates")
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.templates?.length > 0) {
+          setTemplates(data.templates.slice(0, 3));
+        } else {
+          setTemplates(fallbackTemplates);
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        setTemplates(fallbackTemplates);
+        setError(true);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+            <div className="aspect-[4/3] bg-gray-100 animate-pulse"></div>
+            <div className="p-5">
+              <div className="h-5 bg-gray-200 rounded w-2/3 mb-2 animate-pulse"></div>
+              <div className="h-4 bg-gray-100 rounded w-1/2 animate-pulse"></div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+      {templates.map((template) => (
+        <Link key={template.id} href={`/templates/${template.id}`} className="group">
+          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#1d4ed8]/20">
+            <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+              {template.thumbnail ? (
+                <OptimizedImage
+                  src={template.thumbnail}
+                  alt={template.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="group-hover:scale-105 transition-transform duration-500"
+                  containerClassName="w-full h-full"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-50 text-gray-400">
+                  <Palette className="w-12 h-12 opacity-20" />
+                </div>
+              )}
+            </div>
+            <div className="p-5">
+              <h3 className="text-lg font-bold text-gray-900 mb-1">{template.name}</h3>
+              <p className="text-sm text-gray-500 line-clamp-1">{template.description || "Start selling today"}</p>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-white">
       <Navbar />
       <HeroSection />
 
       {/* Stats Bar */}
-      <section className="bg-[#0a0a0a] border-t border-white/5">
-        <div className="max-w-[1400px] mx-auto px-6 py-10">
+      <section className="bg-gray-950 border-t border-white/5">
+        <div className="max-w-[1400px] mx-auto px-6 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-2xl md:text-3xl font-bold text-white">{stat.value}</p>
-                <p className="text-sm text-white/40 mt-1">{stat.label}</p>
+                <p className="text-sm text-white/50 mt-1">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* AI Website Builder */}
-      <LazySection className="py-20 md:py-28 bg-black border-t border-white/5" placeholderHeight={600}>
-        <div className="max-w-[1400px] mx-auto px-6">
-          <AIWebsiteBuilder />
-        </div>
-      </LazySection>
-
       {/* How It Works */}
       <LazySection className="py-20 md:py-28 bg-white" placeholderHeight={400}>
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Live in 3 Simple Steps</h2>
-            <p className="text-gray-500 max-w-2xl mx-auto text-lg">No technical skills needed.</p>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg">No technical skills needed. Get your store online today.</p>
           </div>
           <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
             {steps.map((step, i) => (
-              <div key={step.number} className="text-center">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${i === 0 ? "bg-[#1d4ed8]/10" : i === 1 ? "bg-blue-500/10" : "bg-purple-500/10"}`}>
-                  <step.icon className={`w-7 h-7 ${i === 0 ? "text-[#1d4ed8]" : i === 1 ? "text-blue-500" : "text-purple-500"}`} />
+              <div key={step.number} className="text-center relative">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${i === 0 ? "bg-[#1d4ed8]/10" : i === 1 ? "bg-blue-500/10" : "bg-emerald-500/10"}`}>
+                  <step.icon className={`w-7 h-7 ${i === 0 ? "text-[#1d4ed8]" : i === 1 ? "text-blue-500" : "text-emerald-500"}`} />
                 </div>
+                <span className="text-xs font-bold text-gray-300 mb-2 block">{step.number}</span>
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{step.title}</h3>
                 <p className="text-gray-500 text-sm">{step.description}</p>
               </div>
@@ -121,7 +182,7 @@ export default function LandingPage() {
       </LazySection>
 
       {/* Templates Section */}
-      <LazySection id="templates" className="py-20 md:py-28 bg-white" placeholderHeight={500}>
+      <LazySection id="templates" className="py-20 md:py-28 bg-gray-50" placeholderHeight={500}>
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Beautiful Templates</h2>
@@ -129,29 +190,9 @@ export default function LandingPage() {
               Start with a professionally designed template and customize it for your brand.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {templates.map((template) => (
-              <Link key={template.id} href={`/templates/${template.id}`} className="group">
-                <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#1d4ed8]/20">
-                  <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
-                    <img
-                      src={template.thumbnail}
-                      alt={template.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <span className="absolute top-4 left-4 px-3 py-1 bg-white/90 rounded-full text-xs font-medium text-gray-700 shadow-sm">
-                      {template.category}
-                    </span>
-                  </div>
-                  <div className="p-5">
-                    <h3 className="text-lg font-bold text-gray-900 mb-
-1">{template.name}</h3>
-                    <p className="text-sm text-gray-500">{template.pages}</p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+          
+          <TemplatePreviewSection />
+          
           <div className="text-center mt-12">
             <Link href="/templates">
               <Button variant="outline" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-[#1d4ed8] hover:border-[#1d4ed8]/30 px-8 py-3 transition-colors">
@@ -163,20 +204,20 @@ export default function LandingPage() {
       </LazySection>
 
       {/* Features */}
-      <LazySection id="features" className="py-20 md:py-28 bg-gray-50" placeholderHeight={500}>
+      <LazySection id="features" className="py-20 md:py-28 bg-white" placeholderHeight={500}>
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Everything You Need</h2>
             <p className="text-gray-500 max-w-2xl mx-auto text-lg">All the tools to run a successful online store in Bangladesh.</p>
           </div>
-          <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
             {features.map((feature, i) => (
-              <div key={feature.title} className={`p-6 rounded-2xl border border-gray-200 bg-white hover:shadow-lg transition-shadow ${i === 3 ? "md:col-span-2 lg:col-span-4" : "md:col-span-2 lg:col-span-2"}`}>
+              <div key={feature.title} className="p-6 rounded-2xl border border-gray-200 bg-white hover:shadow-lg transition-shadow">
                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${
-                  i === 0 ? "bg-[#1d4ed8]/10" : i === 1 ? "bg-blue-500/10" : i === 2 ? "bg-amber-500/10" : i === 3 ? "bg-purple-500/10" : i === 4 ? "bg-rose-500/10" : i === 5 ? "bg-cyan-500/10" : "bg-indigo-500/10"
+                  i === 0 ? "bg-[#1d4ed8]/10" : i === 1 ? "bg-emerald-500/10" : i === 2 ? "bg-amber-500/10" : i === 3 ? "bg-rose-500/10" : i === 4 ? "bg-cyan-500/10" : "bg-violet-500/10"
                 }`}>
                   <feature.icon className={`w-6 h-6 ${
-                    i === 0 ? "text-[#1d4ed8]" : i === 1 ? "text-blue-500" : i === 2 ? "text-amber-500" : i === 3 ? "text-purple-500" : i === 4 ? "text-rose-500" : i === 5 ? "text-cyan-500" : "text-indigo-500"
+                    i === 0 ? "text-[#1d4ed8]" : i === 1 ? "text-emerald-500" : i === 2 ? "text-amber-500" : i === 3 ? "text-rose-500" : i === 4 ? "text-cyan-500" : "text-violet-500"
                   }`} />
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{feature.title}</h3>
@@ -188,10 +229,11 @@ export default function LandingPage() {
       </LazySection>
 
       {/* Testimonials */}
-      <LazySection className="py-20 md:py-28 bg-white" placeholderHeight={400}>
+      <LazySection className="py-20 md:py-28 bg-gray-50" placeholderHeight={400}>
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Loved by Merchants</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg">See what Bangladeshi business owners are saying.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
             {testimonials.map((t) => (
@@ -245,7 +287,7 @@ export default function LandingPage() {
       <section className="py-20 md:py-28 bg-gradient-to-br from-[#1d4ed8] to-[#1e3a8a] relative overflow-hidden">
         <div className="relative max-w-[1400px] mx-auto px-6 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Start Selling?</h2>
-          <p className="text-white/70 max-w-xl mx-auto mb-8 text-lg">Join Bangladeshi businesses already selling online.</p>
+          <p className="text-white/70 max-w-xl mx-auto mb-8 text-lg">Join thousands of Bangladeshi businesses already selling online.</p>
           <Link href="/templates">
             <Button className="bg-white text-[#1d4ed8] hover:bg-gray-100 text-base font-semibold px-10 py-3.5">
               Browse Templates <ArrowRight size={16} className="ml-2" />
@@ -255,7 +297,7 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-black border-t border-white/10 pt-16 pb-8">
+      <footer className="bg-gray-950 border-t border-white/10 pt-16 pb-8">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-4 mb-12">
             <div>
@@ -289,7 +331,7 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-white/30">&copy; {new Date().getFullYear()} BixelBD. All rights reserved.</p>
-            <p className="text-sm text-white/30">Made with ❤️ in Bangladesh</p>
+            <p className="text-sm text-white/30">Made with care in Bangladesh</p>
           </div>
         </div>
       </footer>

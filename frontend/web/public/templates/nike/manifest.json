@@ -1,0 +1,57 @@
+{
+  "id": "nike",
+  "name": "Nike Store",
+  "version": "1.0.0",
+  "entryPoint": "index.html",
+  "type": "react",
+  "css": [],
+  "js": [],
+  "sections": {},
+  "description": "Nike athletic wear & footwear template with product filtering by category",
+  "previewUrl": "/templates/nike/index.html",
+  "api": {
+    "mappings": {
+      "products": {
+        "id": "id",
+        "name": "name",
+        "description": "description",
+        "price": "price",
+        "salePrice": "comparePrice",
+        "image": "images[0]",
+        "images": "images",
+        "category": "tags[0]",
+        "stock": "quantity",
+        "status": "status",
+        "slug": "slug"
+      }
+    }
+  },
+  "configSchema": {
+    "hero": {
+      "label": "Hero Section",
+      "fields": {
+        "headline": { "type": "text", "label": "Headline", "default": "Get More Out of Every Run" },
+        "subtext": { "type": "text", "label": "Subtext", "default": "Discover the latest gear for your best performance" },
+        "image": { "type": "image", "label": "Hero Image", "default": "" },
+        "ctaText": { "type": "text", "label": "CTA Button Text", "default": "Shop Now" },
+        "ctaLink": { "type": "text", "label": "CTA Link", "default": "/products" }
+      }
+    },
+    "banner": {
+      "label": "Promo Banner",
+      "fields": {
+        "text": { "type": "text", "label": "Banner Text", "default": "Free shipping on orders over ৳2000" },
+        "color": { "type": "color", "label": "Background Color", "default": "#111111" },
+        "textColor": { "type": "color", "label": "Text Color", "default": "#ffffff" }
+      }
+    },
+    "theme": {
+      "label": "Brand Colors",
+      "fields": {
+        "primaryColor": { "type": "color", "label": "Primary Color", "default": "#000000" },
+        "secondaryColor": { "type": "color", "label": "Secondary Color", "default": "#f5f5f5" },
+        "accentColor": { "type": "color", "label": "Accent Color", "default": "#e74c3c" }
+      }
+    }
+  }
+}

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Navbar } from "@/components/marketing/Navbar";
 import { Button } from "@/components/shared/Button";
+import { OptimizedImage } from "@/components/shared/OptimizedImage";
 import Link from "next/link";
 import { Loader2, FileText, Search, AlertCircle } from "lucide-react";
 
@@ -34,6 +35,9 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+
+  const categories = ["All", "Fashion", "Electronics", "Food", "Beauty", "Corporate", "Other"];
 
   useEffect(() => {
     fetchTemplates();
@@ -56,12 +60,30 @@ export default function TemplatesPage() {
     }
   };
 
-  const filteredTemplates = templates.filter(
-    (t) =>
+  const getTemplateCategory = (t: Template) => {
+    const text = `${t.name} ${t.description || ""}`.toLowerCase();
+    if (text.match(/fashion|clothing|apparel|shoe|wear/)) return "Fashion";
+    if (text.match(/electronic|tech|gadget|phone|computer/)) return "Electronics";
+    if (text.match(/food|restaurant|grocery|cafe|menu/)) return "Food";
+    if (text.match(/beauty|cosmetic|skincare|makeup/)) return "Beauty";
+    if (text.match(/corporate|business|agency|portfolio/)) return "Corporate";
+    return "Other";
+  };
+
+  const filteredTemplates = templates.filter((t) => {
+    const matchesSearch =
       t.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       t.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      t.id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+      t.id.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    if (selectedCategory !== "All") {
+      return getTemplateCategory(t) === selectedCategory;
+    }
+    
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -78,24 +100,40 @@ export default function TemplatesPage() {
           </p>
         </div>
 
-        {/* Search */}
-        <div className="max-w-md mx-auto mb-8">
-          <div className="relative">
+        {/* Filters & Search */}
+        <div className="max-w-2xl mx-auto mb-10 space-y-6">
+          <div className="relative max-w-md mx-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               placeholder="Search templates..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1d4ed8] focus:border-transparent"
             />
+          </div>
+          
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            {categories.map((category) => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === category
+                    ? "bg-[#1d4ed8] text-white"
+                    : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                }`}
+              >
+                {category}
+              </button>
+            ))}
           </div>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="flex flex-col items-center gap-3">
-              <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+              <Loader2 className="w-8 h-8 text-[#1d4ed8] animate-spin" />
               <p className="text-gray-500 text-sm">Loading templates...</p>
             </div>
           </div>
@@ -103,30 +141,51 @@ export default function TemplatesPage() {
           <div className="text-center py-16">
             <AlertCircle className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500">
-              {searchQuery
-                ? "No templates match your search."
+              {searchQuery || selectedCategory !== "All"
+                ? "No templates match your filters."
                 : "No templates available yet. Check back soon!"}
             </p>
           </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {filteredTemplates.map((template) => (
+            {filteredTemplates.map((template, index) => {
+              const category = getTemplateCategory(template);
+              return (
               <div
-                key={template.id}
+                key={`${template.id}-${index}`}
                 className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow"
               >
-                <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
+                <div className="aspect-[4/3] relative overflow-hidden bg-gray-100 group">
                   {template.thumbnail ? (
-                    <img
+                    <OptimizedImage
                       src={template.thumbnail}
                       alt={template.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="group-hover:scale-105 transition-transform duration-500"
+                      containerClassName="w-full h-full"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <FileText className="w-16 h-16 text-gray-300" />
+                    <div className="absolute inset-0 bg-white overflow-hidden pointer-events-none">
+                      <iframe
+                        src={template.previewUrl}
+                        className="border-0 bg-white"
+                        style={{
+                          width: '400%',
+                          height: '400%',
+                          transform: 'scale(0.25)',
+                          transformOrigin: '0 0',
+                          pointerEvents: 'none',
+                        }}
+                        scrolling="no"
+                        tabIndex={-1}
+                        title={`Live Preview of ${template.name}`}
+                      />
                     </div>
                   )}
+                  <span className="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-gray-700 shadow-sm">
+                    {category}
+                  </span>
                 </div>
 
                 <div className="p-6">
@@ -173,7 +232,8 @@ export default function TemplatesPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

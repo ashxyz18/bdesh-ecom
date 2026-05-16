@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Save, Trash2, Plus, X, Upload, Image } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Plus, X, Upload, Image, Loader2 } from "lucide-react";
 
 export default function EditProductPage() {
   const params = useParams();
@@ -19,33 +19,70 @@ export default function EditProductPage() {
   const [price, setPrice] = useState("");
   const [comparePrice, setComparePrice] = useState("");
   const [stock, setStock] = useState("");
+  const [category, setCategory] = useState("");
+  const [colors, setColors] = useState<string[]>([]);
+  const [newColor, setNewColor] = useState("");
   const [status, setStatus] = useState<"active" | "draft" | "archived">("draft");
   const [images, setImages] = useState<string[]>([]);
   const [newImage, setNewImage] = useState("");
+  const [attributes, setAttributes] = useState<Record<string, any>>({});
+
+  const [manifest, setManifest] = useState<any>(null);
 
   useEffect(() => {
     if (!productId) return;
+    const storedStoreId = localStorage.getItem("storeId");
+    if (!storedStoreId) {
+      router.push("/login");
+      return;
+    }
 
-    // Fetch product data
-    fetch(`/api/products/${productId}`)
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.product) {
-          setName(data.product.name || "");
-          setDescription(data.product.description || "");
-          setPrice(data.product.price?.toString() || "");
-          setComparePrice(data.product.comparePrice?.toString() || "");
-          setStock(data.product.stock?.toString() || "");
-          setStatus(data.product.status || "draft");
-          setImages(data.product.images || []);
+    const loadData = async () => {
+      try {
+        // Fetch store & template manifest
+        const storeRes = await fetch(`/api/stores/${storedStoreId}`);
+        const storeData = await storeRes.json();
+        const templateId = storeData.store?.templateId;
+        if (templateId) {
+          const manifestRes = await fetch(`/api/templates/${templateId}`);
+          const manifestData = await manifestRes.json();
+          if (manifestData.success && manifestData.template?.manifest) {
+            setManifest(manifestData.template.manifest);
+          } else {
+            try {
+              const directRes = await fetch(`/templates/${templateId}/manifest.json`);
+              if (directRes.ok) {
+                const directManifest = await directRes.json();
+                setManifest(directManifest);
+              }
+            } catch {}
+          }
         }
+
+        // Fetch product data
+        const prodRes = await fetch(`/api/products/${productId}`);
+        const prodData = await prodRes.json();
+        if (prodData.product) {
+          setName(prodData.product.name || "");
+          setDescription(prodData.product.description || "");
+          setPrice(prodData.product.price?.toString() || "");
+          setComparePrice(prodData.product.comparePrice?.toString() || "");
+          setStock(prodData.product.stock?.toString() || "0");
+          setCategory(prodData.product.category || "");
+          setColors(prodData.product.colors || []);
+          setStatus(prodData.product.status || "draft");
+          setImages(prodData.product.images || []);
+          setAttributes(prodData.product.metadata || {});
+        }
+      } catch (err) {
+        console.error("Failed to load data:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch product:", err);
-        setLoading(false);
-      });
-  }, [productId]);
+      }
+    };
+
+    loadData();
+  }, [productId, router]);
 
   const handleAddImage = () => {
     if (newImage && !images.includes(newImage)) {
@@ -56,6 +93,10 @@ export default function EditProductPage() {
 
   const handleRemoveImage = (url: string) => {
     setImages(images.filter((img) => img !== url));
+  };
+
+  const handleAttributeChange = (key: string, value: any) => {
+    setAttributes((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -74,8 +115,11 @@ export default function EditProductPage() {
           price: parseFloat(price),
           comparePrice: comparePrice ? parseFloat(comparePrice) : undefined,
           stock: parseInt(stock) || 0,
+          category,
+          colors: colors.length > 0 ? colors : undefined,
           status,
           images,
+          attributes: Object.keys(attributes).length > 0 ? attributes : undefined,
         }),
       });
 
@@ -106,10 +150,15 @@ export default function EditProductPage() {
   if (loading) {
     return (
       <div className="p-6 lg:p-8 flex items-center justify-center min-h-[400px]">
-        <div className="w-8 h-8 border-4 border-[#1d4ed8]/30 border-t-[#1d4ed8] rounded-full animate-spin" />
+        <Loader2 className="w-8 h-8 text-[#1d4ed8] animate-spin" />
       </div>
     );
   }
+
+  const catalog = manifest?.dashboard?.catalog;
+  const hasCollections = catalog?.collections && catalog.collections.length > 0;
+  const hasFilters = catalog?.filters && catalog.filters.length > 0;
+  const hasCustomFields = catalog?.productFields && catalog.productFields.length > 0;
 
   return (
     <div className="p-6 lg:p-8">
@@ -149,19 +198,6 @@ export default function EditProductPage() {
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
                 placeholder="e.g., Navy Blue Zariwork Silk Saree"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description
-              </label>
-              <textarea
-                rows={4}
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
-                placeholder="Describe your product..."
               />
             </div>
 
@@ -226,6 +262,141 @@ export default function EditProductPage() {
                 </select>
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category {hasCollections && '*'}</label>
+                {hasCollections ? (
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  >
+                    <option value="">Select a category</option>
+                    {catalog.collections.map((col: any) => (
+                      <option key={col.id} value={col.id}>{col.label}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    placeholder="e.g. Men's Shoes"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                  />
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Colors</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={newColor || "#000000"}
+                    onChange={(e) => setNewColor(e.target.value)}
+                    className="w-10 h-10 border border-gray-300 rounded-lg cursor-pointer"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newColor && !colors.includes(newColor)) {
+                        setColors([...colors, newColor]);
+                        setNewColor("");
+                      }
+                    }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
+                  >
+                    Add
+                  </button>
+                </div>
+                {colors.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {colors.map((c) => (
+                      <span key={c} className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded text-xs">
+                        <span className="w-3 h-3 rounded-full inline-block" style={{ backgroundColor: c }} />
+                        <button type="button" onClick={() => setColors(colors.filter((x) => x !== c))} className="text-gray-400 hover:text-red-500">×</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {hasFilters && (
+              <div className="pt-4 border-t border-gray-100 mt-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Template Filters</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {catalog.filters.map((filter: any) => (
+                    <div key={filter.id}>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {filter.label} {filter.required && '*'}
+                      </label>
+                      <select
+                        value={attributes[filter.id] || ""}
+                        onChange={(e) => handleAttributeChange(filter.id, e.target.value)}
+                        required={filter.required}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                      >
+                        <option value="">Select {filter.label}</option>
+                        {(filter.options || []).map((opt: string) => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {hasCustomFields && (
+              <div className="pt-4 border-t border-gray-100 mt-4">
+                <h3 className="text-sm font-semibold text-gray-900 mb-3">Template Specific Fields</h3>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  {catalog.productFields.map((field: any) => (
+                    <div key={field.key}>
+                      {field.type === 'boolean' ? (
+                        <label className="flex items-center gap-2 mt-6 text-sm font-medium text-gray-700 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={!!attributes[field.key]} 
+                            onChange={(e) => handleAttributeChange(field.key, e.target.checked)} 
+                            className="w-4 h-4 rounded border-gray-300 text-[#1d4ed8] focus:ring-[#1d4ed8]" 
+                          />
+                          {field.label} {field.required && '*'}
+                        </label>
+                      ) : (
+                        <>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            {field.label} {field.required && '*'}
+                          </label>
+                          <input
+                            type={field.type === 'number' ? 'number' : 'text'}
+                            value={attributes[field.key] || ""}
+                            onChange={(e) => handleAttributeChange(field.key, field.type === 'number' ? Number(e.target.value) : e.target.value)}
+                            required={field.required}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                          />
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1d4ed8]"
+                placeholder="Describe your product..."
+              />
+            </div>
           </div>
         </div>
 
@@ -285,7 +456,7 @@ export default function EditProductPage() {
             className="px-6 py-2 bg-[#1d4ed8] text-white rounded-lg hover:bg-[#1e40af] flex items-center gap-2 disabled:opacity-50"
           >
             {saving ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <Loader2 size={18} className="animate-spin" />
             ) : (
               <Save size={18} />
             )}

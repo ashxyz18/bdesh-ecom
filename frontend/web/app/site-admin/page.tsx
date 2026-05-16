@@ -6,7 +6,8 @@ import {
   Store, LayoutDashboard, ShoppingBag, Package, DollarSign, Users,
   Shield, Upload, Trash2, Eye, ExternalLink, X, Check, AlertCircle,
   Loader2, Search, FileText, LogOut, RefreshCw, Info, Clock,
-  ArrowUpRight, TrendingUp, Palette, FolderArchive,
+  ArrowUpRight, TrendingUp, Palette, FolderArchive, CheckCircle, XCircle,
+  Terminal, FolderOpen,
 } from "lucide-react";
 
 type Tab = "dashboard" | "stores" | "users" | "templates" | "orders";
@@ -23,7 +24,7 @@ interface Stats {
 interface StoreItem { id: string; name: string; slug: string; status: string; websiteType: string; owner: { id: string; name: string; email: string }; createdAt: string; }
 interface UserItem { id: string; name: string; email: string; role: string; storeCount?: number; createdAt: string; }
 interface OrderItem { id: string; orderNumber: string; total: number; status: string; paymentStatus: string; customerInfo: { name: string; phone: string }; customerName?: string; createdAt: string; }
-interface TemplateItem { id: string; name: string; description?: string; thumbnail?: string; previewUrl: string; pages?: number; size?: string; lastModified?: string; }
+interface TemplateItem { id: string; name: string; description?: string; thumbnail?: string; previewUrl: string; pages?: number; size?: string; lastModified?: string; buildStatus?: "pending" | "installing" | "building" | "ready" | "failed"; buildLog?: string; }
 interface UploadStats { totalFiles: number; htmlPages: number; }
 
 export default function SiteAdminPage() {
@@ -50,7 +51,7 @@ export default function SiteAdminPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [message, setMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
 
-  // Template upload
+  // Template upload / import
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -58,7 +59,16 @@ export default function SiteAdminPage() {
   const [uploadDescription, setUploadDescription] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [importMode, setImportMode] = useState<"zip" | "path">("zip");
+  const [importPath, setImportPath] = useState("");
+  const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Build log viewer
+  const [showLogModal, setShowLogModal] = useState(false);
+  const [logTemplate, setLogTemplate] = useState<TemplateItem | null>(null);
+  const [logContent, setLogContent] = useState<string>("");
+  const [logLoading, setLogLoading] = useState(false);
 
   const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -159,6 +169,31 @@ export default function SiteAdminPage() {
   };
 
   // ─── Template handlers ───
+  const pollBuildStatus = async (templateId: string) => {
+    const uid = getUserId();
+    try {
+      const res = await fetch(`/api/site-admin/templates/${templateId}/status`, {
+        headers: uid ? { "x-user-id": uid } : {},
+      });
+      const data = await res.json();
+      if (data.success && data.template) {
+        setTemplates((prev) =>
+          prev.map((t) =>
+            t.id === templateId
+              ? { ...t, buildStatus: data.template.buildStatus, buildLog: data.template.buildLog }
+              : t
+          )
+        );
+        if (data.template.buildStatus === "ready" || data.template.buildStatus === "failed") {
+          return;
+        }
+        setTimeout(() => pollBuildStatus(templateId), 5000);
+      }
+    } catch (error) {
+      console.error("Failed to poll build status:", error);
+    }
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!uploadFile || !uploadName.trim()) return;
@@ -177,9 +212,12 @@ export default function SiteAdminPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setMessage({ type: "success", text: `Template "${data.name}" uploaded (${data.stats?.htmlPages || 0} pages)` });
+        setMessage({ type: "success", text: `Template "${data.name}" uploaded! Build status: ${data.buildStatus}` });
         setShowUploadForm(false); setUploadFile(null); setUploadName(""); setUploadDescription("");
         fetchTabData("templates");
+        if (data.buildStatus !== "ready") {
+          setTimeout(() => pollBuildStatus(data.templateId), 3000);
+        }
       } else {
         const errText = data.error || "Upload failed";
         if (res.status === 403) setMessage({ type: "error", text: "Access denied. Admin login required." });
@@ -213,6 +251,93 @@ export default function SiteAdminPage() {
     const f = e.dataTransfer.files[0];
     if (f?.name.endsWith(".zip")) setUploadFile(f);
     else setMessage({ type: "error", text: "Please drop a .zip file" });
+  };
+
+  const handleViewLog = async (template: TemplateItem) => {
+    setLogTemplate(template);
+    setShowLogModal(true);
+    setLogLoading(true);
+    setLogContent("");
+    const uid = getUserId();
+    try {
+      const res = await fetch(`/api/site-admin/templates/${template.id}/status`, {
+        headers: uid ? { "x-user-id": uid } : {},
+      });
+      const data = await res.json();
+      if (data.success && data.template?.buildLog) {
+        setLogContent(data.template.buildLog);
+      } else {
+        setLogContent("No build log available.");
+      }
+    } catch {
+      setLogContent("Failed to load build log.");
+    } finally {
+      setLogLoading(false);
+    }
+  };
+
+  const handleRetryBuild = async (template: TemplateItem) => {
+    if (!confirm(`Retry build for "${template.name}"?`)) return;
+    setMessage(null);
+    const uid = getUserId();
+    try {
+      const res = await fetch(`/api/site-admin/templates/${template.id}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-user-id": uid },
+        body: JSON.stringify({ action: "retry" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: "success", text: `Build retry started for "${template.name}"` });
+        setTemplates((prev) =>
+          prev.map((t) =>
+            t.id === template.id ? { ...t, buildStatus: "building" as const } : t
+          )
+        );
+        pollBuildStatus(template.id);
+      } else {
+        setMessage({ type: "error", text: data.error || "Retry failed" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Network error during retry" });
+    }
+  };
+
+  const handleImportFromPath = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!importPath.trim() || !uploadName.trim()) return;
+    setImporting(true);
+    setMessage(null);
+    const uid = getUserId();
+    try {
+      const res = await fetch("/api/site-admin/templates/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-user-id": uid },
+        body: JSON.stringify({
+          name: uploadName,
+          description: uploadDescription,
+          sourcePath: importPath,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessage({ type: "success", text: `Template "${data.name}" imported! Build status: ${data.buildStatus}` });
+        setShowUploadForm(false);
+        setImportPath("");
+        setUploadName("");
+        setUploadDescription("");
+        fetchTabData("templates");
+        if (data.buildStatus !== "ready") {
+          setTimeout(() => pollBuildStatus(data.templateId), 3000);
+        }
+      } else {
+        setMessage({ type: "error", text: data.error || "Import failed" });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Network error" });
+    } finally {
+      setImporting(false);
+    }
   };
 
   const logout = () => {
@@ -470,45 +595,145 @@ export default function SiteAdminPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type="text" placeholder="Search templates..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
-              <button onClick={() => setShowUploadForm(true)} className="px-5 py-2.5 bg-[#1d4ed8] text-white rounded-xl hover:bg-[#1e40af] flex items-center gap-2 font-medium"><Upload size={18} /> Upload Template</button>
+              <div className="flex items-center gap-2">
+                <button onClick={() => { setShowUploadForm(true); setImportMode("zip"); }} className="px-5 py-2.5 bg-[#1d4ed8] text-white rounded-xl hover:bg-[#1e40af] flex items-center gap-2 font-medium"><Upload size={18} /> Upload ZIP</button>
+                <button onClick={() => { setShowUploadForm(true); setImportMode("path"); }} className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 flex items-center gap-2 font-medium"><FolderOpen size={18} /> Import Path</button>
+              </div>
             </div>
 
-            {/* Upload Modal */}
+            {/* Upload / Import Modal */}
             {showUploadForm && (
-              <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                onClick={(e) => { if (e.target === e.currentTarget) setShowUploadForm(false); }}
+              >
                 <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
-                  <div className="flex items-center justify-between mb-6">
-                    <div><h2 className="text-lg font-bold text-gray-900">Upload Template</h2><p className="text-sm text-gray-500 mt-0.5">ZIP file with HTML/CSS/JS</p></div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h2 className="text-lg font-bold text-gray-900">
+                        {importMode === "zip" ? "Upload React Template" : "Import from Path"}
+                      </h2>
+                      <p className="text-sm text-gray-500 mt-0.5">
+                        {importMode === "zip" ? "ZIP file of React project (without node_modules)" : "Local directory path on the server"}
+                      </p>
+                    </div>
                     <button onClick={() => setShowUploadForm(false)} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
                   </div>
-                  <form onSubmit={handleUpload} className="space-y-5">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Template Name <span className="text-red-500">*</span></label>
-                      <input type="text" required placeholder="e.g., My Fashion Store" value={uploadName} onChange={(e) => setUploadName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
-                      <textarea placeholder="Brief description..." value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y" />
-                    </div>
-                    <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop} className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${dragOver ? "border-blue-500 bg-blue-50" : uploadFile ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"}`} onClick={() => fileInputRef.current?.click()}>
-                      {uploadFile ? (
-                        <><FolderArchive className="w-12 h-12 text-green-500 mx-auto mb-3" /><p className="text-green-700 font-medium">{uploadFile.name}</p><p className="text-sm text-green-600 mt-1">{(uploadFile.size / 1024 / 1024).toFixed(2)} MB</p><button type="button" onClick={(e) => { e.stopPropagation(); setUploadFile(null); }} className="mt-3 text-sm text-red-600 hover:text-red-700 underline">Remove</button></>
-                      ) : (
-                        <><Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" /><p className="text-gray-600 font-medium mb-1">Drag & drop ZIP here</p><p className="text-sm text-gray-400 mb-3">or click to browse</p><p className="text-xs text-gray-400">ZIP • Max 50MB • Must contain HTML</p></>
-                      )}
-                      <input ref={fileInputRef} type="file" accept=".zip" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} className="hidden" />
-                    </div>
-                    {uploading && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-gray-600"><Loader2 size={14} className="animate-spin" /> Uploading...</div>
-                        <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-[#1d4ed8] h-2 rounded-full animate-pulse w-3/4" /></div>
+
+                  {/* Mode tabs */}
+                  <div className="flex gap-1 mb-5 bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setImportMode("zip")}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${importMode === "zip" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                    >
+                      Upload ZIP
+                    </button>
+                    <button
+                      onClick={() => setImportMode("path")}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${importMode === "path" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"}`}
+                    >
+                      Import Path
+                    </button>
+                  </div>
+
+                  {importMode === "zip" ? (
+                    <form onSubmit={handleUpload} className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Template Name <span className="text-red-500">*</span></label>
+                        <input type="text" required placeholder="e.g., My Fashion Store" value={uploadName} onChange={(e) => setUploadName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
                       </div>
-                    )}
-                    <div className="flex gap-3 pt-2">
-                      <button type="button" onClick={() => { setShowUploadForm(false); setUploadFile(null); setUploadName(""); setUploadDescription(""); }} className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
-                      <button type="submit" disabled={uploading || !uploadFile || !uploadName.trim()} className="flex-1 px-4 py-2.5 bg-[#1d4ed8] text-white rounded-xl hover:bg-[#1e40af] disabled:opacity-50 disabled:cursor-not-allowed font-medium">{uploading ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Deploying...</span> : <span className="flex items-center justify-center gap-2"><Upload size={16} /> Upload</span>}</button>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+                        <textarea placeholder="Brief description..." value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y" />
+                      </div>
+                      <div onDragOver={(e) => { e.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={handleDrop} className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${dragOver ? "border-blue-500 bg-blue-50" : uploadFile ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-gray-400 hover:bg-gray-50"}`} onClick={() => fileInputRef.current?.click()}>
+                        {uploadFile ? (
+                          <><FolderArchive className="w-12 h-12 text-green-500 mx-auto mb-3" /><p className="text-green-700 font-medium">{uploadFile.name}</p><p className="text-sm text-green-600 mt-1">{(uploadFile.size / 1024 / 1024).toFixed(2)} MB</p><button type="button" onClick={(e) => { e.stopPropagation(); setUploadFile(null); }} className="mt-3 text-sm text-red-600 hover:text-red-700 underline">Remove</button></>
+                        ) : (
+                          <><Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" /><p className="text-gray-600 font-medium mb-1">Drag & drop ZIP here</p><p className="text-sm text-gray-400 mb-3">or click to browse</p><p className="text-xs text-gray-400">ZIP • Max 100MB • Must contain HTML or package.json</p></>
+                        )}
+                        <input ref={fileInputRef} type="file" accept=".zip" onChange={(e) => setUploadFile(e.target.files?.[0] || null)} className="hidden" />
+                      </div>
+                      {uploading && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600"><Loader2 size={14} className="animate-spin" /> Uploading...</div>
+                          <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-[#1d4ed8] h-2 rounded-full animate-pulse w-3/4" /></div>
+                        </div>
+                      )}
+                      <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => { setShowUploadForm(false); setUploadFile(null); setUploadName(""); setUploadDescription(""); }} className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
+                        <button type="submit" disabled={uploading || !uploadFile || !uploadName.trim()} className="flex-1 px-4 py-2.5 bg-[#1d4ed8] text-white rounded-xl hover:bg-[#1e40af] disabled:opacity-50 disabled:cursor-not-allowed font-medium">{uploading ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Deploying...</span> : <span className="flex items-center justify-center gap-2"><Upload size={16} /> Upload</span>}</button>
+                      </div>
+                    </form>
+                  ) : (
+                    <form onSubmit={handleImportFromPath} className="space-y-5">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Template Name <span className="text-red-500">*</span></label>
+                        <input type="text" required placeholder="e.g., My Fashion Store" value={uploadName} onChange={(e) => setUploadName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Description</label>
+                        <textarea placeholder="Brief description..." value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Source Path <span className="text-red-500">*</span></label>
+                        <input type="text" required placeholder="e.g., D:\\templates\\my-store or /home/user/templates/my-store" value={importPath} onChange={(e) => setImportPath(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm" />
+                        <p className="text-xs text-gray-400 mt-1">Absolute path to a local directory containing the template source.</p>
+                      </div>
+                      {importing && (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 text-sm text-gray-600"><Loader2 size={14} className="animate-spin" /> Importing & building...</div>
+                          <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-[#1d4ed8] h-2 rounded-full animate-pulse w-3/4" /></div>
+                        </div>
+                      )}
+                      <div className="flex gap-3 pt-2">
+                        <button type="button" onClick={() => { setShowUploadForm(false); setImportPath(""); setUploadName(""); setUploadDescription(""); }} className="flex-1 px-4 py-2.5 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium">Cancel</button>
+                        <button type="submit" disabled={importing || !importPath.trim() || !uploadName.trim()} className="flex-1 px-4 py-2.5 bg-[#1d4ed8] text-white rounded-xl hover:bg-[#1e40af] disabled:opacity-50 disabled:cursor-not-allowed font-medium">{importing ? <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Importing...</span> : <span className="flex items-center justify-center gap-2"><FolderOpen size={16} /> Import</span>}</button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Build Log Modal */}
+            {showLogModal && logTemplate && (
+              <div
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+                onClick={(e) => { if (e.target === e.currentTarget) setShowLogModal(false); }}
+              >
+                <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl">
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center">
+                        <Terminal size={16} className="text-white" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-bold text-gray-900">Build Log</h2>
+                        <p className="text-xs text-gray-500">{logTemplate.name} <code className="bg-gray-100 px-1 rounded">{logTemplate.id}</code></p>
+                      </div>
                     </div>
-                  </form>
+                    <div className="flex items-center gap-2">
+                      {logTemplate.buildStatus === "failed" && (
+                        <button
+                          onClick={() => { setShowLogModal(false); handleRetryBuild(logTemplate); }}
+                          className="px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 flex items-center gap-1.5"
+                        >
+                          <RefreshCw size={14} /> Retry
+                        </button>
+                      )}
+                      <button onClick={() => setShowLogModal(false)} className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg"><X size={20} /></button>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-auto p-0">
+                    {logLoading ? (
+                      <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 text-gray-400 animate-spin" /></div>
+                    ) : (
+                      <pre className="text-xs font-mono text-gray-300 bg-gray-900 p-6 whitespace-pre-wrap break-words min-h-[300px]">
+                        {logContent || "No build log available."}
+                      </pre>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -525,33 +750,70 @@ export default function SiteAdminPage() {
                     <div className="w-20 h-20 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-5"><FolderArchive className="w-10 h-10 text-gray-300" /></div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No templates found</h3>
                     <p className="text-gray-500 mb-6">{searchQuery ? "Try a different search term." : "Upload your first website template."}</p>
-                    {!searchQuery && <button onClick={() => setShowUploadForm(true)} className="px-6 py-3 bg-[#1d4ed8] text-white rounded-xl hover:bg-[#1e40af] font-medium"><Upload size={18} className="inline mr-2" />Upload Template</button>}
+                    {!searchQuery && (
+                      <div className="flex items-center justify-center gap-3">
+                        <button onClick={() => { setShowUploadForm(true); setImportMode("zip"); }} className="px-6 py-3 bg-[#1d4ed8] text-white rounded-xl hover:bg-[#1e40af] font-medium"><Upload size={18} className="inline mr-2" />Upload ZIP</button>
+                        <button onClick={() => { setShowUploadForm(true); setImportMode("path"); }} className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium"><FolderOpen size={18} className="inline mr-2" />Import Path</button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                    {templates.filter((t) => !searchQuery || t.name.toLowerCase().includes(searchQuery) || t.description?.toLowerCase().includes(searchQuery)).map((template) => (
-                      <div key={template.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden group hover:shadow-lg hover:border-gray-300 transition-all">
-                        <div className="aspect-video bg-gray-100 relative overflow-hidden">
-                          {template.thumbnail ? <img src={template.thumbnail} alt={template.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"><FileText className="w-12 h-12 text-gray-300" /></div>}
-                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
-                            <a href={template.previewUrl} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white rounded-full text-gray-700 hover:text-blue-600 shadow-lg"><Eye size={18} /></a>
-                            <a href={template.previewUrl} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white rounded-full text-gray-700 hover:text-blue-600 shadow-lg"><ExternalLink size={18} /></a>
+                    {templates.filter((t) => !searchQuery || t.name.toLowerCase().includes(searchQuery) || t.description?.toLowerCase().includes(searchQuery)).map((template) => {
+                      const getStatusBadge = (status: string) => {
+                        switch (status) {
+                          case "ready":
+                            return <span className="flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full"><Check size={10} /> Ready</span>;
+                          case "failed":
+                            return <span className="flex items-center gap-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full"><XCircle size={10} /> Failed</span>;
+                          case "building":
+                          case "installing":
+                            return <span className="flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full"><Loader2 size={10} className="animate-spin" /> Building</span>;
+                          default:
+                            return <span className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full"><Clock size={10} /> Pending</span>;
+                        }
+                      };
+                      return (
+                        <div key={template.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden group hover:shadow-lg hover:border-gray-300 transition-all">
+                          <div className="aspect-video bg-gray-100 relative overflow-hidden">
+                            {template.thumbnail ? <img src={template.thumbnail} alt={template.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100"><FileText className="w-12 h-12 text-gray-300" /></div>}
+                            <div className="absolute top-2 left-2">{getStatusBadge(template.buildStatus || "pending")}</div>
+                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                              {template.buildStatus === "ready" && (
+                                <>
+                                  <a href={template.previewUrl} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white rounded-full text-gray-700 hover:text-blue-600 shadow-lg"><Eye size={18} /></a>
+                                  <a href={template.previewUrl} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-white rounded-full text-gray-700 hover:text-blue-600 shadow-lg"><ExternalLink size={18} /></a>
+                                </>
+                              )}
+                              {template.buildStatus === "failed" && (
+                                <button onClick={() => handleRetryBuild(template)} className="p-2.5 bg-white rounded-full text-gray-700 hover:text-blue-600 shadow-lg" title="Retry build"><RefreshCw size={18} /></button>
+                              )}
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <h3 className="font-semibold text-gray-900 mb-1 truncate">{template.name}</h3>
+                            <p className="text-sm text-gray-500 mb-3 line-clamp-2 min-h-[2.5rem]">{template.description || "No description"}</p>
+                            <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+                              <span className="flex items-center gap-1"><FileText size={12} /> React App</span>
+                              <span className="flex items-center gap-1"><Package size={12} /> {template.buildStatus === "ready" ? "Built" : template.buildStatus === "failed" ? "Failed" : "Pending"}</span>
+                            </div>
+                            <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                              <button
+                                onClick={() => handleViewLog(template)}
+                                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-900 px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                                title="View build log"
+                              >
+                                <Terminal size={12} /> Log
+                              </button>
+                              <div className="flex items-center gap-1">
+                                <code className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded mr-2">{template.id}</code>
+                                <button onClick={() => handleDelete(template.id, template.name)} disabled={deleting === template.id} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-50">{deleting === template.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}</button>
+                              </div>
+                            </div>
                           </div>
                         </div>
-                        <div className="p-4">
-                          <h3 className="font-semibold text-gray-900 mb-1 truncate">{template.name}</h3>
-                          <p className="text-sm text-gray-500 mb-3 line-clamp-2 min-h-[2.5rem]">{template.description || "No description"}</p>
-                          <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
-                            <span className="flex items-center gap-1"><FileText size={12} /> {template.pages || 0} pages</span>
-                            <span className="flex items-center gap-1"><Package size={12} /> {template.size || "—"}</span>
-                          </div>
-                          <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                            <code className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{template.id}</code>
-                            <button onClick={() => handleDelete(template.id, template.name)} disabled={deleting === template.id} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg disabled:opacity-50">{deleting === template.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </>

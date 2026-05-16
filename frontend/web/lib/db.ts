@@ -23,11 +23,11 @@ export function generateOrderNumber(): string {
 // ========================
 
 export async function getStoreById(storeId: string) {
-  return prisma.store.findUnique({ where: { id: storeId } });
+  return prisma.store.findFirst({ where: { id: storeId, deletedAt: null } });
 }
 
 export async function getStoreByOwnerId(ownerId: string) {
-  return prisma.store.findFirst({ where: { ownerId } });
+  return prisma.store.findFirst({ where: { ownerId, deletedAt: null } });
 }
 
 export async function createStore(name: string, ownerId: string, templateId?: string) {
@@ -44,7 +44,8 @@ export async function createStore(name: string, ownerId: string, templateId?: st
       slug: slug + suffix,
       subdomain: subdomain + suffix,
       ownerId,
-      theme: JSON.stringify({ templateId: templateId || "" }),
+      templateId: templateId || "default",
+      theme: "{}",
       settings: "{}",
       status: "APPROVED",
     },
@@ -52,7 +53,7 @@ export async function createStore(name: string, ownerId: string, templateId?: st
 }
 
 export async function getStoreWithProducts(storeId: string) {
-  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  const store = await prisma.store.findFirst({ where: { id: storeId, deletedAt: null } });
   if (!store) return null;
   const products = await getProductsByStoreId(storeId);
   return { ...store, products };
@@ -64,7 +65,7 @@ export async function getStoreWithProducts(storeId: string) {
 
 export async function getProductsByStoreId(storeId: string) {
   return prisma.product.findMany({
-    where: { storeId, status: { not: "archived" }, deletedAt: null },
+    where: { storeId, status: { notIn: ["archived", "deleted"] }, deletedAt: null },
   });
 }
 
@@ -79,6 +80,8 @@ export async function createProduct(storeId: string, data: {
   images?: string[];
   stock?: number;
   categoryId?: string;
+  category?: string;
+  colors?: string[];
   tags?: string[];
   status?: string;
   comparePrice?: number | null;
@@ -86,7 +89,13 @@ export async function createProduct(storeId: string, data: {
   lowStockThreshold?: number;
   seo?: { title?: string | null; description?: string | null };
   slug?: string;
+  attributes?: Record<string, unknown>;
 }) {
+  const attributes: Record<string, unknown> = { ...(data.attributes || {}) };
+  if (data.category) attributes.category = data.category;
+  if (data.colors && data.colors.length > 0) attributes.colors = data.colors;
+  if (data.tags && data.tags.length > 0) attributes.tags = data.tags;
+
   return prisma.product.create({
     data: {
       storeId,
@@ -98,6 +107,7 @@ export async function createProduct(storeId: string, data: {
       quantity: data.stock || 0,
       status: data.status || "active",
       comparePrice: data.comparePrice || null,
+      attributes: JSON.stringify(attributes),
       seoTitle: data.seo?.title || null,
       seoDesc: data.seo?.description || null,
     },
@@ -114,6 +124,17 @@ export async function updateProduct(productId: string, data: Record<string, unkn
   if (data.stock !== undefined) updateData.quantity = data.stock as number;
   if (data.status !== undefined) updateData.status = data.status as string;
   if (data.slug !== undefined) updateData.slug = data.slug as string;
+
+  // Merge category/colors into attributes
+  const existing = await prisma.product.findUnique({ where: { id: productId }, select: { attributes: true } });
+  const existingAttrs = safeJsonParse(existing?.attributes, {});
+  const newAttrs = { ...existingAttrs, ...((data.attributes as Record<string, unknown>) || {}) };
+  if (data.category !== undefined) newAttrs.category = data.category || undefined;
+  if (data.colors !== undefined) newAttrs.colors = data.colors || [];
+  if (Object.keys(newAttrs).length > 0) {
+    updateData.attributes = JSON.stringify(newAttrs);
+  }
+
   return prisma.product.update({ where: { id: productId }, data: updateData });
 }
 
@@ -193,12 +214,14 @@ export async function createOrder(storeId: string, data: {
   notes?: string;
   couponId?: string;
   couponCode?: string;
+  storeCustomerId?: string;
 }) {
   const order = await prisma.order.create({
     data: {
       storeId,
       orderNumber: generateOrderNumber(),
       customerId: null,
+      storeCustomerId: data.storeCustomerId || null,
       status: "PENDING",
       paymentStatus: data.paymentStatus || "PENDING",
       paymentMethod: data.paymentMethod,
@@ -328,17 +351,31 @@ export async function isAdmin(userId: string | null): Promise<boolean> {
 }
 
 // ========================
+// STORE CUSTOMERS
+// ========================
+
+export async function getStoreCustomerById(storeCustomerId: string) {
+  return prisma.storeCustomer.findUnique({ where: { id: storeCustomerId } });
+}
+
+export async function getStoreCustomerByEmail(storeId: string, email: string) {
+  return prisma.storeCustomer.findUnique({
+    where: { storeId_email: { storeId, email } },
+  });
+}
+
+// ========================
 // JSON UTILS
 // ========================
 
-export function parseStoreJson<T extends { theme: string; settings: string }>(store: T | null) {
+export function parseStoreJson<T extends { theme: string; settings: string; templateId?: string | null }>(store: T | null) {
   if (!store) return null;
   const theme = safeJsonParse(store.theme) as Record<string, unknown>;
   return {
     ...store,
     theme,
     settings: safeJsonParse(store.settings),
-    templateId: (theme?.templateId as string) || "",
+    templateId: store.templateId || (theme?.templateId as string) || "default",
   };
 }
 
@@ -355,10 +392,14 @@ export function safeJsonParse(value: string | undefined | null, fallback: unknow
 export function serializeProduct(p: {
   id: string; storeId: string; name: string; slug: string; description: string | null;
   images: string; price: number; comparePrice: number | null; sku: string | null;
-  quantity: number; status: string; featured: boolean;
+  quantity: number; status: string; featured: boolean; attributes: string;
   seoTitle: string | null; seoDesc: string | null;
   createdAt: Date; updatedAt: Date;
 }) {
+  const attrs = safeJsonParse(p.attributes, {});
+  const category = attrs.category || attrs.type || "";
+  const colors = attrs.colors || [];
+  const tags = category ? [category] : ([] as string[]);
   return {
     id: p.id,
     storeId: p.storeId,
@@ -369,8 +410,10 @@ export function serializeProduct(p: {
     comparePrice: p.comparePrice,
     costPrice: null,
     images: safeJsonParse(p.images, []),
-    categoryId: null,
-    tags: [] as string[],
+    categoryId: category || null,
+    category,
+    tags,
+    colors,
     stock: p.quantity,
     lowStockThreshold: 5,
     status: p.status,
@@ -378,7 +421,7 @@ export function serializeProduct(p: {
     seo: { title: p.seoTitle, description: p.seoDesc },
     weight: null,
     dimensions: null,
-    metadata: {} as Record<string, string>,
+    metadata: attrs as Record<string, string>,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
   };

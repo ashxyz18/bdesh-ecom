@@ -1,16 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { prisma, getProductsByStoreId, createProduct, serializeProductList } from "@/lib/db";
+import { apiResponse, apiError, cacheConfig } from "@/lib/api-utils";
+
+function getStoreId(request: NextRequest): string | null {
+  const url = request.nextUrl;
+  let storeId = url.searchParams.get("storeId") || url.searchParams.get("store_id");
+
+  if (storeId === "null" || storeId === "undefined" || storeId === "") {
+    storeId = null;
+  }
+
+  if (storeId) return storeId;
+
+  const referer = request.headers.get("referer");
+  if (referer) {
+    try {
+      const refererUrl = new URL(referer);
+      const refStoreId = refererUrl.searchParams.get("storeId") || refererUrl.searchParams.get("store_id");
+      if (refStoreId && refStoreId !== "null" && refStoreId !== "undefined") return refStoreId;
+    } catch {
+      // ignore invalid referer
+    }
+  }
+
+  return null;
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const storeId = request.nextUrl.searchParams.get("storeId");
+    const storeId = getStoreId(request);
     if (!storeId) {
-      return NextResponse.json({ error: "storeId is required" }, { status: 400 });
+      return apiError("storeId is required", 400);
     }
 
-    const store = await prisma.store.findUnique({ where: { id: storeId } });
+    const store = await prisma.store.findFirst({ where: { id: storeId, deletedAt: null } });
     if (!store) {
-      return NextResponse.json({ error: "Store not found" }, { status: 404 });
+      return apiError("Store not found", 404);
     }
 
     const search = request.nextUrl.searchParams.get("search");
@@ -36,28 +61,37 @@ export async function GET(request: NextRequest) {
       productList = productList.filter((p) => p.status === status);
     }
 
-    return NextResponse.json({ success: true, products: productList });
+    return apiResponse(
+      { success: true, products: productList },
+      { cache: cacheConfig.private }
+    );
   } catch (error) {
     console.error("Get products error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return apiError("Internal server error", 500);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { storeId, name, price, description, images, stock, categoryId, tags, variants, status, comparePrice, costPrice, lowStockThreshold, seo, weight, dimensions, slug } = body;
-
-    if (!storeId || !name || price === undefined) {
-      return NextResponse.json(
-        { error: "storeId, name, and price are required" },
-        { status: 400 }
-      );
+    const userId = request.headers.get("x-user-id");
+    if (!userId) {
+      return apiError("Unauthorized", 401);
     }
 
-    const store = await prisma.store.findUnique({ where: { id: storeId } });
+    const body = await request.json();
+    const { storeId, name, price, description, images, stock, categoryId, category, colors, tags, variants, status, comparePrice, costPrice, lowStockThreshold, seo, weight, dimensions, slug, attributes } = body;
+
+    if (!storeId || !name || price === undefined) {
+      return apiError("storeId, name, and price are required", 400);
+    }
+
+    const store = await prisma.store.findFirst({ where: { id: storeId, deletedAt: null } });
     if (!store) {
-      return NextResponse.json({ error: "Store not found" }, { status: 404 });
+      return apiError("Store not found", 404);
+    }
+
+    if (store.ownerId !== userId) {
+      return apiError("You do not own this store", 403);
     }
 
     const product = await createProduct(storeId, {
@@ -67,6 +101,8 @@ export async function POST(request: NextRequest) {
       images: images || [],
       stock: stock || 0,
       categoryId,
+      category,
+      colors,
       tags: tags || [],
       status: status || "active",
       comparePrice,
@@ -74,11 +110,15 @@ export async function POST(request: NextRequest) {
       lowStockThreshold,
       seo,
       slug,
+      attributes,
     });
 
-    return NextResponse.json({ success: true, product: serializeProductList([product])[0] }, { status: 201 });
+    return apiResponse(
+      { success: true, product: serializeProductList([product])[0] },
+      { status: 201, cache: cacheConfig.noCache }
+    );
   } catch (error) {
     console.error("Create product error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return apiError("Internal server error", 500);
   }
 }

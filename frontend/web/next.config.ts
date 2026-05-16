@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
+  poweredByHeader: false,
+  output: "standalone",
   transpilePackages: ["@bdesh/database", "@bdesh/shared", "@bdesh/ui", "@bdesh/ai"],
 
   images: {
@@ -80,7 +82,7 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*.(json|js|css)",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          { key: "Cache-Control", value: "no-cache, must-revalidate" },
         ],
       },
       {
