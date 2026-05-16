@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserId } from "@/lib/auth";
-import { apiResponse, apiError } from "@/lib/api-utils";
+import { apiResponse, apiError, cacheConfig } from "@/lib/api-utils";
 
 export async function GET() {
   try {
