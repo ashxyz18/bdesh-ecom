@@ -1,5 +1,0 @@
-{
-  "installCommand": "cd ../.. && npm install && npm run build -w @bdesh/shared -w @bdesh/database -w @bdesh/ai --if-present",
-  "buildCommand": "next build",
-  "outputDirectory": ".next"
-}
