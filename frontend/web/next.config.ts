@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
-  output: "standalone",
   transpilePackages: ["@bdesh/database", "@bdesh/shared", "@bdesh/ui", "@bdesh/ai"],
 
   images: {
