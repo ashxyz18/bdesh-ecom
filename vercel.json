@@ -3,5 +3,5 @@
   "name": "bdesh-ecom",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "outputDirectory": "frontend/web/.next"
+  "outputDirectory": ".next"
 }
