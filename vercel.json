@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "rootDirectory": "frontend/web",
+  "name": "bdesh-ecom",
   "buildCommand": "npm run build",
   "installCommand": "npm install",
-  "framework": "nextjs"
+  "outputDirectory": "frontend/web/.next"
 }
