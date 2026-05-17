@@ -151,7 +151,10 @@ export function proxy(request: NextRequest) {
   }
 
   // If the request is on a known platform domain, pass through
-  if (PLATFORM_DOMAINS.includes(hostWithoutPort)) {
+  if (
+    PLATFORM_DOMAINS.includes(hostWithoutPort) ||
+    hostWithoutPort.endsWith(".vercel.app")
+  ) {
     // fall through to apply cache headers
   } else {
     // Check subdomain: mystore.bdesh.com
