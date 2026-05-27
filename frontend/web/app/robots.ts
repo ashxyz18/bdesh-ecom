@@ -36,7 +36,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: "/",
       },
     ],
-    sitemap: "https://bdesh.shop/sitemap.xml",
-    host: "https://bdesh.shop",
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL || "https://bdesh.shop"}/sitemap.xml`,
+    host: process.env.NEXT_PUBLIC_APP_URL || "https://bdesh.shop",
   };
 }

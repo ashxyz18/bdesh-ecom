@@ -1,17 +1,32 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Navbar } from "@/components/marketing/Navbar";
 import { HeroSection } from "@/components/marketing/HeroSection";
-import Link from "next/link";
 import { Button } from "@/components/shared/Button";
-import { LazySection } from "@/components/shared/LazySection";
-import { OptimizedImage } from "@/components/shared/OptimizedImage";
+import { LandingTemplatePreview } from "@/components/marketing/LandingTemplatePreview";
+import { BUILTIN_TEMPLATES } from "@/lib/storefront/templates";
 import {
-  Store, ShoppingBag,
-  ArrowRight, Check, Star,
-  Zap, Palette, Shield, Truck,
+  Store,
+  ShoppingBag,
+  ArrowRight,
+  Check,
+  Star,
+  Zap,
+  Palette,
+  Shield,
+  Truck,
 } from "lucide-react";
+
+/**
+ * Landing page — fully server-rendered. The previous version was `"use
+ * client"` which forced React to ship the entire 350-line tree as JS and
+ * hydrate it on every visit. Now only the Navbar megamenu and a few inline
+ * client components hydrate; the rest paints as static HTML.
+ *
+ * Templates are loaded from the in-memory BUILTIN_TEMPLATES registry — zero
+ * DB calls, zero waterfalls.
+ */
+
+export const revalidate = 3600; // Static for an hour, then re-render in background.
 
 const stats = [
   { value: "10,000+", label: "Active Stores" },
@@ -47,121 +62,22 @@ const steps = [
   { number: "03", title: "Go Live!", description: "Your store is instantly live with payments", icon: Zap },
 ];
 
-const fallbackTemplates = [
-  {
-    id: "koskii",
-    name: "Koskii Ethnic Wear",
-    description: "A beautiful e-commerce template designed for ethnic wear.",
-    thumbnail: "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800&h=600&fit=crop",
-    previewUrl: "/templates/koskii/index.html",
-  },
-  {
-    id: "modern-store",
-    name: "Modern Store",
-    description: "Clean, minimal design perfect for any product category.",
-    thumbnail: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&h=600&fit=crop",
-    previewUrl: "/templates/modern-store/index.html",
-  },
-  {
-    id: "food-express",
-    name: "Food Express",
-    description: "Built for restaurants and food delivery businesses.",
-    thumbnail: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&h=600&fit=crop",
-    previewUrl: "/templates/food-express/index.html",
-  },
-];
-
-function TemplatePreviewSection() {
-  const [templates, setTemplates] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/templates")
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.templates?.length > 0) {
-          setTemplates(data.templates.slice(0, 3));
-        } else {
-          setTemplates(fallbackTemplates);
-        }
-        setLoading(false);
-      })
-      .catch(() => {
-        setTemplates(fallbackTemplates);
-        setError(true);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-            <div className="aspect-[4/3] bg-gray-100 animate-pulse"></div>
-            <div className="p-5">
-              <div className="h-5 bg-gray-200 rounded w-2/3 mb-2 animate-pulse"></div>
-              <div className="h-4 bg-gray-100 rounded w-1/2 animate-pulse"></div>
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-      {templates.map((template) => (
-        <Link key={template.id} href={`/templates/${template.id}`} className="group">
-          <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:border-[#1d4ed8]/20">
-            <div className="aspect-[4/3] relative overflow-hidden bg-gray-100">
-              {template.thumbnail ? (
-                <OptimizedImage
-                  src={template.thumbnail}
-                  alt={template.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="group-hover:scale-105 transition-transform duration-500"
-                  containerClassName="w-full h-full"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-white overflow-hidden pointer-events-none">
-                  <iframe
-                    src={template.previewUrl}
-                    className="border-0 bg-white"
-                    style={{
-                      width: '400%',
-                      height: '400%',
-                      transform: 'scale(0.25)',
-                      transformOrigin: '0 0',
-                      pointerEvents: 'none',
-                    }}
-                    scrolling="no"
-                    tabIndex={-1}
-                    title={`Live Preview of ${template.name}`}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="p-5">
-              <h3 className="text-lg font-bold text-gray-900 mb-1">{template.name}</h3>
-              <p className="text-sm text-gray-500 line-clamp-1">{template.description || "Start selling today"}</p>
-            </div>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-}
-
 export default function LandingPage() {
+  // Build the small template card list at render time from the in-memory registry.
+  const featuredTemplates = BUILTIN_TEMPLATES.slice(0, 3).map((t) => ({
+    id: t.slug,
+    name: t.name,
+    description: t.description,
+    thumbnail: t.thumbnail,
+    previewUrl: `/templates/preview/${t.slug}`,
+  }));
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
       <HeroSection />
 
-      {/* Stats Bar */}
+      {/* Stats */}
       <section className="bg-gray-950 border-t border-white/5">
         <div className="max-w-[1400px] mx-auto px-6 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -176,7 +92,7 @@ export default function LandingPage() {
       </section>
 
       {/* How It Works */}
-      <LazySection className="py-20 md:py-28 bg-white" placeholderHeight={400}>
+      <section className="py-20 md:py-28 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Live in 3 Simple Steps</h2>
@@ -195,10 +111,10 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </LazySection>
+      </section>
 
-      {/* Templates Section */}
-      <LazySection id="templates" className="py-20 md:py-28 bg-gray-50" placeholderHeight={500}>
+      {/* Templates */}
+      <section id="templates" className="py-20 md:py-28 bg-gray-50">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Beautiful Templates</h2>
@@ -206,9 +122,9 @@ export default function LandingPage() {
               Start with a professionally designed template and customize it for your brand.
             </p>
           </div>
-          
-          <TemplatePreviewSection />
-          
+
+          <LandingTemplatePreview templates={featuredTemplates} />
+
           <div className="text-center mt-12">
             <Link href="/templates">
               <Button variant="outline" className="border-2 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-[#1d4ed8] hover:border-[#1d4ed8]/30 px-8 py-3 transition-colors">
@@ -217,10 +133,10 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-      </LazySection>
+      </section>
 
       {/* Features */}
-      <LazySection id="features" className="py-20 md:py-28 bg-white" placeholderHeight={500}>
+      <section id="features" className="py-20 md:py-28 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Everything You Need</h2>
@@ -242,10 +158,10 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </LazySection>
+      </section>
 
       {/* Testimonials */}
-      <LazySection className="py-20 md:py-28 bg-gray-50" placeholderHeight={400}>
+      <section className="py-20 md:py-28 bg-gray-50">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Loved by Merchants</h2>
@@ -267,10 +183,10 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </LazySection>
+      </section>
 
       {/* Pricing */}
-      <LazySection id="pricing" className="py-20 md:py-28 bg-white" placeholderHeight={500}>
+      <section id="pricing" className="py-20 md:py-28 bg-white">
         <div className="max-w-[1400px] mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Start Free, Scale As You Grow</h2>
@@ -297,7 +213,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </LazySection>
+      </section>
 
       {/* CTA */}
       <section className="py-20 md:py-28 bg-gradient-to-br from-[#1d4ed8] to-[#1e3a8a] relative overflow-hidden">
@@ -323,24 +239,33 @@ export default function LandingPage() {
               </Link>
               <p className="text-white/40 text-sm leading-relaxed">The easiest way to create an online store in Bangladesh.</p>
             </div>
-            <div><h4 className="font-semibold text-white mb-4">Product</h4>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Product</h4>
               <ul className="space-y-3">
-                {[{ label: "Features", href: "#features" }, { label: "Templates", href: "/templates" }, { label: "Pricing", href: "#pricing" }].map((l) => (
-                  <li key={l.label}><Link href={l.href} className="text-sm text-white/40 hover:text-white transition-colors">{l.label}</Link></li>
+                {[
+                  { label: "Features", href: "#features" },
+                  { label: "Templates", href: "/templates" },
+                  { label: "Pricing", href: "#pricing" },
+                ].map((l) => (
+                  <li key={l.label}>
+                    <Link href={l.href} className="text-sm text-white/40 hover:text-white transition-colors">{l.label}</Link>
+                  </li>
                 ))}
               </ul>
             </div>
-            <div><h4 className="font-semibold text-white mb-4">Company</h4>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Company</h4>
               <ul className="space-y-3">
-                {[{ label: "About", href: "#" }, { label: "Blog", href: "#" }, { label: "Careers", href: "#" }, { label: "Contact", href: "#" }].map((l) => (
-                  <li key={l.label}><span className="text-sm text-white/40">{l.label}</span></li>
+                {["About", "Blog", "Careers", "Contact"].map((l) => (
+                  <li key={l}><span className="text-sm text-white/40">{l}</span></li>
                 ))}
               </ul>
             </div>
-            <div><h4 className="font-semibold text-white mb-4">Legal</h4>
+            <div>
+              <h4 className="font-semibold text-white mb-4">Legal</h4>
               <ul className="space-y-3">
-                {[{ label: "Privacy Policy", href: "#" }, { label: "Terms of Service", href: "#" }].map((l) => (
-                  <li key={l.label}><span className="text-sm text-white/40">{l.label}</span></li>
+                {["Privacy Policy", "Terms of Service"].map((l) => (
+                  <li key={l}><span className="text-sm text-white/40">{l}</span></li>
                 ))}
               </ul>
             </div>

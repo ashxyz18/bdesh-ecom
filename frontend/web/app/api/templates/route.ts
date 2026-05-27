@@ -74,7 +74,20 @@ export async function GET() {
       };
     });
 
-    return apiResponse({ success: true, templates: [...builtin, ...customListed] });
+    // Edge-cache aggressively — the template gallery rarely changes and a stale
+    // response is fine. Without this, every visit triggers a Prisma query and
+    // the marketing landing page blocks for 1-3s on the cold start.
+    return apiResponse(
+      { success: true, templates: [...builtin, ...customListed] },
+      {
+        cache: {
+          public: true,
+          maxAge: 60,
+          sMaxAge: 300,
+          staleWhileRevalidate: 3600,
+        },
+      },
+    );
   } catch (error) {
     console.error("Failed to get templates:", error);
     return apiError("Failed to get templates", 500);

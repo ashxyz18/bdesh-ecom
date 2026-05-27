@@ -121,17 +121,22 @@ export const viewport: Viewport = {
 
 // JSON-LD Structured Data
 function StructuredData() {
+  // Resolve URLs from env so production deploys don't leak hardcoded values.
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://bdesh.shop";
+  const orgId = `${baseUrl}/#organization`;
+  const siteId = `${baseUrl}/#website`;
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
-        "@id": "https://bdesh.shop/#organization",
+        "@id": orgId,
         name: "BixelBD",
-        url: "https://bdesh.shop",
+        url: baseUrl,
         logo: {
           "@type": "ImageObject",
-          url: "https://bdesh.shop/logo.png",
+          url: `${baseUrl}/logo.png`,
           width: 512,
           height: 512,
         },
@@ -150,16 +155,16 @@ function StructuredData() {
       },
       {
         "@type": "WebSite",
-        "@id": "https://bdesh.shop/#website",
-        url: "https://bdesh.shop",
+        "@id": siteId,
+        url: baseUrl,
         name: "BixelBD",
         description: "The easiest way to create your online store in Bangladesh.",
-        publisher: { "@id": "https://bdesh.shop/#organization" },
+        publisher: { "@id": orgId },
         potentialAction: {
           "@type": "SearchAction",
           target: {
             "@type": "EntryPoint",
-            urlTemplate: "https://bdesh.shop/templates?q={search_term_string}",
+            urlTemplate: `${baseUrl}/templates?q={search_term_string}`,
           },
           "query-input": "required name=search_term_string",
         },

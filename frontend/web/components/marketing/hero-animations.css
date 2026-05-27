@@ -1,0 +1,33 @@
+/* Pure-CSS hero animations so the headline paints in the first server-
+   rendered HTML and does NOT wait for the client bundle to hydrate. */
+
+@keyframes hero-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-hero-fade-up {
+  animation: hero-fade-up 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.animate-hero-delay-1 {
+  animation-delay: 150ms;
+}
+.animate-hero-delay-2 {
+  animation-delay: 300ms;
+}
+.animate-hero-delay-3 {
+  animation-delay: 450ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-hero-fade-up {
+    animation: none;
+  }
+}

@@ -30,14 +30,19 @@ const nextConfig: NextConfig = {
   },
 
   async headers() {
+    // CORS allowlist: only configured origins (and the platform host) can
+    // call the API. This used to be `*` which is dangerously permissive.
+    const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL || "https://bdesh.shop";
+
     return [
       {
         source: "/api/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Origin", value: allowedOrigin },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
           { key: "Access-Control-Allow-Methods", value: "GET,POST,PUT,DELETE,PATCH,OPTIONS" },
-          { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
-          // Security headers for API
+          { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization, x-user-id, x-customer-id" },
+          { key: "Vary", value: "Origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "X-Frame-Options", value: "DENY" },
         ],
