@@ -10,7 +10,8 @@
     "db:push": "turbo run db:push",
     "db:migrate": "turbo run db:migrate",
     "db:studio": "turbo run db:studio",
-    "type-check": "turbo run type-check"
+    "type-check": "turbo run type-check",
+    "fix:product-status": "node scripts/fix-product-status.js"
   },
   "dependencies": {
     "typescript": "^5.7.3"
