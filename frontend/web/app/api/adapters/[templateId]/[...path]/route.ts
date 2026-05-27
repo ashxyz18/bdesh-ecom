@@ -267,7 +267,9 @@ async function handleTemplateGet(templateId: string, path: string[], request: Ne
           const res = await fetch(buildPlatformUrl("/products", request, storeId));
           const data = await res.json();
           if (data.products) {
-            const p = data.products.find((p: any) => p.id === maybeId || p.slug === maybeId);
+            const p = data.products.find((p: any) => 
+              (p.id === maybeId || p.slug === maybeId) && p.status === "active"
+            );
             if (p) {
               const mappings = await getProductMappings(templateId);
               return NextResponse.json(mapProductToTemplate(p, mappings));
@@ -288,8 +290,10 @@ async function handleTemplateGet(templateId: string, path: string[], request: Ne
 
       if (data.products) {
         const mappings = await getProductMappings(templateId);
+        // Filter to show only active products on the storefront
+        const activeProducts = data.products.filter((p: any) => p.status === "active");
         return NextResponse.json({
-          products: data.products.map((p: any) => mapProductToTemplate(p, mappings)),
+          products: activeProducts.map((p: any) => mapProductToTemplate(p, mappings)),
         });
       }
       return NextResponse.json(data);
