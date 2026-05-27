@@ -43,8 +43,17 @@ export interface StoreSettings {
     subtext?: string;
     image?: string;
     mobileImage?: string;
+    /** Optional looping background video (mp4/webm). Falls back to image. */
+    videoUrl?: string;
+    /** Optional poster shown until the video starts. */
+    videoPoster?: string;
     buttonText?: string;
     buttonUrl?: string;
+    /** Optional secondary CTA text/URL. */
+    secondaryButtonText?: string;
+    secondaryButtonUrl?: string;
+    /** 0-100 — used by templates that overlay text on imagery. */
+    overlayOpacity?: number;
   };
   announcement?: {
     enabled?: boolean;

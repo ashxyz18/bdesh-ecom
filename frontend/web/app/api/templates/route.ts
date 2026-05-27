@@ -37,7 +37,7 @@ export async function GET() {
       thumbnail: t.thumbnail,
       category: t.category,
       websiteType: t.websiteType,
-      previewUrl: `/templates/${t.slug}`,
+      previewUrl: `/templates/preview/${t.slug}`,
       isBuiltIn: true,
       buildStatus: "ready",
     }));

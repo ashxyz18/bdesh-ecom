@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { ModernHome } from "./modern/ModernHome";
 import { BoutiqueHome } from "./boutique/BoutiqueHome";
 import { TechStoreHome } from "./tech-store/TechStoreHome";
+import { AuroraHome } from "./aurora/AuroraHome";
 import {
   resolveTemplateSlug,
   type BuiltinTemplateSlug,
@@ -16,6 +17,7 @@ const HOME_BY_SLUG: Record<BuiltinTemplateSlug, ComponentType<TemplateHomeProps>
   modern: ModernHome,
   boutique: BoutiqueHome,
   "tech-store": TechStoreHome,
+  aurora: AuroraHome,
 };
 
 /**

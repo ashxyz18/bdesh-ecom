@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { ArrowRight, Truck, ShieldCheck, RotateCcw, Headphones } from "lucide-react";
 import { ProductGrid } from "@/components/storefront/ProductGrid";
+import { HeroMedia } from "@/components/storefront/HeroMedia";
+import "@/components/storefront/animations.css";
 import type { StorefrontData } from "@/lib/storefront/types";
 
 interface Props {
@@ -9,7 +11,7 @@ interface Props {
 
 /**
  * Modern Store — clean, contemporary, bright. Uses generous whitespace and
- * sharp typography. Designed to fit any product category.
+ * sharp typography. Works for any product category.
  */
 export function ModernHome({ data }: Props) {
   const { store, products, featured, categories } = data;
@@ -21,16 +23,13 @@ export function ModernHome({ data }: Props) {
     "Discover thoughtfully curated products with fast delivery and easy returns.";
   const ctaText = hero.buttonText || "Shop Now";
   const ctaUrl = hero.buttonUrl || `/store/${store.id}/products`;
-  const heroImage =
-    hero.image ||
-    "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1400&h=900&fit=crop";
 
   return (
     <main>
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-16">
         <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div className="order-2 lg:order-1">
+          <div className="order-2 lg:order-1 sf-fade-up">
             <p
               className="text-sm font-medium tracking-wider uppercase mb-4"
               style={{ color: "var(--sf-accent)" }}
@@ -69,14 +68,15 @@ export function ModernHome({ data }: Props) {
               </Link>
             </div>
           </div>
-          <div className="order-1 lg:order-2 relative">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={heroImage}
-              alt=""
-              className="w-full aspect-[4/5] lg:aspect-[5/6] object-cover"
-              style={{ borderRadius: "var(--sf-radius)" }}
-            />
+          <div className="order-1 lg:order-2 sf-fade-up sf-fade-up-delay-1">
+            <div className="relative aspect-[4/5] lg:aspect-[5/6] overflow-hidden">
+              <HeroMedia
+                hero={hero}
+                fallbackImage="https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1400&h=1700&fit=crop"
+                rounded
+                overlay="none"
+              />
+            </div>
           </div>
         </div>
       </section>

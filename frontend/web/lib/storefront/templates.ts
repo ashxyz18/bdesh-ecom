@@ -9,7 +9,7 @@
  * sections vs. theme.
  */
 
-export type BuiltinTemplateSlug = "modern" | "boutique" | "tech-store";
+export type BuiltinTemplateSlug = "modern" | "boutique" | "tech-store" | "aurora";
 
 export interface BuiltinTemplate {
   slug: BuiltinTemplateSlug;
@@ -128,6 +128,42 @@ export const BUILTIN_TEMPLATES: BuiltinTemplate[] = [
       announcement: {
         enabled: true,
         message: "30-day money-back guarantee on every order",
+      },
+    },
+  },
+  {
+    slug: "aurora",
+    name: "Aurora",
+    description:
+      "Cinematic full-bleed hero with optional background video, animated gradient mesh, and motion-rich product reveals. Built for fashion, beauty, and lifestyle brands that want to make an impression.",
+    thumbnail:
+      "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=800&h=600&fit=crop",
+    category: "fashion",
+    websiteType: "ECOMMERCE",
+    defaultTheme: {
+      primaryColor: "#0f0f10",
+      accentColor: "#f97316",
+      backgroundColor: "#fafafa",
+      textColor: "#0f0f10",
+      mutedColor: "#737373",
+      fontFamilyHeading: "'Inter', system-ui, sans-serif",
+      fontFamilyBody: "'Inter', system-ui, sans-serif",
+      cornerRadius: "large",
+    },
+    defaultSettings: {
+      hero: {
+        headline: "Made to move.",
+        subtext:
+          "Designed in studio, finished by hand. Every piece is built to last and delivered with care.",
+        buttonText: "Shop the new drop",
+        buttonUrl: "/products",
+        secondaryButtonText: "Watch the film",
+        secondaryButtonUrl: "/products?featured=1",
+        overlayOpacity: 50,
+      },
+      announcement: {
+        enabled: true,
+        message: "Free express delivery on orders over ৳2500",
       },
     },
   },
