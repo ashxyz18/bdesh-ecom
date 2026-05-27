@@ -60,22 +60,23 @@ model Session {
 }
 
 model Store {
-  id          String   @id @default(cuid())
-  name        String
-  slug        String   @unique
-  subdomain   String   @unique
-  description String?
-  logo        String?
-  banner      String?
-  templateId  String?  // Reference to Template id
-  theme       String   @default("{}") // JSON: { primary, secondary, font, layout }
-  settings    String   @default("{}") // JSON: { currency, locale, features }
-  status      String   @default("PENDING") // PENDING, APPROVED, SUSPENDED, DELETED
-  websiteType WebsiteType @default(ECOMMERCE)
-  deletedAt   DateTime? // Soft delete field
-  ownerId     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  subdomain    String   @unique
+  customDomain String?  @unique // e.g. "shop.example.com" - lookup target for middleware
+  description  String?
+  logo         String?
+  banner       String?
+  templateId   String?  // Reference to a Template (cuid) or builtin template slug ("modern", "boutique", "tech-store")
+  theme        String   @default("{}") // JSON: { primary, secondary, font, layout }
+  settings     String   @default("{}") // JSON: { currency, locale, features }
+  status       String   @default("PENDING") // PENDING, APPROVED, SUSPENDED, DELETED
+  websiteType  WebsiteType @default(ECOMMERCE)
+  deletedAt    DateTime? // Soft delete field
+  ownerId      String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   products       Product[]
@@ -95,6 +96,7 @@ model Store {
   storeCustomers StoreCustomer[]
 
   @@index([subdomain])
+  @@index([customDomain])
   @@index([ownerId])
   @@index([status])
   @@index([websiteType])

@@ -44,7 +44,11 @@ export async function createStore(name: string, ownerId: string, templateId?: st
       slug: slug + suffix,
       subdomain: subdomain + suffix,
       ownerId,
-      templateId: templateId || "default",
+      // Leave templateId null so the dashboard can route the user to
+      // onboarding to pick a real template. Previously this defaulted to
+      // "default", which never matched any real template and caused the
+      // storefront to render a "Template not found" page.
+      templateId: templateId || null,
       theme: "{}",
       settings: "{}",
       status: "APPROVED",

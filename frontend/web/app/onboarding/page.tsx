@@ -39,37 +39,6 @@ const BUSINESS_TYPES = [
   { value: "EDUCATION", label: "📚 Education / Courses", desc: "Online courses, tutorials" },
 ];
 
-const PRE_BUILT_TEMPLATES: TemplateOption[] = [
-  {
-    id: "default",
-    name: "Modern Store",
-    description: "Clean, minimal design suitable for any product type",
-    thumbnail: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400",
-    websiteType: "ECOMMERCE",
-  },
-  {
-    id: "fashion",
-    name: "Fashion Boutique",
-    description: "Elegant design for clothing and fashion stores",
-    thumbnail: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400",
-    websiteType: "ECOMMERCE",
-  },
-  {
-    id: "electronics",
-    name: "Tech Store",
-    description: "Modern design for electronics and gadgets",
-    thumbnail: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400",
-    websiteType: "ECOMMERCE",
-  },
-  {
-    id: "restaurant",
-    name: "Restaurant & Cafe",
-    description: "Perfect for restaurants, cafes and food delivery",
-    thumbnail: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
-    websiteType: "RESTAURANT",
-  },
-];
-
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -114,31 +83,32 @@ export default function OnboardingPage() {
       })
       .catch(console.error);
 
-    // Fetch uploaded templates
+    // Fetch all templates (built-in + uploaded). The API now returns the
+    // first-party templates inline so we don't need a hardcoded fallback.
     fetch("/api/templates")
       .then((res) => res.json())
       .then((data) => {
-        if (data.templates?.length > 0) {
-          const custom = data.templates
-            .filter((t: any) => !t.isBuiltIn && t.buildStatus === "ready")
+        if (Array.isArray(data.templates)) {
+          const all = data.templates
+            .filter((t: any) => t.buildStatus === "ready")
             .map((t: any) => ({
-              id: t.id,
+              id: t.slug || t.id,
               name: t.name,
               description: t.description,
               thumbnail: t.thumbnail,
-              previewUrl: t.previewUrl || `/templates/${t.slug || t.id}/index.html`,
-              isUploaded: true,
+              previewUrl: t.previewUrl || `/templates/${t.slug || t.id}`,
+              isUploaded: !t.isBuiltIn,
               category: t.category,
               websiteType: t.websiteType,
             }));
-          setUploadedTemplates(custom);
+          setUploadedTemplates(all);
         }
       })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [router]);
 
-  const allTemplates = [...PRE_BUILT_TEMPLATES, ...uploadedTemplates];
+  const allTemplates = uploadedTemplates;
 
   // Filter templates by selected business type
   const filteredTemplates = allTemplates.filter((t) => {

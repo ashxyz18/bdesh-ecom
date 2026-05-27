@@ -115,6 +115,26 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 }
 
 async function resolveTemplateManifest(templateId: string): Promise<TemplateManifest | null> {
+  // Builtin React templates contribute their default settings/theme via the
+  // BuiltinTemplate registry rather than a manifest.json on disk. Synthesize
+  // a minimal manifest so mergeTemplateSettings/mergeTemplateTheme work.
+  const { BUILTIN_TEMPLATES, isBuiltinSlug } = await import("@/lib/storefront/templates");
+  if (isBuiltinSlug(templateId)) {
+    const builtin = BUILTIN_TEMPLATES.find((t) => t.slug === templateId);
+    if (builtin) {
+      return {
+        id: builtin.slug,
+        name: builtin.name,
+        version: "1.0.0",
+        entryPoint: "n/a",
+        css: [],
+        sections: {},
+        defaultTheme: builtin.defaultTheme as Record<string, unknown>,
+        defaultSettings: builtin.defaultSettings,
+      } as unknown as TemplateManifest;
+    }
+  }
+
   const manifestPath = path.join(process.cwd(), "public", "templates", templateId, "manifest.json");
   if (fs.existsSync(manifestPath)) {
     try {

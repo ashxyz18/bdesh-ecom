@@ -2,35 +2,79 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { getUserId } from "@/lib/auth";
 import { apiResponse, apiError } from "@/lib/api-utils";
+import { BUILTIN_TEMPLATES } from "@/lib/storefront/templates";
 
+interface ListedTemplate {
+  id: string;
+  slug?: string;
+  name: string;
+  description: string | null;
+  thumbnail: string | null;
+  category: string;
+  websiteType: string;
+  previewUrl: string;
+  isBuiltIn: boolean;
+  buildStatus: "ready";
+  dashboard?: unknown;
+  configSchema?: unknown;
+}
+
+/**
+ * GET /api/templates — used by onboarding, the template gallery, and the
+ * landing page to list every template available for selection.
+ *
+ * The 3 first-party templates (modern, boutique, tech-store) are returned
+ * first as in-memory definitions. Custom templates uploaded by site admins
+ * are listed after.
+ */
 export async function GET() {
   try {
-    const customTemplates = await prisma.template.findMany({
-      where: { isPublic: true, buildStatus: "ready", isBuiltIn: false },
-      select: {
-        id: true,
-        name: true,
-        description: true,
-        thumbnail: true,
-        slug: true,
-        buildStatus: true,
-        config: true,
-      },
-    });
-
-    const templates = customTemplates.map((t) => ({
-      id: t.id,
+    const builtin: ListedTemplate[] = BUILTIN_TEMPLATES.map((t) => ({
+      id: t.slug,
+      slug: t.slug,
       name: t.name,
       description: t.description,
       thumbnail: t.thumbnail,
-      previewUrl: `/templates/${t.id}/index.html`,
-      isBuiltIn: false,
-      buildStatus: t.buildStatus,
-      dashboard: parseTemplateConfig(t.config).dashboard,
-      configSchema: parseTemplateConfig(t.config).configSchema,
+      category: t.category,
+      websiteType: t.websiteType,
+      previewUrl: `/templates/${t.slug}`,
+      isBuiltIn: true,
+      buildStatus: "ready",
     }));
 
-    return apiResponse({ success: true, templates });
+    const custom = await prisma.template.findMany({
+      where: { isPublic: true, buildStatus: "ready", isBuiltIn: false },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        description: true,
+        thumbnail: true,
+        config: true,
+        category: true,
+        websiteType: true,
+      },
+    });
+
+    const customListed: ListedTemplate[] = custom.map((t) => {
+      const cfg = parseTemplateConfig(t.config);
+      return {
+        id: t.id,
+        slug: t.slug,
+        name: t.name,
+        description: t.description,
+        thumbnail: t.thumbnail,
+        category: t.category,
+        websiteType: t.websiteType,
+        previewUrl: `/templates/${t.id}/index.html`,
+        isBuiltIn: false,
+        buildStatus: "ready",
+        dashboard: (cfg as Record<string, unknown>).dashboard,
+        configSchema: (cfg as Record<string, unknown>).configSchema,
+      };
+    });
+
+    return apiResponse({ success: true, templates: [...builtin, ...customListed] });
   } catch (error) {
     console.error("Failed to get templates:", error);
     return apiError("Failed to get templates", 500);
